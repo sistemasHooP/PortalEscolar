@@ -1,4 +1,4 @@
-const URL_API = 'COLE_SUA_URL_DO_APPS_SCRIPT_AQUI';
+const URL_API = 'https://script.google.com/macros/s/AKfycbyQVT1GE4rLNCq50_YpHXMpkC6NwLTH5vW5kbTShaNFeBiO9DXYyU-S3qq8iVm_YRxtsQ/exec';
 
 // Campos disponíveis no sistema (Mapeamento)
 const CAMPO_DEFS = {
@@ -134,4 +134,5 @@ function consultarChave() {
 
 function voltarHome() {
     location.reload();
+
 }
