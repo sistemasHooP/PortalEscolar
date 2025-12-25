@@ -5,88 +5,141 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Portal Educacional</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Importação de Fontes (Google Fonts - Poppins) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- Importação de Ícones (FontAwesome) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Arquivo de Estilos Principal -->
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Manifesto para PWA (Opcional, mas recomendado para Mobile) -->
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
 
+    <!-- Overlay de Carregamento (Loader) -->
+    <!-- Fica invisível (hidden) até ser ativado pelo JavaScript -->
     <div id="loader-overlay" class="hidden">
         <div class="spinner"></div>
-        <p>Processando...</p>
+        <p id="loader-text">Processando...</p>
     </div>
 
+    <!-- Cabeçalho Principal -->
     <header>
         <div class="brand">
             <i class="fa-solid fa-graduation-cap"></i>
-            <div>
+            <div class="brand-text">
                 <h1>Educação Conectada</h1>
-                <small>Portal do Aluno</small>
+                <small>Secretaria de Educação</small>
             </div>
         </div>
     </header>
 
+    <!-- Conteúdo Principal -->
     <main>
+        
+        <!-- SEÇÃO 1: Lista de Eventos (Tela Inicial) -->
         <section id="lista-eventos" class="fade-in">
             <div class="section-header">
                 <h2><i class="fa-regular fa-calendar-check"></i> Eventos Disponíveis</h2>
-                <p>Selecione um evento para iniciar sua inscrição.</p>
+                <p>Selecione um evento abaixo para iniciar sua inscrição.</p>
             </div>
-            <div id="cards-container">
-                </div>
+            
+            <!-- O JavaScript vai inserir os cards dos eventos aqui dentro -->
+            <div id="cards-container"></div>
         </section>
 
+
+        <!-- SEÇÃO 2: Formulário de Inscrição (Escondido inicialmente) -->
         <section id="area-inscricao" class="hidden fade-in">
+            <!-- Botão de Voltar -->
             <button class="btn-back" onclick="voltarHome()">
-                <i class="fa-solid fa-arrow-left"></i> Voltar
+                <i class="fa-solid fa-arrow-left"></i> Voltar para Eventos
             </button>
             
             <div class="form-card">
-                <h2 id="titulo-evento">Nome do Evento</h2>
-                <p class="subtitle">Preencha os dados com atenção.</p>
+                <!-- Título do Evento Selecionado -->
+                <div class="form-header">
+                    <h2 id="titulo-evento">Nome do Evento</h2>
+                    <p class="subtitle">Preencha todos os dados com atenção antes de enviar.</p>
+                </div>
                 
                 <form id="form-inscricao" onsubmit="enviarInscricao(event)">
+                    
+                    <!-- Campos Dinâmicos (Nome, CPF, etc) serão inseridos aqui pelo JS -->
                     <div id="campos-dinamicos" class="grid-form"></div>
                     
+                    <hr class="divider">
+
+                    <!-- Área de Upload de Documentos -->
                     <div class="upload-section">
-                        <h3><i class="fa-solid fa-cloud-arrow-up"></i> Documentação</h3>
+                        <h3><i class="fa-solid fa-cloud-arrow-up"></i> Documentação Obrigatória</h3>
+                        <p class="upload-info">Formatos aceitos: Imagens (JPG/PNG) e PDF.</p>
                         
+                        <!-- Upload Foto -->
                         <div class="file-input-wrapper">
-                            <label>Foto 3x4 (Rosto visível)</label>
+                            <label for="file-foto">
+                                <i class="fa-solid fa-user"></i> Foto 3x4 (Rosto visível)
+                            </label>
                             <input type="file" id="file-foto" accept="image/*" required>
                         </div>
 
+                        <!-- Upload Documento -->
                         <div class="file-input-wrapper">
-                            <label>Declaração de Matrícula (PDF)</label>
+                            <label for="file-doc">
+                                <i class="fa-solid fa-file-pdf"></i> Declaração de Matrícula (PDF)
+                            </label>
                             <input type="file" id="file-doc" accept="application/pdf" required>
                         </div>
                     </div>
 
-                    <button type="submit" class="btn-primary pulse">
-                        Confirmar Inscrição <i class="fa-solid fa-paper-plane"></i>
-                    </button>
+                    <!-- Botão de Envio -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary pulse">
+                            Confirmar Inscrição <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
                 </form>
             </div>
         </section>
 
+
+        <!-- SEÇÃO 3: Consulta de Inscrição (Rodapé da página inicial) -->
         <section id="area-consulta" class="fade-in">
             <div class="search-box">
-                <h2>Já se inscreveu?</h2>
-                <div class="input-group">
-                    <input type="text" id="busca-chave" placeholder="Digite sua Chave Única (ex: A1B2)">
-                    <button onclick="consultarChave()"><i class="fa-solid fa-magnifying-glass"></i></button>
+                <div class="search-header">
+                    <i class="fa-solid fa-magnifying-glass-location"></i>
+                    <h2>Acompanhar Inscrição</h2>
                 </div>
+                <p>Já se inscreveu? Digite sua chave única para ver o status.</p>
+                
+                <div class="input-group">
+                    <input type="text" id="busca-chave" placeholder="Ex: A1B2C3D4">
+                    <button onclick="consultarChave()">Consultar</button>
+                </div>
+                
+                <!-- Resultado da busca aparecerá aqui -->
                 <div id="resultado-busca"></div>
             </div>
         </section>
+
     </main>
 
+    <!-- Rodapé -->
     <footer>
-        <p>&copy; 2025 Secretaria de Educação - Sistema Seguro</p>
+        <p>&copy; 2025 Secretaria de Educação - Sistema Seguro & Responsivo</p>
     </footer>
 
+    <!-- Scripts -->
+    <!-- SweetAlert2: Para alertas bonitos e modais -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Nosso Script Principal -->
     <script src="app.js"></script>
+
 </body>
 </html>
