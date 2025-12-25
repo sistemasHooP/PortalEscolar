@@ -6,6 +6,8 @@
     <title>Painel Admin - Educação</title>
     
     <!-- Fontes e Ícones -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -71,7 +73,7 @@
                                 <th>ID</th>
                                 <th>Título</th>
                                 <th>Status</th>
-                                <th>Ações</th>
+                                <th style="text-align: right;">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="lista-eventos-admin">
@@ -128,37 +130,44 @@
                 </div>
             </section>
 
-            <!-- ABA 3: CONFIGURAÇÕES (CORRIGIDA) -->
+            <!-- ABA 3: CONFIGURAÇÕES -->
             <section id="tab-config" class="tab-content hidden fade-in">
                 <h2>Configurações do Sistema</h2>
                 
-                <!-- Card de Gestão de Instituições -->
-                <div class="card form-card" style="margin-bottom: 20px;">
-                    <h3><i class="fa-solid fa-building-columns"></i> Gerenciar Instituições</h3>
-                    <p style="font-size:0.9rem; color:#666;">Estas são as opções que aparecem na lista do formulário. Adicione novas aqui.</p>
-                    
-                    <div style="display:flex; gap:10px; margin-top:15px;">
-                        <input type="text" id="nova-inst" placeholder="Digite o nome da Instituição (ex: Estácio)" style="flex:1;">
-                        <button class="btn-primary" style="width:auto;" onclick="addInstituicao()">
-                            <i class="fa-solid fa-plus"></i> Adicionar
-                        </button>
+                <div class="config-grid">
+                    <!-- Card de Gestão de Instituições -->
+                    <div class="card form-card">
+                        <h3><i class="fa-solid fa-building-columns"></i> Gerenciar Instituições</h3>
+                        <p style="font-size:0.9rem; color:#666;">Adicione as instituições de ensino que aparecerão na lista do formulário.</p>
+                        
+                        <div style="display:flex; gap:10px; margin-top:15px;">
+                            <input type="text" id="nova-inst" placeholder="Nome da Instituição (ex: UFRN)" style="flex:1;">
+                            <button class="btn-primary" style="width:auto;" onclick="addInstituicao()">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+                        
+                        <div id="lista-instituicoes" style="margin-top:15px; max-height:300px; overflow-y:auto; border:1px solid #eee; border-radius:8px; background-color: #fff;">
+                            <p style="padding:10px; color:#999; text-align:center;">Carregando...</p>
+                        </div>
                     </div>
-                    
-                    <!-- Lista de Instituições -->
-                    <div id="lista-instituicoes" style="margin-top:15px; max-height:300px; overflow-y:auto; border:1px solid #eee; border-radius:8px; background-color: #fff;">
-                        <p style="padding:10px; color:#999; text-align:center;">Carregando...</p>
-                    </div>
-                </div>
 
-                <!-- Card de Acesso ao Banco -->
-                <div class="card form-card">
-                    <h3><i class="fa-solid fa-database"></i> Banco de Dados</h3>
-                    <p style="color:#666; margin-bottom:15px;">
-                        Acesse a planilha para backups ou alterações manuais de emergência.
-                    </p>
-                    <a href="#" onclick="window.open('https://docs.google.com/spreadsheets/u/0/', '_blank')" class="btn-primary" style="text-decoration:none; display:inline-block; width:auto; background-color: #10b981;">
-                        <i class="fa-solid fa-table-cells"></i> Abrir Google Sheets
-                    </a>
+                    <!-- Card de Acesso ao Banco -->
+                    <div class="card form-card">
+                        <h3><i class="fa-solid fa-database"></i> Banco de Dados</h3>
+                        <p style="color:#666; margin-bottom:15px;">
+                            Acesse a planilha para alterar a senha, visualizar dados brutos ou fazer backups.
+                        </p>
+                        <a href="#" onclick="window.open('https://docs.google.com/spreadsheets/u/0/', '_blank')" class="btn-primary" style="text-decoration:none; display:inline-block; width:100%; text-align: center; background-color: #10b981;">
+                            <i class="fa-solid fa-table-cells"></i> Abrir Google Sheets
+                        </a>
+                        
+                        <div style="margin-top:20px; padding:15px; background:#f0f9ff; border-radius:8px; border:1px dashed #bae6fd;">
+                            <small style="color:#0284c7; display: block; line-height: 1.4;">
+                                <i class="fa-solid fa-circle-info"></i> <strong>Dica:</strong> A senha de administrador pode ser alterada na aba "Config" da planilha, célula B3.
+                            </small>
+                        </div>
+                    </div>
                 </div>
             </section>
 
