@@ -5,30 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Portal Educacional</title>
     
-    <!-- Importação de Fontes (Google Fonts - Poppins) -->
+    <!-- Fontes e Ícones -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Importação de Ícones (FontAwesome) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Arquivo de Estilos Principal -->
     <link rel="stylesheet" href="style.css">
-    
-    <!-- Manifesto para PWA (Opcional, mas recomendado para Mobile) -->
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
 
-    <!-- Overlay de Carregamento (Loader) -->
-    <!-- Fica invisível (hidden) até ser ativado pelo JavaScript -->
     <div id="loader-overlay" class="hidden">
         <div class="spinner"></div>
         <p id="loader-text">Processando...</p>
     </div>
 
-    <!-- Cabeçalho Principal -->
     <header>
         <div class="brand">
             <i class="fa-solid fa-graduation-cap"></i>
@@ -39,65 +31,70 @@
         </div>
     </header>
 
-    <!-- Conteúdo Principal -->
     <main>
         
-        <!-- SEÇÃO 1: Lista de Eventos (Tela Inicial) -->
+        <!-- SEÇÃO 1: Consulta de Inscrição (AGORA NO TOPO) -->
+        <!-- Adicionei a classe 'consulta-compacta' para ficar bonito no topo -->
+        <section id="area-consulta" class="fade-in consulta-compacta">
+            <div class="search-box">
+                <div class="search-header-compact">
+                    <i class="fa-solid fa-magnifying-glass-location"></i>
+                    <span>Já se inscreveu? Consulte aqui:</span>
+                </div>
+                
+                <div class="input-group">
+                    <input type="text" id="busca-chave" placeholder="Digite sua Chave Única">
+                    <button onclick="consultarChave()"><i class="fa-solid fa-arrow-right"></i></button>
+                </div>
+                <div id="resultado-busca"></div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO 2: Lista de Eventos -->
         <section id="lista-eventos" class="fade-in">
             <div class="section-header">
                 <h2><i class="fa-regular fa-calendar-check"></i> Eventos Disponíveis</h2>
-                <p>Selecione um evento abaixo para iniciar sua inscrição.</p>
+                <p>Toque no evento para ver detalhes e se inscrever.</p>
             </div>
-            
-            <!-- O JavaScript vai inserir os cards dos eventos aqui dentro -->
             <div id="cards-container"></div>
         </section>
 
-
-        <!-- SEÇÃO 2: Formulário de Inscrição (Escondido inicialmente) -->
+        <!-- SEÇÃO 3: Formulário de Inscrição -->
         <section id="area-inscricao" class="hidden fade-in">
-            <!-- Botão de Voltar -->
+            <!-- Espaçador para o botão não ficar coberto -->
+            <div class="spacer-top"></div>
+
             <button class="btn-back" onclick="voltarHome()">
-                <i class="fa-solid fa-arrow-left"></i> Voltar para Eventos
+                <i class="fa-solid fa-chevron-left"></i> Voltar para Início
             </button>
             
             <div class="form-card">
-                <!-- Título do Evento Selecionado -->
                 <div class="form-header">
                     <h2 id="titulo-evento">Nome do Evento</h2>
-                    <p class="subtitle">Preencha todos os dados com atenção antes de enviar.</p>
+                    <p class="subtitle">Preencha os dados abaixo.</p>
                 </div>
                 
                 <form id="form-inscricao" onsubmit="enviarInscricao(event)">
-                    
-                    <!-- Campos Dinâmicos (Nome, CPF, etc) serão inseridos aqui pelo JS -->
                     <div id="campos-dinamicos" class="grid-form"></div>
                     
                     <hr class="divider">
 
-                    <!-- Área de Upload de Documentos -->
+                    <!-- Uploads -->
                     <div class="upload-section">
                         <h3><i class="fa-solid fa-cloud-arrow-up"></i> Documentação</h3>
-                        <p class="upload-info">Os campos abaixo dependem das regras do evento.</p>
+                        <p class="upload-info">Anexe os arquivos solicitados.</p>
                         
-                        <!-- Upload Foto (Com ID para controle via JS) -->
                         <div id="div-upload-foto" class="file-input-wrapper hidden">
-                            <label for="file-foto">
-                                <i class="fa-solid fa-user"></i> Foto 3x4 (Rosto visível)
-                            </label>
+                            <label for="file-foto"><i class="fa-solid fa-user"></i> Foto 3x4 (Rosto visível)</label>
                             <input type="file" id="file-foto" accept="image/*">
                         </div>
 
-                        <!-- Upload Documento (Com ID para controle via JS) -->
                         <div id="div-upload-doc" class="file-input-wrapper hidden">
-                            <label for="file-doc">
-                                <i class="fa-solid fa-file-pdf"></i> Declaração de Matrícula (PDF)
-                            </label>
+                            <label for="file-doc"><i class="fa-solid fa-file-pdf"></i> Declaração (PDF)</label>
                             <input type="file" id="file-doc" accept="application/pdf">
                         </div>
                     </div>
 
-                    <!-- Botão de Envio -->
                     <div class="form-actions">
                         <button type="submit" class="btn-primary pulse">
                             Confirmar Inscrição <i class="fa-solid fa-paper-plane"></i>
@@ -107,46 +104,18 @@
             </div>
         </section>
 
-
-        <!-- SEÇÃO 3: Consulta de Inscrição (Rodapé da página inicial) -->
-        <section id="area-consulta" class="fade-in">
-            <div class="search-box">
-                <div class="search-header">
-                    <i class="fa-solid fa-magnifying-glass-location"></i>
-                    <h2>Acompanhar Inscrição</h2>
-                </div>
-                <p>Já se inscreveu? Digite sua chave única para ver o status.</p>
-                
-                <div class="input-group">
-                    <input type="text" id="busca-chave" placeholder="Ex: A1B2C3D4">
-                    <button onclick="consultarChave()">Consultar</button>
-                </div>
-                
-                <!-- Resultado da busca aparecerá aqui -->
-                <div id="resultado-busca"></div>
-            </div>
-        </section>
-
     </main>
 
-    <!-- Rodapé -->
     <footer>
-        <p>&copy; 2025 Secretaria de Educação - Sistema Seguro & Responsivo</p>
-        
-        <!-- Link para Área Administrativa -->
+        <p>&copy; 2025 Secretaria de Educação</p>
         <div style="margin-top: 15px;">
-            <a href="admin.html" style="color: #94a3b8; font-size: 0.8rem; text-decoration: none; opacity: 0.6; transition: opacity 0.3s;">
+            <a href="admin.html" style="color: #94a3b8; font-size: 0.8rem; text-decoration: none; opacity: 0.6;">
                 <i class="fa-solid fa-lock"></i> Acesso Restrito
             </a>
         </div>
     </footer>
 
-    <!-- Scripts -->
-    <!-- SweetAlert2: Para alertas bonitos e modais -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <!-- Nosso Script Principal -->
     <script src="app.js"></script>
-
 </body>
 </html>
