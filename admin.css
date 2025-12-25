@@ -6,6 +6,7 @@
     align-items: center;
     background: linear-gradient(135deg, var(--primary), var(--bg-color));
 }
+
 .login-card {
     width: 100%;
     max-width: 400px;
@@ -19,67 +20,155 @@
     min-height: 100vh;
 }
 
+/* Layout Desktop: Sidebar Fixa à Esquerda */
 @media(min-width: 768px) {
-    #admin-panel { flex-direction: row; }
+    #admin-panel {
+        flex-direction: row;
+    }
+    
     .admin-nav { 
-        width: 250px; 
+        width: 260px; 
         flex-direction: column; 
         height: 100vh; 
         position: fixed;
+        top: 0;
+        left: 0;
+        justify-content: flex-start;
+        padding-top: 2rem;
+        z-index: 1000;
     }
-    .admin-content { margin-left: 250px; width: calc(100% - 250px); }
+    
+    .admin-content { 
+        margin-left: 260px; 
+        width: calc(100% - 260px); 
+    }
 }
 
-/* --- Navegação --- */
+/* --- Navegação (Sidebar/Navbar) --- */
 .admin-nav {
-    background: #1e293b; /* Escuro */
+    background: #1e293b; /* Slate 800 - Escuro Profissional */
     color: white;
     padding: 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
 }
 
-.nav-brand { font-size: 1.2rem; font-weight: bold; margin-bottom: 20px; display: none; }
-@media(min-width: 768px) { .nav-brand { display: block; } }
+.nav-brand {
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin-bottom: 30px;
+    display: none; /* Escondido no mobile, visível no desktop */
+    text-align: center;
+    color: #f8fafc;
+}
 
-.nav-links { display: flex; gap: 10px; flex-direction: row; }
-@media(min-width: 768px) { .nav-links { flex-direction: column; width: 100%; } }
+@media(min-width: 768px) {
+    .nav-brand {
+        display: block;
+    }
+}
+
+.nav-links {
+    display: flex;
+    gap: 10px;
+    flex-direction: row;
+    width: 100%;
+    overflow-x: auto; /* Scroll horizontal no mobile se precisar */
+}
+
+@media(min-width: 768px) {
+    .nav-links {
+        flex-direction: column;
+        overflow-x: visible;
+    }
+}
 
 .nav-btn {
     background: transparent;
-    color: #94a3b8;
+    color: #94a3b8; /* Slate 400 */
     text-align: left;
-    padding: 12px;
+    padding: 14px;
     border-radius: 8px;
     width: 100%;
     border: none;
     cursor: pointer;
     font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+    font-weight: 500;
 }
 
-.nav-btn:hover, .nav-btn.active {
-    background: rgba(255,255,255,0.1);
+.nav-btn:hover {
+    background: rgba(255,255,255,0.05);
     color: white;
+}
+
+.nav-btn.active {
+    background: rgba(37, 99, 235, 0.2); /* Azul transparente */
+    color: #60a5fa; /* Azul claro */
+    border-left: 3px solid #3b82f6;
 }
 
 .logout-btn {
     background: transparent;
     color: #ef4444;
-    border: 1px solid #ef4444;
-    padding: 8px 15px;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    padding: 10px 15px;
     border-radius: 6px;
     cursor: pointer;
+    margin-top: auto; /* Empurra para o fundo no desktop */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    transition: all 0.2s;
 }
 
-/* --- Conteúdo --- */
-.admin-content { padding: 2rem; background: var(--bg-color); }
+.logout-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+}
+
+@media(max-width: 768px) {
+    .logout-btn {
+        margin-top: 0;
+        padding: 8px 12px;
+    }
+}
+
+/* --- Área de Conteúdo Principal --- */
+.admin-content {
+    padding: 2rem;
+    background: var(--bg-color);
+    min-height: 100vh;
+}
 
 .header-action {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.header-action h2 {
+    color: var(--text-dark);
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+/* --- GRID DE CONFIGURAÇÕES --- */
+/* Cria um layout responsivo de cartões para a aba de Configurações */
+.config-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 25px;
 }
 
 /* --- Tabelas de Dados --- */
@@ -88,51 +177,216 @@
     background: white;
     border-radius: 12px;
     box-shadow: var(--shadow-sm);
+    border: 1px solid #e2e8f0;
 }
 
 .data-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.9rem;
+    white-space: nowrap; /* Evita quebra de linha indesejada */
 }
 
 .data-table th {
-    background: #f1f5f9;
-    padding: 15px;
+    background: #f8fafc;
+    padding: 18px;
     text-align: left;
     font-weight: 600;
-    color: var(--text-dark);
+    color: var(--text-light);
+    border-bottom: 2px solid #e2e8f0;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
 }
 
 .data-table td {
-    padding: 15px;
+    padding: 15px 18px;
     border-bottom: 1px solid #e2e8f0;
     color: var(--text-dark);
+    vertical-align: middle;
 }
 
-.data-table tr:hover { background: #f8fafc; }
+.data-table tr:hover {
+    background: #f8fafc;
+}
 
-/* Status Badges */
-.badge { padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
-.badge-Pendente { background: #fef3c7; color: #d97706; }
-.badge-Aprovada { background: #d1fae5; color: #059669; }
-.badge-Rejeitada { background: #fee2e2; color: #dc2626; }
+.data-table tr:last-child td {
+    border-bottom: none;
+}
 
-/* Filtros */
+/* Texto Secundário na Tabela */
+.text-muted {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    display: block;
+    margin-top: 2px;
+}
+
+/* --- Status Badges (Etiquetas Coloridas) --- */
+.badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-block;
+    text-align: center;
+}
+
+/* Cores dos Status */
+.badge-Pendente { background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
+.badge-Aprovada { background: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
+.badge-Rejeitada { background: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; }
+.badge-FichaEmitida { background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
+.badge-Ativo { background: #dcfce7; color: #166534; }
+.badge-Inativo { background: #f1f5f9; color: #64748b; }
+
+/* --- Barra de Filtros --- */
 .filters {
-    display: flex; gap: 10px; margin-bottom: 15px;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid #e2e8f0;
+    flex-wrap: wrap;
 }
-.filters input, .filters select { width: auto; flex: 1; }
 
+.filters select, 
+.filters input {
+    width: auto;
+    flex: 1;
+    min-width: 150px;
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    outline: none;
+}
+
+.filters input:focus,
+.filters select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.btn-refresh {
+    background: white;
+    border: 1px solid #cbd5e1;
+    color: var(--text-dark);
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-refresh:hover {
+    background: #f1f5f9;
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+/* --- Botões de Ação na Tabela --- */
 .action-btn {
-    padding: 6px 10px;
-    margin-right: 5px;
-    border-radius: 4px;
+    padding: 8px 10px;
+    margin-right: 4px;
+    border-radius: 6px;
     border: none;
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: white;
+    transition: transform 0.1s, opacity 0.2s;
+    min-width: 32px;
 }
-.btn-view { background: var(--secondary); }
-.btn-edit { background: var(--primary); }
-.btn-delete { background: #ef4444; }
+
+.action-btn:hover {
+    opacity: 0.9;
+}
+
+.action-btn:active {
+    transform: scale(0.95);
+}
+
+/* Cores Específicas dos Botões */
+.btn-view { background: var(--secondary); } /* Azul Claro */
+.btn-edit { background: var(--primary); }   /* Azul Forte */
+.btn-delete { background: #ef4444; }        /* Vermelho */
+
+/* Botão Toggle Status (Ativar/Inativar) */
+.btn-status-toggle {
+    background: #64748b;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.btn-status-toggle.active {
+    background: #ef4444; /* Botão vermelho para ação de Inativar */
+}
+
+.btn-status-toggle.inactive {
+    background: #22c55e; /* Botão verde para ação de Ativar */
+}
+
+/* --- SweetAlert2 Customizações --- */
+/* Ajuste para inputs dentro dos modais SweetAlert */
+.swal2-input, 
+.swal2-textarea {
+    font-size: 0.9rem !important;
+    margin: 5px auto !important;
+}
+
+/* Estilo para a lista de checkboxes dentro do modal de novo evento */
+.checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.checkbox-item {
+    background: #f8fafc;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.checkbox-item:hover {
+    border-color: var(--primary);
+    background: #eff6ff;
+}
+
+/* Responsividade Mobile para Admin */
+@media(max-width: 768px) {
+    .config-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .checkbox-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .header-action {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filters {
+        flex-direction: column;
+    }
+    
+    .data-table th, .data-table td {
+        padding: 10px;
+    }
+}
