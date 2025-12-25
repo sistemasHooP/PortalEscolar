@@ -1,11 +1,10 @@
 const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
 
+// Removidos CPF e Email daqui, pois agora são fixos no formulário do aluno
 const CAMPOS_PADRAO = [
     { key: 'NomeCompleto', label: 'Nome Completo' },
-    { key: 'CPF', label: 'CPF' },
     { key: 'DataNascimento', label: 'Data de Nascimento' },
     { key: 'Telefone', label: 'Celular (WhatsApp)' },
-    { key: 'Email', label: 'E-mail' },
     { key: 'Endereco', label: 'Endereço Completo' },
     { key: 'NomeInstituicao', label: 'Nome da Instituição' },
     { key: 'NomeCurso', label: 'Nome do Curso' },
@@ -83,9 +82,8 @@ function carregarEventosAdmin() {
         });
 }
 
-// --- NOVO MODAL: Com Campos Personalizados ---
+// --- NOVO MODAL: Sem opções de CPF/Email (são padrão agora) ---
 function modalNovoEvento() {
-    // Checkboxes Padrão
     let htmlCampos = '<div class="checkbox-grid">';
     CAMPOS_PADRAO.forEach(c => {
         htmlCampos += `
@@ -110,10 +108,9 @@ function modalNovoEvento() {
                 .swal2-input { margin: 0 !important; width: 100% !important; font-size: 0.9rem; }
                 .checkbox-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
                 .checkbox-item { background: #f8fafc; padding: 6px 10px; border-radius: 4px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; }
-                
-                /* Estilo Custom Fields */
                 .custom-fields-area { background: #fffbeb; padding: 10px; border: 1px dashed #f59e0b; border-radius: 6px; }
                 .custom-field-row { display: flex; gap: 5px; margin-bottom: 5px; }
+                .info-msg { background: #e0f2fe; color: #0284c7; padding: 10px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
             </style>
 
             <div class="modal-section">
@@ -137,7 +134,10 @@ function modalNovoEvento() {
             </div>
 
             <div class="modal-section">
-                <label class="modal-label">3. Campos Padrão</label>
+                <label class="modal-label">3. Campos Adicionais</label>
+                <div class="info-msg">
+                    <i class="fa-solid fa-circle-info"></i> CPF e E-mail são obrigatórios e já estarão no formulário automaticamente.
+                </div>
                 ${htmlCampos}
             </div>
 
@@ -193,7 +193,7 @@ function modalNovoEvento() {
                 inicio, fim,
                 config: JSON.stringify({
                     camposTexto: selecionados,
-                    camposPersonalizados: personalizados, // Array novo
+                    camposPersonalizados: personalizados,
                     arquivos: { 
                         foto: document.getElementById('req_foto').checked, 
                         doc: document.getElementById('req_doc').checked 
@@ -255,7 +255,6 @@ function renderLinhaInscricao(ins, tbody) {
     const nome = detalhes.NomeCompleto || "Aluno";
     const nomeEvento = mapaEventos[ins.eventoId] || ins.eventoId;
 
-    // Botão de PDF só aparece se já tiver link ou se puder gerar
     let btnPDF = `<button class="action-btn btn-view" style="background:#4f46e5" onclick="gerarFicha('${ins.chave}')" title="Gerar e Salvar PDF"><i class="fa-solid fa-file-invoice"></i> PDF</button>`;
     
     if(ins.link_ficha) {
@@ -312,7 +311,6 @@ function gerarFicha(chave) {
 }
 
 function filtrarTabela() {
-    // Mesma lógica de filtro anterior
     const termo = document.getElementById('filtro-nome').value.toLowerCase();
     const status = document.getElementById('filtro-status').value;
     const eventoId = document.getElementById('filtro-evento').value; 
@@ -349,4 +347,8 @@ function mudarStatus(chave) {
         }
     });
 }
-function logout() { sessionStorage.removeItem('admin_token'); location.reload(); }
+
+function logout() {
+    sessionStorage.removeItem('admin_token');
+    location.reload();
+}
