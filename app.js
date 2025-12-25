@@ -1,17 +1,15 @@
 /**
- * Portal Educacional - App Logic v4.3
- * Link da API Atualizado
+ * Portal Educacional - App Logic v5.1
  */
 
-// ⚠️ URL da API Atualizada
+// ⚠️ URL da API (Já configurada)
 const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
 
 const CAMPO_DEFS = {
     'NomeCompleto': { label: 'Nome Completo', type: 'text', placeholder: 'Digite seu nome completo' },
-    'CPF': { label: 'CPF', type: 'text', placeholder: '000.000.000-00', mask: 'cpf' },
+    // CPF e Email são inseridos manualmente no código agora
     'DataNascimento': { label: 'Data de Nascimento', type: 'date', placeholder: '' },
     'Telefone': { label: 'Celular (WhatsApp)', type: 'tel', placeholder: '(00) 00000-0000', mask: 'tel' },
-    'Email': { label: 'E-mail Pessoal', type: 'email', placeholder: 'seu@email.com' },
     'Endereco': { label: 'Endereço Residencial', type: 'text', placeholder: 'Rua, Número, Complemento' },
     'NomeInstituicao': { label: 'Instituição de Ensino', type: 'text', placeholder: 'Ex: Universidade X' },
     'NomeCurso': { label: 'Curso', type: 'text', placeholder: 'Ex: Engenharia' },
@@ -21,7 +19,7 @@ const CAMPO_DEFS = {
 
 document.addEventListener('DOMContentLoaded', () => { carregarEventos(); });
 
-// --- Funções UI (Loader & Alerts) ---
+// --- Funções UI ---
 
 function toggleLoader(show, msg = "Processando...") {
     const el = document.getElementById('loader-overlay');
@@ -29,8 +27,16 @@ function toggleLoader(show, msg = "Processando...") {
     else { el.classList.add('hidden'); }
 }
 
-function showSuccess(titulo, html) {
-    Swal.fire({ icon: 'success', title, html, confirmButtonColor: '#2563eb', confirmButtonText: 'OK' }).then(() => location.reload());
+function showSuccess(titulo, html, callback) {
+    Swal.fire({ 
+        icon: 'success', 
+        title: titulo, 
+        html: html, 
+        confirmButtonColor: '#2563eb', 
+        confirmButtonText: 'OK' 
+    }).then(() => {
+        if(callback) callback();
+    });
 }
 
 function showError(titulo, text) {
@@ -107,6 +113,19 @@ function abrirInscricao(evento) {
     const areaCampos = document.getElementById('campos-dinamicos');
     areaCampos.innerHTML = '';
     
+    // --- CAMPOS OBRIGATÓRIOS (FIXOS) ---
+    areaCampos.innerHTML += `
+        <div>
+            <label>CPF *</label>
+            <input type="text" name="CPF" placeholder="000.000.000-00" required>
+        </div>
+        <div>
+            <label>E-mail *</label>
+            <input type="email" name="Email" placeholder="seu@email.com" required>
+        </div>
+    `;
+
+    // Campos Configuráveis
     if(config.camposTexto) {
         config.camposTexto.forEach(key => {
             if(CAMPO_DEFS[key]) {
@@ -124,11 +143,20 @@ function abrirInscricao(evento) {
         });
     }
 
+    // Ativa Máscaras
     const inputCPF = document.querySelector('input[name="CPF"]');
-    if(inputCPF) { inputCPF.maxLength = 14; inputCPF.addEventListener('input', (e) => e.target.value = aplicarMascaraCPF(e.target.value)); }
+    if(inputCPF) { 
+        inputCPF.maxLength = 14; 
+        inputCPF.addEventListener('input', (e) => e.target.value = aplicarMascaraCPF(e.target.value)); 
+    }
+    
     const inputTel = document.querySelector('input[name="Telefone"]');
-    if(inputTel) { inputTel.maxLength = 15; inputTel.addEventListener('input', (e) => e.target.value = aplicarMascaraTelefone(e.target.value)); }
+    if(inputTel) { 
+        inputTel.maxLength = 15; 
+        inputTel.addEventListener('input', (e) => e.target.value = aplicarMascaraTelefone(e.target.value)); 
+    }
 
+    // Uploads
     const divFoto = document.getElementById('div-upload-foto');
     const divDoc = document.getElementById('div-upload-doc');
     const inputFoto = document.getElementById('file-foto');
@@ -175,8 +203,15 @@ async function enviarInscricao(e) {
             .then(res => res.json())
             .then(json => {
                 toggleLoader(false);
-                if(json.status === 'success') showSuccess('Sucesso!', `Sua Chave: <strong>${json.chave}</strong><br>Guarde-a!`);
-                else showError('Erro', json.message);
+                if(json.status === 'success') {
+                    // --- SUCESSO E RESET ---
+                    showSuccess('Sucesso!', `Sua Chave: <strong>${json.chave}</strong><br>Enviamos um e-mail de confirmação.`, () => {
+                        document.getElementById('form-inscricao').reset(); 
+                        voltarHome(); 
+                    });
+                } else {
+                    showError('Erro', json.message);
+                }
             });
     } catch(err) { toggleLoader(false); showError('Erro', 'Falha no upload.'); }
 }
