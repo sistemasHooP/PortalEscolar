@@ -1,27 +1,35 @@
 /**
- * Portal Educacional - App Logic v6.2 (Full)
- * Funcionalidades:
- * - Listagem de Eventos
- * - Formulário Dinâmico com Máscaras (CPF/Telefone)
- * - Select de Instituições (Carregamento Dinâmico)
- * - Verificação de Duplicidade de CPF
- * - Upload de Arquivos (Foto/Doc)
- * - Consulta de Status e Download de PDF
- * - Botão Flutuante (FAB) e Modais
- * - Mensagens de Alerta personalizadas por evento
+ * Portal Educacional - App Logic v6.4 (Completo e Integral)
+ * * Funcionalidades Incluídas:
+ * 1. Listagem de Eventos Ativos
+ * 2. Formulário Dinâmico com suporte a:
+ * - Campos Padrão (Texto, Data, Telefone)
+ * - Campos Fixos Obrigatórios (CPF, Email)
+ * - Select de Instituições com carregamento dinâmico
+ * - Opção "Outra" Instituição (Digitável)
+ * - Campos Personalizados (Criados pelo Admin)
+ * 3. Máscaras de Input (CPF e Telefone)
+ * 4. Upload de Arquivos (Foto 3x4 e Declaração PDF)
+ * 5. Validações de Frontend (CPF incompleto, campos vazios)
+ * 6. Integração com API (POST/GET)
+ * 7. Tratamento de Erros Específicos (Ex: CPF Duplicado)
+ * 8. Sistema de Consulta de Status
+ * 9. Download de Ficha de Inscrição (PDF)
+ * 10. Elementos de UI (Loader, Botão Flutuante, Modais, Alertas)
  */
 
 // ⚠️ URL da API (Link mais recente fornecido)
 const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
 
 // Definição dos campos visuais e seus tipos
+// Mapeia o nome técnico do campo para o rótulo visual e placeholder
 const CAMPO_DEFS = {
     'NomeCompleto': { 
         label: 'Nome Completo', 
         type: 'text', 
         placeholder: 'Digite seu nome completo' 
     },
-    // CPF e Email são inseridos manualmente no código (obrigatórios)
+    // CPF e Email não estão aqui pois são inseridos manualmente no código como obrigatórios
     'DataNascimento': { 
         label: 'Data de Nascimento', 
         type: 'date', 
@@ -62,13 +70,16 @@ const CAMPO_DEFS = {
 // Cache para armazenar as instituições e não buscar repetidamente na API
 let listaInstituicoesCache = [];
 
-// Inicialização
+// Inicialização: Carrega eventos assim que a página abre
 document.addEventListener('DOMContentLoaded', () => { 
     carregarEventos(); 
 });
 
-// --- Funções de Interface (UI) ---
+// ============================================================
+// --- FUNÇÕES DE INTERFACE (UI) ---
+// ============================================================
 
+// Controla o Overlay de Carregamento (Spinner)
 function toggleLoader(show, msg = "Processando...") {
     const el = document.getElementById('loader-overlay');
     if(show) {
@@ -79,6 +90,7 @@ function toggleLoader(show, msg = "Processando...") {
     }
 }
 
+// Exibe Alerta de Sucesso (SweetAlert2)
 function showSuccess(titulo, html, callback) {
     Swal.fire({
         icon: 'success',
@@ -91,6 +103,7 @@ function showSuccess(titulo, html, callback) {
     });
 }
 
+// Exibe Alerta de Erro (SweetAlert2)
 function showError(titulo, text) {
     Swal.fire({
         icon: 'error',
@@ -100,7 +113,9 @@ function showError(titulo, text) {
     });
 }
 
-// --- Controle de Modal e Botão Flutuante (FAB) ---
+// ============================================================
+// --- CONTROLE DE MODAL E FAB ---
+// ============================================================
 
 function abrirModalConsulta() {
     document.getElementById('modal-consulta').classList.remove('hidden');
@@ -119,7 +134,9 @@ document.getElementById('modal-consulta').addEventListener('click', function(e) 
     if (e.target === this) fecharModalConsulta();
 });
 
-// --- Máscaras de Input ---
+// ============================================================
+// --- MÁSCARAS DE INPUT ---
+// ============================================================
 
 function aplicarMascaraCPF(value) {
     return value
@@ -139,12 +156,14 @@ function aplicarMascaraTelefone(value) {
 }
 
 function ativarMascaras() {
+    // Procura o input de CPF e adiciona o evento
     const inputCPF = document.querySelector('input[name="CPF"]');
     if(inputCPF) {
         inputCPF.maxLength = 14;
         inputCPF.addEventListener('input', (e) => e.target.value = aplicarMascaraCPF(e.target.value));
     }
     
+    // Procura o input de Telefone e adiciona o evento
     const inputTel = document.querySelector('input[name="Telefone"]');
     if(inputTel) {
         inputTel.maxLength = 15;
@@ -152,10 +171,14 @@ function ativarMascaras() {
     }
 }
 
-// --- Lógica Principal ---
+// ============================================================
+// --- LÓGICA PRINCIPAL DO SISTEMA ---
+// ============================================================
 
+// Busca eventos ativos na API e renderiza os cards
 function carregarEventos() {
     toggleLoader(true, "Buscando eventos...");
+    
     fetch(`${URL_API}?action=getEventosAtivos`)
         .then(res => res.json())
         .then(json => {
@@ -163,11 +186,17 @@ function carregarEventos() {
             const container = document.getElementById('cards-container');
             container.innerHTML = '';
             
+            // Verifica se há eventos
             if (!json.data || json.data.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding:2rem; color:#64748b;"><h3>Nenhum evento aberto.</h3><p>Aguarde novas publicações.</p></div>';
+                container.innerHTML = `
+                    <div style="text-align:center; padding:2rem; color:#64748b;">
+                        <h3>Nenhum evento aberto.</h3>
+                        <p>Aguarde novas publicações.</p>
+                    </div>`;
                 return;
             }
             
+            // Renderiza cada evento
             json.data.forEach(ev => {
                 container.innerHTML += `
                     <div class="card fade-in">
@@ -186,23 +215,24 @@ function carregarEventos() {
         });
 }
 
+// Prepara e exibe o formulário de inscrição
 async function abrirInscricao(evento) {
-    // 1. Troca de Telas
+    // 1. Troca de Telas (Esconde lista, mostra form)
     document.getElementById('lista-eventos').classList.add('hidden');
     document.getElementById('fab-consulta').classList.add('hidden'); // Esconde FAB na tela de form
     document.getElementById('area-inscricao').classList.remove('hidden');
     
-    // 2. Preenche Cabeçalho
+    // 2. Preenche Cabeçalho do Formulário
     document.getElementById('titulo-evento').innerText = evento.titulo;
     document.getElementById('form-inscricao').dataset.idEvento = evento.id;
 
-    // 3. Lê Configuração do Evento
+    // 3. Lê Configuração do Evento (JSON salvo no banco)
     let config = {};
     try {
         config = typeof evento.config === 'string' ? JSON.parse(evento.config) : evento.config;
     } catch(e) { console.error(e); }
     
-    // Salva config no elemento form para usar no envio
+    // Salva config no elemento form para usar na hora do envio
     document.getElementById('form-inscricao').dataset.config = JSON.stringify(config);
 
     const areaCampos = document.getElementById('campos-dinamicos');
@@ -218,7 +248,7 @@ async function abrirInscricao(evento) {
     }
     
     // --- CAMPOS OBRIGATÓRIOS (FIXOS) ---
-    // Estes campos aparecem sempre, independentemente da configuração
+    // Estes campos aparecem sempre, independentemente da configuração do admin
     areaCampos.innerHTML += `
         <div>
             <label>CPF *</label>
@@ -231,7 +261,7 @@ async function abrirInscricao(evento) {
     `;
 
     // --- CARREGAR LISTA DE INSTITUIÇÕES ---
-    // Apenas se o campo "NomeInstituicao" for solicitado e a lista ainda não estiver em cache
+    // Apenas se o campo "NomeInstituicao" for solicitado E a lista ainda não estiver em cache
     if(config.camposTexto && config.camposTexto.includes('NomeInstituicao') && listaInstituicoesCache.length === 0) {
         try {
             toggleLoader(true, "Carregando instituições...");
@@ -241,7 +271,7 @@ async function abrirInscricao(evento) {
                 listaInstituicoesCache = json.data;
             }
         } catch(e) {
-            console.warn("Falha ao carregar lista de instituições. Usando input de texto.", e);
+            console.warn("Falha ao carregar lista de instituições. Usando input de texto como fallback.", e);
         } finally {
             toggleLoader(false);
         }
@@ -261,13 +291,15 @@ async function abrirInscricao(evento) {
                         listaInstituicoesCache.forEach(inst => {
                             options += `<option value="${inst}">${inst}</option>`;
                         });
-                        // Opção de fallback caso não esteja na lista
+                        // Opção para digitar manualmente caso não esteja na lista
                         options += `<option value="Outra">Outra (Não listada)</option>`;
                         
                         areaCampos.innerHTML += `
                             <div>
                                 <label>${def.label}</label>
-                                <select name="${key}" required style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:8px; background:white;">${options}</select>
+                                <select name="${key}" required onchange="verificarOutraInst(this)" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:8px; background:white;">${options}</select>
+                                <!-- Campo de texto que aparece apenas se escolher 'Outra' -->
+                                <input type="text" id="input_outra_inst" placeholder="Digite o nome da instituição" style="display:none; margin-top:10px;" >
                             </div>
                         `;
                     } else {
@@ -275,7 +307,7 @@ async function abrirInscricao(evento) {
                         areaCampos.innerHTML += `<div><label>${def.label}</label><input type="text" name="${key}" placeholder="Digite o nome da instituição" required></div>`;
                     }
                 } else {
-                    // Renderiza como INPUT normal
+                    // Renderiza como INPUT normal para outros campos
                     areaCampos.innerHTML += `<div><label>${def.label}</label><input type="${def.type}" name="${key}" placeholder="${def.placeholder||''}" required></div>`;
                 }
             }
@@ -319,10 +351,25 @@ async function abrirInscricao(evento) {
         inputDoc.required = true; 
     }
 
-    // Rola para o topo do formulário
+    // Rola para o topo do formulário para o aluno começar
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// Função global para mostrar/esconder campo "Outra" na instituição
+window.verificarOutraInst = function(select) {
+    const input = document.getElementById('input_outra_inst');
+    if(select.value === 'Outra') {
+        input.style.display = 'block';
+        input.required = true;
+        input.focus();
+    } else {
+        input.style.display = 'none';
+        input.required = false;
+        input.value = '';
+    }
+}
+
+// Processa o envio do formulário
 async function enviarInscricao(e) {
     e.preventDefault();
     
@@ -350,7 +397,17 @@ async function enviarInscricao(e) {
     // Coleta dados (INPUT e SELECT)
     const inputs = document.querySelectorAll('#campos-dinamicos input, #campos-dinamicos select');
     let dadosCampos = {};
-    inputs.forEach(inp => dadosCampos[inp.name] = inp.value);
+    inputs.forEach(inp => {
+        // Ignora input "Outra" se estiver escondido (pois não foi usado)
+        if(inp.id === 'input_outra_inst' && inp.style.display === 'none') return;
+        
+        dadosCampos[inp.name] = inp.value;
+    });
+
+    // Se escolheu "Outra", substitui o valor do Select ("Outra") pelo valor digitado no input
+    if(dadosCampos['NomeInstituicao'] === 'Outra') {
+        dadosCampos['NomeInstituicao'] = document.getElementById('input_outra_inst').value;
+    }
 
     // Preparação de Arquivos
     const config = JSON.parse(document.getElementById('form-inscricao').dataset.config);
@@ -410,6 +467,7 @@ async function enviarInscricao(e) {
     }
 }
 
+// Consulta status da inscrição
 function consultarChave() {
     const chave = document.getElementById('busca-chave').value.trim();
     if(!chave) return showError('Atenção', 'Digite a chave de inscrição.');
@@ -449,6 +507,7 @@ function consultarChave() {
         .catch(() => { divResult.innerHTML = '<p style="color:red; margin-top:10px;">Erro ao consultar.</p>'; });
 }
 
+// Volta para a tela inicial
 function voltarHome() {
     document.getElementById('area-inscricao').classList.add('hidden');
     document.getElementById('fab-consulta').classList.remove('hidden'); 
@@ -456,6 +515,7 @@ function voltarHome() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// Formatação de data
 function formatarData(isoStr) {
     if(!isoStr) return '--';
     const partes = isoStr.split('T')[0].split('-');
