@@ -14,7 +14,9 @@ const CAMPOS_PADRAO = [
 
 let mapaEventos = {}; 
 
-// --- Autenticação ---
+// ============================================================
+// --- AUTENTICAÇÃO ---
+// ============================================================
 
 function realizarLogin(e) {
     e.preventDefault();
@@ -42,7 +44,9 @@ function logout() {
     location.reload();
 }
 
-// --- Navegação entre Abas ---
+// ============================================================
+// --- NAVEGAÇÃO (TABS) ---
+// ============================================================
 
 function switchTab(tabId) {
     // Esconde todas as abas
@@ -64,7 +68,9 @@ function switchTab(tabId) {
     if(tabId === 'tab-config') carregarInstituicoes();
 }
 
-// --- Gestão de Instituições (Configurações) ---
+// ============================================================
+// --- GESTÃO DE INSTITUIÇÕES (CONFIGURAÇÕES) ---
+// ============================================================
 
 function carregarInstituicoes() {
     const div = document.getElementById('lista-instituicoes');
@@ -154,7 +160,9 @@ function removerInst(nome) {
     });
 }
 
-// --- Gestão de Eventos ---
+// ============================================================
+// --- GESTÃO DE EVENTOS ---
+// ============================================================
 
 function carregarEventosAdmin() {
     fetch(`${URL_API}?action=getTodosEventos`)
@@ -174,6 +182,14 @@ function carregarEventosAdmin() {
                 const inicio = new Date(ev.inicio).toLocaleDateString();
                 const fim = new Date(ev.fim).toLocaleDateString();
                 
+                // Botão de Toggle Status
+                let btnAction = '';
+                if(ev.status === 'Ativo') {
+                    btnAction = `<button class="action-btn btn-status-toggle active" onclick="toggleStatusEvento('${ev.id}', 'Inativo')" title="Encerrar Evento"><i class="fa-solid fa-pause"></i> Inativar</button>`;
+                } else {
+                    btnAction = `<button class="action-btn btn-status-toggle inactive" onclick="toggleStatusEvento('${ev.id}', 'Ativo')" title="Reabrir Evento"><i class="fa-solid fa-play"></i> Ativar</button>`;
+                }
+
                 tbody.innerHTML += `
                     <tr>
                         <td>#${ev.id}</td>
@@ -182,7 +198,8 @@ function carregarEventosAdmin() {
                             <small class="text-muted"><i class="fa-regular fa-calendar"></i> ${inicio} até ${fim}</small>
                         </td>
                         <td><span class="badge badge-${ev.status}">${ev.status}</span></td>
-                        <td>
+                        <td style="text-align:right;">
+                             ${btnAction}
                              <button class="action-btn btn-edit" title="Bloqueado para edição (Segurança)" onclick="Swal.fire('Evento Registrado', 'Para garantir a integridade dos dados, inative este evento e crie um novo.', 'info')">
                                 <i class="fa-solid fa-lock"></i>
                              </button>
@@ -191,6 +208,33 @@ function carregarEventosAdmin() {
                 `;
             });
         });
+}
+
+function toggleStatusEvento(id, novoStatus) {
+    Swal.fire({
+        title: `Definir como ${novoStatus}?`,
+        text: novoStatus === 'Inativo' ? "O evento não aparecerá mais para os alunos." : "O evento ficará visível novamente.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: novoStatus === 'Inativo' ? '#ef4444' : '#22c55e',
+        confirmButtonText: 'Sim, confirmar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({ title: 'Atualizando...', didOpen: () => Swal.showLoading() });
+            fetch(URL_API, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'alterarStatusEvento',
+                    senha: sessionStorage.getItem('admin_token'),
+                    id: id,
+                    novoStatus: novoStatus
+                })
+            }).then(() => {
+                Swal.fire('Atualizado!', '', 'success');
+                carregarEventosAdmin();
+            });
+        }
+    });
 }
 
 function modalNovoEvento() {
@@ -341,7 +385,9 @@ function salvarNovoEvento(dados) {
         });
 }
 
-// --- Gestão de Inscrições ---
+// ============================================================
+// --- GESTÃO DE INSCRIÇÕES E PDF ---
+// ============================================================
 
 function carregarInscricoes() {
     const token = sessionStorage.getItem('admin_token');
@@ -390,7 +436,7 @@ function renderLinhaInscricao(ins, tbody) {
         btnPDF = `<a href="${ins.link_ficha}" target="_blank" class="action-btn btn-view" style="background:#059669" title="Baixar Ficha"><i class="fa-solid fa-download"></i> Ficha</a>`;
     }
 
-    // Botões de Ação
+    // Botões de Ação Atualizados
     const btnEditar = `<button class="action-btn" style="background:#f59e0b" onclick="abrirEdicao('${ins.chave}')" title="Editar Dados"><i class="fa-solid fa-pen"></i></button>`;
     const btnStatus = `<button class="action-btn btn-edit" onclick="mudarStatus('${ins.chave}')" title="Mudar Status"><i class="fa-solid fa-list-check"></i></button>`;
 
@@ -415,7 +461,7 @@ function renderLinhaInscricao(ins, tbody) {
     `;
 }
 
-// --- EDITAR DADOS DO ALUNO ---
+// --- FUNÇÃO PARA EDITAR DADOS (NOVO) ---
 function abrirEdicao(chave) {
     const inscricao = window.inscricoesData.find(i => i.chave === chave);
     if(!inscricao) return;
