@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Educacional</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <header>
+        <h1>Secretaria de Educação</h1>
+        <p>Portal de Inscrições</p>
+    </header>
+
+    <main id="app">
+        <div id="loading" class="hidden">Carregando...</div>
+        
+        <section id="lista-eventos">
+            <h2>Eventos Abertos</h2>
+            <div id="cards-container"></div>
+        </section>
+
+        <section id="area-inscricao" class="hidden">
+            <button onclick="voltarHome()">Voltar</button>
+            <h2 id="titulo-evento"></h2>
+            <form id="form-inscricao" onsubmit="enviarInscricao(event)">
+                <div id="campos-dinamicos"></div>
+                
+                <h3>Documentação</h3>
+                <label>Foto 3x4: <input type="file" id="file-foto" accept="image/*" required></label>
+                <label>Declaração de Matrícula (PDF): <input type="file" id="file-doc" accept="application/pdf" required></label>
+                
+                <button type="submit">Finalizar Inscrição</button>
+            </form>
+        </section>
+
+        <section id="area-consulta">
+            <h2>Consultar Inscrição</h2>
+            <input type="text" id="busca-chave" placeholder="Digite sua Chave (ex: A1B2C3)">
+            <button onclick="consultarChave()">Buscar</button>
+            <div id="resultado-busca"></div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>

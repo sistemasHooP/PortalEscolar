@@ -1,0 +1,16 @@
+:root {
+    --primary: #0056b3; /* Azul Governo */
+    --light: #f4f4f9;
+    --dark: #333;
+}
+
+body { font-family: sans-serif; margin: 0; padding: 0; background: var(--light); color: var(--dark); }
+header { background: var(--primary); color: white; padding: 1rem; text-align: center; }
+main { padding: 1rem; max-width: 600px; margin: 0 auto; }
+
+.card { background: white; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+input, select, button { width: 100%; padding: 10px; margin: 5px 0 15px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;}
+button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
+button:hover { opacity: 0.9; }
+
+.hidden { display: none; }
