@@ -2,47 +2,91 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Portal Educacional</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
 </head>
 <body>
+
+    <div id="loader-overlay" class="hidden">
+        <div class="spinner"></div>
+        <p>Processando...</p>
+    </div>
+
     <header>
-        <h1>Secretaria de Educação</h1>
-        <p>Portal de Inscrições</p>
+        <div class="brand">
+            <i class="fa-solid fa-graduation-cap"></i>
+            <div>
+                <h1>Educação Conectada</h1>
+                <small>Portal do Aluno</small>
+            </div>
+        </div>
     </header>
 
-    <main id="app">
-        <div id="loading" class="hidden">Carregando...</div>
-        
-        <section id="lista-eventos">
-            <h2>Eventos Abertos</h2>
-            <div id="cards-container"></div>
+    <main>
+        <section id="lista-eventos" class="fade-in">
+            <div class="section-header">
+                <h2><i class="fa-regular fa-calendar-check"></i> Eventos Disponíveis</h2>
+                <p>Selecione um evento para iniciar sua inscrição.</p>
+            </div>
+            <div id="cards-container">
+                </div>
         </section>
 
-        <section id="area-inscricao" class="hidden">
-            <button onclick="voltarHome()">Voltar</button>
-            <h2 id="titulo-evento"></h2>
-            <form id="form-inscricao" onsubmit="enviarInscricao(event)">
-                <div id="campos-dinamicos"></div>
+        <section id="area-inscricao" class="hidden fade-in">
+            <button class="btn-back" onclick="voltarHome()">
+                <i class="fa-solid fa-arrow-left"></i> Voltar
+            </button>
+            
+            <div class="form-card">
+                <h2 id="titulo-evento">Nome do Evento</h2>
+                <p class="subtitle">Preencha os dados com atenção.</p>
                 
-                <h3>Documentação</h3>
-                <label>Foto 3x4: <input type="file" id="file-foto" accept="image/*" required></label>
-                <label>Declaração de Matrícula (PDF): <input type="file" id="file-doc" accept="application/pdf" required></label>
-                
-                <button type="submit">Finalizar Inscrição</button>
-            </form>
+                <form id="form-inscricao" onsubmit="enviarInscricao(event)">
+                    <div id="campos-dinamicos" class="grid-form"></div>
+                    
+                    <div class="upload-section">
+                        <h3><i class="fa-solid fa-cloud-arrow-up"></i> Documentação</h3>
+                        
+                        <div class="file-input-wrapper">
+                            <label>Foto 3x4 (Rosto visível)</label>
+                            <input type="file" id="file-foto" accept="image/*" required>
+                        </div>
+
+                        <div class="file-input-wrapper">
+                            <label>Declaração de Matrícula (PDF)</label>
+                            <input type="file" id="file-doc" accept="application/pdf" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary pulse">
+                        Confirmar Inscrição <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
         </section>
 
-        <section id="area-consulta">
-            <h2>Consultar Inscrição</h2>
-            <input type="text" id="busca-chave" placeholder="Digite sua Chave (ex: A1B2C3)">
-            <button onclick="consultarChave()">Buscar</button>
-            <div id="resultado-busca"></div>
+        <section id="area-consulta" class="fade-in">
+            <div class="search-box">
+                <h2>Já se inscreveu?</h2>
+                <div class="input-group">
+                    <input type="text" id="busca-chave" placeholder="Digite sua Chave Única (ex: A1B2)">
+                    <button onclick="consultarChave()"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+                <div id="resultado-busca"></div>
+            </div>
         </section>
     </main>
 
+    <footer>
+        <p>&copy; 2025 Secretaria de Educação - Sistema Seguro</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="app.js"></script>
 </body>
 </html>
