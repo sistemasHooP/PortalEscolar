@@ -1,10 +1,10 @@
 /**
- * Portal Educacional - App Logic v4.2
- * Inclui: Máscaras, Campos Personalizados, PDF e Controle de Modal/FAB
+ * Portal Educacional - App Logic v4.3
+ * Link da API Atualizado
  */
 
-// ⚠️ URL da API (Já configurada)
-const URL_API = 'https://script.google.com/macros/s/AKfycbyQVT1GE4rLNCq50_YpHXMpkC6NwLTH5vW5kbTShaNFeBiO9DXYyU-S3qq8iVm_YRxtsQ/exec';
+// ⚠️ URL da API Atualizada
+const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
 
 const CAMPO_DEFS = {
     'NomeCompleto': { label: 'Nome Completo', type: 'text', placeholder: 'Digite seu nome completo' },
@@ -37,37 +37,28 @@ function showError(titulo, text) {
     Swal.fire({ icon: 'error', title, text, confirmButtonColor: '#d33' });
 }
 
-// --- CONTROLE DE MODAL E FAB (NOVO) ---
+// --- CONTROLE DE MODAL E FAB ---
 function abrirModalConsulta() {
     document.getElementById('modal-consulta').classList.remove('hidden');
-    // Foca no input para digitar logo
     setTimeout(() => document.getElementById('busca-chave').focus(), 100); 
 }
 
 function fecharModalConsulta() {
     document.getElementById('modal-consulta').classList.add('hidden');
-    document.getElementById('resultado-busca').innerHTML = ''; // Limpa resultados anteriores
+    document.getElementById('resultado-busca').innerHTML = ''; 
     document.getElementById('busca-chave').value = '';
 }
 
-// Fecha modal se clicar fora (no fundo escuro)
 document.getElementById('modal-consulta').addEventListener('click', function(e) {
     if (e.target === this) fecharModalConsulta();
 });
 
-// --- Máscaras de Input ---
+// --- Máscaras ---
 function aplicarMascaraCPF(value) {
-    return value.replace(/\D/g, '')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d{1,2})/, '$1-$2')
-        .replace(/(-\d{2})\d+?$/, '$1');
+    return value.replace(/\D/g, '').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})/, '$1-$2').replace(/(-\d{2})\d+?$/, '$1');
 }
 function aplicarMascaraTelefone(value) {
-    return value.replace(/\D/g, '')
-        .replace(/(\d{2})(\d)/, '($1) $2')
-        .replace(/(\d{5})(\d)/, '$1-$2')
-        .replace(/(-\d{4})\d+?$/, '$1');
+    return value.replace(/\D/g, '').replace(/(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2').replace(/(-\d{4})\d+?$/, '$1');
 }
 
 // --- Lógica Principal ---
@@ -102,9 +93,8 @@ function carregarEventos() {
 }
 
 function abrirInscricao(evento) {
-    // Gestão de Telas
     document.getElementById('lista-eventos').classList.add('hidden');
-    document.getElementById('fab-consulta').classList.add('hidden'); // Esconde o botão flutuante
+    document.getElementById('fab-consulta').classList.add('hidden'); 
     document.getElementById('area-inscricao').classList.remove('hidden');
     
     document.getElementById('titulo-evento').innerText = evento.titulo;
@@ -117,7 +107,6 @@ function abrirInscricao(evento) {
     const areaCampos = document.getElementById('campos-dinamicos');
     areaCampos.innerHTML = '';
     
-    // 1. Campos Padrão
     if(config.camposTexto) {
         config.camposTexto.forEach(key => {
             if(CAMPO_DEFS[key]) {
@@ -127,7 +116,6 @@ function abrirInscricao(evento) {
         });
     }
 
-    // 2. Campos Personalizados
     if(config.camposPersonalizados && config.camposPersonalizados.length > 0) {
         areaCampos.innerHTML += `<div style="grid-column: 1/-1; margin-top:15px; border-top:1px dashed #cbd5e1; padding-top:10px;"><h4 style="margin:0 0 10px 0; color:#2563eb; font-size:1rem;">Perguntas Específicas</h4></div>`;
         config.camposPersonalizados.forEach(p => {
@@ -136,20 +124,11 @@ function abrirInscricao(evento) {
         });
     }
 
-    // 3. Ativa Máscaras nos inputs criados
     const inputCPF = document.querySelector('input[name="CPF"]');
-    if(inputCPF) { 
-        inputCPF.maxLength = 14; 
-        inputCPF.addEventListener('input', (e) => e.target.value = aplicarMascaraCPF(e.target.value)); 
-    }
-    
+    if(inputCPF) { inputCPF.maxLength = 14; inputCPF.addEventListener('input', (e) => e.target.value = aplicarMascaraCPF(e.target.value)); }
     const inputTel = document.querySelector('input[name="Telefone"]');
-    if(inputTel) { 
-        inputTel.maxLength = 15; 
-        inputTel.addEventListener('input', (e) => e.target.value = aplicarMascaraTelefone(e.target.value)); 
-    }
+    if(inputTel) { inputTel.maxLength = 15; inputTel.addEventListener('input', (e) => e.target.value = aplicarMascaraTelefone(e.target.value)); }
 
-    // 4. Uploads
     const divFoto = document.getElementById('div-upload-foto');
     const divDoc = document.getElementById('div-upload-doc');
     const inputFoto = document.getElementById('file-foto');
@@ -166,7 +145,6 @@ function abrirInscricao(evento) {
 
 async function enviarInscricao(e) {
     e.preventDefault();
-    
     const inputCPF = document.querySelector('input[name="CPF"]');
     if(inputCPF && inputCPF.value.length < 14) return showError('CPF Inválido', 'Preencha o CPF completo.');
 
@@ -207,7 +185,6 @@ function consultarChave() {
     const chave = document.getElementById('busca-chave').value.trim();
     if(!chave) return showError('Atenção', 'Digite a chave.');
 
-    // Exibe feedback visual de busca dentro do modal
     const divResult = document.getElementById('resultado-busca');
     divResult.innerHTML = '<div style="text-align:center; color:#666; margin-top:10px;"><i class="fa-solid fa-spinner fa-spin"></i> Buscando...</div>';
 
@@ -235,7 +212,7 @@ function consultarChave() {
 
 function voltarHome() {
     document.getElementById('area-inscricao').classList.add('hidden');
-    document.getElementById('fab-consulta').classList.remove('hidden'); // Traz de volta o FAB
+    document.getElementById('fab-consulta').classList.remove('hidden'); 
     document.getElementById('lista-eventos').classList.remove('hidden');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
