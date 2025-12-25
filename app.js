@@ -1,14 +1,12 @@
 /**
- * Portal Educacional - Frontend Logic
+ * Portal Educacional - App Logic v3.0
  * Integração com Google Apps Script e SweetAlert2
  */
 
-// ⚠️ CONFIGURAÇÃO OBRIGATÓRIA ⚠️
-// Substitua pela URL da sua Web App do Google Apps Script
+// ⚠️ URL da API Atualizada
 const URL_API = 'https://script.google.com/macros/s/AKfycbyQVT1GE4rLNCq50_YpHXMpkC6NwLTH5vW5kbTShaNFeBiO9DXYyU-S3qq8iVm_YRxtsQ/exec';
 
 // Dicionário de Definições dos Campos
-// Mapeia o nome técnico (no banco) para o rótulo visual e tipo de input
 const CAMPO_DEFS = {
     'NomeCompleto': { label: 'Nome Completo', type: 'text', placeholder: 'Digite seu nome completo' },
     'CPF': { label: 'CPF', type: 'text', placeholder: '000.000.000-00' },
@@ -19,7 +17,7 @@ const CAMPO_DEFS = {
     'Endereco': { label: 'Endereço Residencial', type: 'text', placeholder: 'Rua, Número, Complemento' },
     'Bairro': { label: 'Bairro', type: 'text', placeholder: '' },
     'Cidade': { label: 'Cidade', type: 'text', placeholder: '' },
-    'NomeInstituicao': { label: 'Instituição de Ensino', type: 'text', placeholder: 'Ex: UFRN, IFRN, Unp' },
+    'NomeInstituicao': { label: 'Instituição de Ensino', type: 'text', placeholder: 'Ex: UFRN, IFRN, UnP' },
     'NomeCurso': { label: 'Curso', type: 'text', placeholder: 'Ex: Direito, Medicina' },
     'PeriodoCurso': { label: 'Período/Semestre', type: 'text', placeholder: 'Ex: 3º Período' },
     'Matricula': { label: 'Nº Matrícula', type: 'text', placeholder: '' }
@@ -32,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- Funções de UI (Interface) ---
 
-// Controla o Overlay de Carregamento
 function toggleLoader(show, msg = "Processando...") {
     const loader = document.getElementById('loader-overlay');
     const txt = document.getElementById('loader-text');
@@ -46,7 +43,6 @@ function toggleLoader(show, msg = "Processando...") {
     }
 }
 
-// Alerta de Sucesso (SweetAlert2)
 function showSuccess(titulo, texto, callback = null) {
     Swal.fire({
         icon: 'success',
@@ -59,7 +55,6 @@ function showSuccess(titulo, texto, callback = null) {
     });
 }
 
-// Alerta de Erro (SweetAlert2)
 function showError(titulo, texto) {
     Swal.fire({
         icon: 'error',
@@ -88,22 +83,22 @@ function carregarEventos() {
                     <div style="text-align:center; padding: 2rem; color: #64748b;">
                         <i class="fa-regular fa-folder-open" style="font-size: 3rem; margin-bottom: 1rem;"></i>
                         <p>Nenhum evento com inscrições abertas no momento.</p>
+                        <small>Aguarde novas publicações da Secretaria.</small>
                     </div>`;
                 return;
             }
             
             json.data.forEach(evento => {
-                const div = document.createElement('div');
-                div.className = 'card fade-in';
-                div.innerHTML = `
-                    <h3>${evento.titulo}</h3>
-                    <p>${evento.descricao}</p>
-                    <small><i class="fa-regular fa-clock"></i> Encerra em: ${formatarData(evento.fim)}</small>
-                    <button class="btn-primary" onclick='abrirInscricao(${JSON.stringify(evento)})'>
-                        Realizar Inscrição <i class="fa-solid fa-arrow-right"></i>
-                    </button>
+                container.innerHTML += `
+                    <div class="card fade-in">
+                        <h3>${evento.titulo}</h3>
+                        <p>${evento.descricao}</p>
+                        <small><i class="fa-regular fa-calendar"></i> Inscrições: ${formatarData(evento.inicio)} até ${formatarData(evento.fim)}</small>
+                        <button class="btn-primary" onclick='abrirInscricao(${JSON.stringify(evento)})'>
+                            Realizar Inscrição <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
                 `;
-                container.appendChild(div);
             });
         })
         .catch(err => {
@@ -115,43 +110,70 @@ function carregarEventos() {
 
 // Prepara o formulário para o evento selecionado
 function abrirInscricao(evento) {
-    // Troca de telas
+    // 1. Troca de telas
     document.getElementById('lista-eventos').classList.add('hidden');
     document.getElementById('area-consulta').classList.add('hidden');
     document.getElementById('area-inscricao').classList.remove('hidden');
     
-    // Configura cabeçalho
+    // 2. Configura cabeçalho
     document.getElementById('titulo-evento').innerText = evento.titulo;
     document.getElementById('form-inscricao').dataset.idEvento = evento.id;
 
-    // Gera campos dinâmicos
+    // 3. Ler a Configuração do Evento (Campos e Arquivos)
+    let config = {};
+    try {
+        config = typeof evento.config === 'string' ? JSON.parse(evento.config) : evento.config;
+    } catch(e) {
+        console.error("Erro config", e);
+    }
+    
+    // Salva config no elemento form para usar na hora de enviar
+    document.getElementById('form-inscricao').dataset.config = JSON.stringify(config);
+
+    // 4. Gerar Campos de Texto Dinâmicos
     const areaCampos = document.getElementById('campos-dinamicos');
     areaCampos.innerHTML = '';
     
-    let listaCampos = [];
-    try {
-        listaCampos = typeof evento.campos === 'string' ? JSON.parse(evento.campos) : evento.campos;
-    } catch (e) {
-        console.error("Erro ao ler campos do evento", e);
-        showError("Erro de Configuração", "Os campos deste evento estão mal configurados.");
-        return;
+    if(config.camposTexto) {
+        config.camposTexto.forEach(campoKey => {
+            if(CAMPO_DEFS[campoKey]) {
+                const def = CAMPO_DEFS[campoKey];
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <label for="${campoKey}">${def.label}</label>
+                    <input type="${def.type}" 
+                           name="${campoKey}" 
+                           id="${campoKey}" 
+                           placeholder="${def.placeholder || ''}" 
+                           required>
+                `;
+                areaCampos.appendChild(div);
+            }
+        });
+    }
+
+    // 5. Controlar Exibição dos Uploads (Foto e Doc)
+    const divFoto = document.getElementById('div-upload-foto');
+    const divDoc = document.getElementById('div-upload-doc');
+    const inputFoto = document.getElementById('file-foto');
+    const inputDoc = document.getElementById('file-doc');
+
+    // Reset inicial (tudo escondido e não obrigatório)
+    divFoto.classList.add('hidden');
+    divDoc.classList.add('hidden');
+    inputFoto.required = false;
+    inputDoc.required = false;
+
+    // Ativa apenas se o Admin configurou como TRUE
+    if(config.arquivos && config.arquivos.foto) {
+        divFoto.classList.remove('hidden');
+        inputFoto.required = true;
     }
     
-    listaCampos.forEach(campoKey => {
-        if(CAMPO_DEFS[campoKey]) {
-            const def = CAMPO_DEFS[campoKey];
-            const div = document.createElement('div');
-            div.innerHTML = `
-                <label for="${campoKey}">${def.label}</label>
-                <input type="${def.type}" 
-                       name="${campoKey}" 
-                       id="${campoKey}" 
-                       placeholder="${def.placeholder || ''}" 
-                       required>
-            `;
-            areaCampos.appendChild(div);
-        }
-    });
+    if(config.arquivos && config.arquivos.doc) {
+        divDoc.classList.remove('hidden');
+        inputDoc.required = true;
+    }
 
     // Rola para o topo
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -164,41 +186,56 @@ async function enviarInscricao(e) {
     // Confirmação do Usuário
     const confirmacao = await Swal.fire({
         title: 'Confirmar envio?',
-        text: "Verifique se todos os dados e documentos estão corretos. Não será possível editar depois.",
+        text: "Verifique se todos os dados estão corretos.",
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#2563eb',
         cancelButtonColor: '#64748b',
-        confirmButtonText: 'Sim, enviar inscrição!',
+        confirmButtonText: 'Sim, enviar!',
         cancelButtonText: 'Revisar'
     });
 
     if (!confirmacao.isConfirmed) return;
 
-    toggleLoader(true, "Enviando seus dados e documentos... Isso pode levar alguns segundos.");
+    toggleLoader(true, "Enviando dados e arquivos...");
 
-    // Coleta dados dos inputs
+    // Coleta dados dos inputs de texto
     const inputs = document.querySelectorAll('#campos-dinamicos input');
     let dadosCampos = {};
     inputs.forEach(input => dadosCampos[input.name] = input.value);
 
-    // Coleta Arquivos
-    const fileFoto = document.getElementById('file-foto').files[0];
-    const fileDoc = document.getElementById('file-doc').files[0];
+    // Ler config salva para saber quais arquivos processar
+    const config = JSON.parse(document.getElementById('form-inscricao').dataset.config);
+    const arquivosPayload = {};
 
     try {
-        // Conversão para Base64
-        const fotoBase64 = await toBase64(fileFoto);
-        const docBase64 = await toBase64(fileDoc);
+        // Processa Foto se necessário
+        if(config.arquivos?.foto) {
+            const fileFoto = document.getElementById('file-foto').files[0];
+            if(fileFoto) {
+                arquivosPayload.foto = { 
+                    data: await toBase64(fileFoto), 
+                    mime: fileFoto.type 
+                };
+            }
+        }
+
+        // Processa Doc se necessário
+        if(config.arquivos?.doc) {
+            const fileDoc = document.getElementById('file-doc').files[0];
+            if(fileDoc) {
+                arquivosPayload.doc = { 
+                    data: await toBase64(fileDoc), 
+                    mime: fileDoc.type 
+                };
+            }
+        }
 
         const payload = {
             action: 'novaInscricao',
             eventoId: document.getElementById('form-inscricao').dataset.idEvento,
             campos: dadosCampos,
-            arquivos: {
-                foto: { data: fotoBase64, mime: fileFoto.type },
-                doc: { data: docBase64, mime: fileDoc.type }
-            }
+            arquivos: arquivosPayload
         };
 
         // Envio para API
@@ -215,7 +252,7 @@ async function enviarInscricao(e) {
                     `Sua inscrição foi realizada com sucesso.<br><br>
                      Sua Chave Única é: <br>
                      <strong style="font-size: 1.5rem; color: #2563eb;">${json.chave}</strong><br><br>
-                     Tire um print ou anote essa chave para consultar o status depois.`,
+                     Tire um print ou anote essa chave.`,
                     () => location.reload()
                 );
             } else {
@@ -231,7 +268,7 @@ async function enviarInscricao(e) {
     } catch (error) {
         toggleLoader(false);
         console.error(error);
-        showError('Erro Técnico', 'Falha ao processar os arquivos. Verifique se são PDFs ou imagens válidas.');
+        showError('Erro Técnico', 'Falha ao processar os arquivos.');
     }
 }
 
@@ -254,7 +291,7 @@ function consultarChave() {
             if(json.status === 'success') {
                 const dataFormatada = formatarData(json.data.data_inscricao);
                 
-                // Define cor do status
+                // Define cor do status visualmente
                 let corStatus = '#f59e0b'; // Pendente (Laranja)
                 if(json.data.situacao.includes('Aprovada') || json.data.situacao.includes('Emitida')) corStatus = '#10b981'; // Verde
                 if(json.data.situacao.includes('Rejeitada')) corStatus = '#ef4444'; // Vermelho
@@ -283,15 +320,17 @@ function voltarHome() {
     document.getElementById('area-inscricao').classList.add('hidden');
     document.getElementById('area-consulta').classList.remove('hidden');
     document.getElementById('lista-eventos').classList.remove('hidden');
-    document.getElementById('cards-container').classList.remove('hidden');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Formata data ISO para PT-BR
-function formatarData(dataString) {
-    if(!dataString) return '--/--/----';
-    const data = new Date(dataString);
-    return data.toLocaleDateString('pt-BR');
+// Formata data ISO (yyyy-mm-dd) para PT-BR (dd/mm/yyyy)
+function formatarData(isoStr) {
+    if(!isoStr) return '--/--/----';
+    // Pega apenas a parte da data (yyyy-mm-dd) ignorando hora para evitar problemas de fuso visual
+    const dataPart = isoStr.split('T')[0];
+    const partes = dataPart.split('-');
+    if(partes.length !== 3) return isoStr;
+    return `${partes[2]}/${partes[1]}/${partes[0]}`; 
 }
 
 // Converte Arquivo para Base64 (Promise)
