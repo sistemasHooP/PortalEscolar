@@ -73,7 +73,11 @@
                 
                 <form id="form-inscricao" onsubmit="enviarInscricao(event)">
                     
-                    <!-- Campos Dinâmicos (Nome, CPF, etc) serão inseridos aqui pelo JS -->
+                    <!-- 
+                        A LISTA DE INSTITUIÇÕES SERÁ INJETADA AQUI 
+                        O javascript (app.js) cria o <select> com as opções
+                        dentro desta div quando o evento for carregado.
+                    -->
                     <div id="campos-dinamicos" class="grid-form"></div>
                     
                     <hr class="divider">
