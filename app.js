@@ -1,13 +1,13 @@
 /**
- * Portal Educacional - App Logic v6.4 (Completo e Integral)
+ * Portal Educacional - App Logic v6.4 (Versão Integral)
  * * Funcionalidades Incluídas:
  * 1. Listagem de Eventos Ativos
- * 2. Formulário Dinâmico com suporte a:
+ * 2. Formulário Dinâmico:
  * - Campos Padrão (Texto, Data, Telefone)
  * - Campos Fixos Obrigatórios (CPF, Email)
- * - Select de Instituições com carregamento dinâmico
- * - Opção "Outra" Instituição (Digitável)
- * - Campos Personalizados (Criados pelo Admin)
+ * - Select de Instituições (Carregamento Dinâmico via API)
+ * - Lógica "Outra" Instituição (Input manual se não estiver na lista)
+ * - Campos Personalizados (Definidos pelo Admin)
  * 3. Máscaras de Input (CPF e Telefone)
  * 4. Upload de Arquivos (Foto 3x4 e Declaração PDF)
  * 5. Validações de Frontend (CPF incompleto, campos vazios)
@@ -515,7 +515,7 @@ function voltarHome() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Formatação de data
+// Formatação de data (yyyy-mm-dd -> dd/mm/yyyy)
 function formatarData(isoStr) {
     if(!isoStr) return '--';
     const partes = isoStr.split('T')[0].split('-');
