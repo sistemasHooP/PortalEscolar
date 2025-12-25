@@ -1,6 +1,6 @@
 /**
- * Portal Educacional - App Logic v4.0
- * Suporte a Campos Personalizados e Download de PDF
+ * Portal Educacional - App Logic v4.1
+ * Suporte a Campos Personalizados, Download de PDF e Máscaras de Input
  */
 
 // ⚠️ URL da API (Já configurada)
@@ -9,9 +9,9 @@ const URL_API = 'https://script.google.com/macros/s/AKfycbyQVT1GE4rLNCq50_YpHXMp
 // Definição dos Campos Padrão (Mapeamento Visual)
 const CAMPO_DEFS = {
     'NomeCompleto': { label: 'Nome Completo', type: 'text', placeholder: 'Digite seu nome completo' },
-    'CPF': { label: 'CPF', type: 'text', placeholder: '000.000.000-00' },
+    'CPF': { label: 'CPF', type: 'text', placeholder: '000.000.000-00', mask: 'cpf' }, // Adicionado flag de máscara
     'DataNascimento': { label: 'Data de Nascimento', type: 'date', placeholder: '' },
-    'Telefone': { label: 'Celular (WhatsApp)', type: 'tel', placeholder: '(00) 00000-0000' },
+    'Telefone': { label: 'Celular (WhatsApp)', type: 'tel', placeholder: '(00) 00000-0000', mask: 'tel' }, // Adicionado flag de máscara
     'Email': { label: 'E-mail Pessoal', type: 'email', placeholder: 'seu@email.com' },
     'Endereco': { label: 'Endereço Residencial', type: 'text', placeholder: 'Rua, Número, Complemento' },
     'NomeInstituicao': { label: 'Instituição de Ensino', type: 'text', placeholder: 'Ex: Universidade X' },
@@ -46,6 +46,25 @@ function showSuccess(titulo, html) {
 
 function showError(titulo, text) {
     Swal.fire({ icon: 'error', title, text, confirmButtonColor: '#d33' });
+}
+
+// --- Funções de Máscara (Novas) ---
+
+function aplicarMascaraCPF(value) {
+    return value
+        .replace(/\D/g, '') // Remove não números
+        .replace(/(\d{3})(\d)/, '$1.$2') // Ponto após 3º digito
+        .replace(/(\d{3})(\d)/, '$1.$2') // Ponto após 6º digito
+        .replace(/(\d{3})(\d{1,2})/, '$1-$2') // Traço antes dos últimos 2
+        .replace(/(-\d{2})\d+?$/, '$1'); // Impede digitar mais que o necessário
+}
+
+function aplicarMascaraTelefone(value) {
+    return value
+        .replace(/\D/g, '') // Remove não números
+        .replace(/(\d{2})(\d)/, '($1) $2') // Parenteses no DDD
+        .replace(/(\d{5})(\d)/, '$1-$2') // Traço no celular (9 digitos)
+        .replace(/(-\d{4})\d+?$/, '$1'); // Limita tamanho
 }
 
 // --- Lógica Principal ---
@@ -121,9 +140,8 @@ function abrirInscricao(evento) {
         });
     }
 
-    // 5. Renderiza Campos Personalizados (Novo!)
+    // 5. Renderiza Campos Personalizados
     if(config.camposPersonalizados && config.camposPersonalizados.length > 0) {
-        // Adiciona um separador visual
         areaCampos.innerHTML += `
             <div style="grid-column: 1 / -1; margin-top: 15px; padding-top: 10px; border-top: 1px dashed #cbd5e1;">
                 <h4 style="margin: 0 0 10px 0; color: #2563eb; font-size: 1rem;">Perguntas Específicas</h4>
@@ -131,10 +149,7 @@ function abrirInscricao(evento) {
         `;
         
         config.camposPersonalizados.forEach(pergunta => {
-            // Cria um nome seguro para o input (remove espaços e caracteres especiais)
-            // Ex: "Tamanho da Camisa?" vira "TamanhodaCamisa"
             const safeName = pergunta.replace(/[^a-zA-Z0-9]/g, '');
-            
             areaCampos.innerHTML += `
                 <div>
                     <label>${pergunta}</label>
@@ -143,6 +158,28 @@ function abrirInscricao(evento) {
             `;
         });
     }
+
+    // --- ATIVAR MÁSCARAS ---
+    // Seleciona os inputs recém-criados e aplica os listeners
+    
+    // Máscara CPF
+    const inputCPF = document.querySelector('input[name="CPF"]');
+    if(inputCPF) {
+        inputCPF.maxLength = 14;
+        inputCPF.addEventListener('input', (e) => {
+            e.target.value = aplicarMascaraCPF(e.target.value);
+        });
+    }
+
+    // Máscara Telefone
+    const inputTel = document.querySelector('input[name="Telefone"]');
+    if(inputTel) {
+        inputTel.maxLength = 15;
+        inputTel.addEventListener('input', (e) => {
+            e.target.value = aplicarMascaraTelefone(e.target.value);
+        });
+    }
+    // -----------------------
 
     // 6. Controla Uploads
     const divFoto = document.getElementById('div-upload-foto');
@@ -164,6 +201,13 @@ function abrirInscricao(evento) {
 async function enviarInscricao(e) {
     e.preventDefault();
     
+    // Validação extra de tamanho do CPF
+    const inputCPF = document.querySelector('input[name="CPF"]');
+    if(inputCPF && inputCPF.value.length < 14) {
+        showError('CPF Inválido', 'Por favor, preencha o CPF completo.');
+        return;
+    }
+
     const result = await Swal.fire({
         title: 'Confirmar Inscrição?',
         text: 'Verifique se todos os dados estão corretos.',
