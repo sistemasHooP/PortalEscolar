@@ -74,7 +74,9 @@
                                 <th>Ações</th>
                             </tr>
                         </thead>
-                        <tbody id="lista-eventos-admin"></tbody>
+                        <tbody id="lista-eventos-admin">
+                            <!-- Preenchido via JS -->
+                        </tbody>
                     </table>
                 </div>
             </section>
@@ -83,15 +85,16 @@
             <section id="tab-inscricoes" class="tab-content hidden fade-in">
                 <div class="header-action">
                     <h2>Inscrições Recebidas</h2>
-                    <button onclick="carregarInscricoes()" class="btn-refresh"><i class="fa-solid fa-rotate-right"></i> Atualizar</button>
+                    <button onclick="carregarInscricoes()" class="btn-refresh">
+                        <i class="fa-solid fa-rotate-right"></i> Atualizar
+                    </button>
                 </div>
                 
-                <!-- FILTROS (ATUALIZADO COM SELEÇÃO DE EVENTO) -->
+                <!-- FILTROS -->
                 <div class="filters">
-                    <!-- Filtro de Evento (Novo) -->
+                    <!-- Filtro de Evento -->
                     <select id="filtro-evento" onchange="filtrarTabela()">
                         <option value="">Todos os Eventos</option>
-                        <!-- Preenchido via JS -->
                     </select>
 
                     <!-- Filtro de Status -->
@@ -118,20 +121,43 @@
                                 <th>Ações</th>
                             </tr>
                         </thead>
-                        <tbody id="lista-inscricoes-admin"></tbody>
+                        <tbody id="lista-inscricoes-admin">
+                            <!-- Preenchido via JS -->
+                        </tbody>
                     </table>
                 </div>
             </section>
 
-            <!-- ABA 3: CONFIGURAÇÕES -->
+            <!-- ABA 3: CONFIGURAÇÕES (CORRIGIDA) -->
             <section id="tab-config" class="tab-content hidden fade-in">
                 <h2>Configurações do Sistema</h2>
+                
+                <!-- Card de Gestão de Instituições -->
+                <div class="card form-card" style="margin-bottom: 20px;">
+                    <h3><i class="fa-solid fa-building-columns"></i> Gerenciar Instituições</h3>
+                    <p style="font-size:0.9rem; color:#666;">Estas são as opções que aparecem na lista do formulário. Adicione novas aqui.</p>
+                    
+                    <div style="display:flex; gap:10px; margin-top:15px;">
+                        <input type="text" id="nova-inst" placeholder="Digite o nome da Instituição (ex: Estácio)" style="flex:1;">
+                        <button class="btn-primary" style="width:auto;" onclick="addInstituicao()">
+                            <i class="fa-solid fa-plus"></i> Adicionar
+                        </button>
+                    </div>
+                    
+                    <!-- Lista de Instituições -->
+                    <div id="lista-instituicoes" style="margin-top:15px; max-height:300px; overflow-y:auto; border:1px solid #eee; border-radius:8px; background-color: #fff;">
+                        <p style="padding:10px; color:#999; text-align:center;">Carregando...</p>
+                    </div>
+                </div>
+
+                <!-- Card de Acesso ao Banco -->
                 <div class="card form-card">
-                    <p style="color:#666; margin-bottom:20px;">
-                        Para alterar a senha ou a pasta do Google Drive, acesse diretamente a planilha do Google Sheets na aba <strong>Config</strong>.
+                    <h3><i class="fa-solid fa-database"></i> Banco de Dados</h3>
+                    <p style="color:#666; margin-bottom:15px;">
+                        Acesse a planilha para backups ou alterações manuais de emergência.
                     </p>
-                    <a href="#" onclick="window.open('https://docs.google.com/spreadsheets/u/0/', '_blank')" class="btn-primary" style="text-decoration:none; display:inline-block; width:auto;">
-                        Abrir Google Sheets <i class="fa-solid fa-up-right-from-square"></i>
+                    <a href="#" onclick="window.open('https://docs.google.com/spreadsheets/u/0/', '_blank')" class="btn-primary" style="text-decoration:none; display:inline-block; width:auto; background-color: #10b981;">
+                        <i class="fa-solid fa-table-cells"></i> Abrir Google Sheets
                     </a>
                 </div>
             </section>
