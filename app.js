@@ -1,13 +1,14 @@
 /**
- * Portal Educacional - App Logic v5.1
+ * Portal Educacional - App Logic v5.2
+ * Melhoria: Alerta amigável para CPF Duplicado
  */
 
-// ⚠️ URL da API (Já configurada)
+// ⚠️ URL da API (Mantida a mesma)
 const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
 
 const CAMPO_DEFS = {
     'NomeCompleto': { label: 'Nome Completo', type: 'text', placeholder: 'Digite seu nome completo' },
-    // CPF e Email são inseridos manualmente no código agora
+    // CPF e Email são inseridos manualmente no código agora (fixos)
     'DataNascimento': { label: 'Data de Nascimento', type: 'date', placeholder: '' },
     'Telefone': { label: 'Celular (WhatsApp)', type: 'tel', placeholder: '(00) 00000-0000', mask: 'tel' },
     'Endereco': { label: 'Endereço Residencial', type: 'text', placeholder: 'Rua, Número, Complemento' },
@@ -209,11 +210,22 @@ async function enviarInscricao(e) {
                         document.getElementById('form-inscricao').reset(); 
                         voltarHome(); 
                     });
+                } else if (json.message && json.message.includes('inscrição realizada')) { 
+                    // --- TRATAMENTO DE DUPLICIDADE (NOVO) ---
+                    // Se a mensagem do backend for de duplicidade, mostra alerta amarelo específico
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Atenção!',
+                        html: `Já existe uma inscrição com este CPF para este evento.<br><br>Verifique seu e-mail para recuperar sua chave ou consulte na secretaria.`,
+                        confirmButtonColor: '#f59e0b',
+                        confirmButtonText: 'Entendi'
+                    });
                 } else {
-                    showError('Erro', json.message);
+                    // Erro genérico
+                    showError('Não foi possível realizar a inscrição', json.message);
                 }
             });
-    } catch(err) { toggleLoader(false); showError('Erro', 'Falha no upload.'); }
+    } catch(err) { toggleLoader(false); showError('Erro', 'Falha na comunicação com o servidor.'); }
 }
 
 function consultarChave() {
