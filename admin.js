@@ -1,6 +1,6 @@
 const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
 
-// Removidos CPF e Email daqui, pois agora são fixos no formulário do aluno
+// Removidos CPF e Email daqui, pois agora são fixos e obrigatórios
 const CAMPOS_PADRAO = [
     { key: 'NomeCompleto', label: 'Nome Completo' },
     { key: 'DataNascimento', label: 'Data de Nascimento' },
@@ -82,7 +82,7 @@ function carregarEventosAdmin() {
         });
 }
 
-// --- NOVO MODAL: Sem opções de CPF/Email (são padrão agora) ---
+// --- MODAL DE NOVO EVENTO ---
 function modalNovoEvento() {
     let htmlCampos = '<div class="checkbox-grid">';
     CAMPOS_PADRAO.forEach(c => {
@@ -136,7 +136,7 @@ function modalNovoEvento() {
             <div class="modal-section">
                 <label class="modal-label">3. Campos Adicionais</label>
                 <div class="info-msg">
-                    <i class="fa-solid fa-circle-info"></i> CPF e E-mail são obrigatórios e já estarão no formulário automaticamente.
+                    <i class="fa-solid fa-circle-info"></i> CPF e E-mail são obrigatórios e já estarão no formulário.
                 </div>
                 ${htmlCampos}
             </div>
@@ -152,7 +152,6 @@ function modalNovoEvento() {
         confirmButtonText: 'Publicar Evento',
         showCancelButton: true,
         didOpen: () => {
-            // Lógica para adicionar inputs de campos customizados dinamicamente
             const container = document.getElementById('custom_fields_container');
             const btn = document.getElementById('btn-add-custom');
             
@@ -176,13 +175,11 @@ function modalNovoEvento() {
                 return false;
             }
 
-            // Coletar Padrões
             const selecionados = [];
             CAMPOS_PADRAO.forEach(c => {
                 if(document.getElementById(`check_${c.key}`).checked) selecionados.push(c.key);
             });
 
-            // Coletar Personalizados
             const personalizados = [];
             document.querySelectorAll('.custom-field-input').forEach(input => {
                 if(input.value.trim()) personalizados.push(input.value.trim());
@@ -261,6 +258,10 @@ function renderLinhaInscricao(ins, tbody) {
         btnPDF = `<a href="${ins.link_ficha}" target="_blank" class="action-btn btn-view" style="background:#059669" title="Baixar Ficha Assinada"><i class="fa-solid fa-download"></i> Ficha</a>`;
     }
 
+    // Botões de Ação Atualizados
+    const btnEditar = `<button class="action-btn" style="background:#f59e0b" onclick="abrirEdicao('${ins.chave}')" title="Editar Dados"><i class="fa-solid fa-pen"></i></button>`;
+    const btnStatus = `<button class="action-btn btn-edit" onclick="mudarStatus('${ins.chave}')" title="Mudar Status"><i class="fa-solid fa-list-check"></i></button>`;
+
     tbody.innerHTML += `
         <tr>
             <td>${new Date(ins.data).toLocaleDateString()}</td>
@@ -269,13 +270,72 @@ function renderLinhaInscricao(ins, tbody) {
             <td><span class="badge badge-${ins.status.replace(/\s/g, '')}">${ins.status}</span></td>
             <td>
                 <div style="display:flex; gap:5px;">
-                    <button class="action-btn btn-edit" onclick="mudarStatus('${ins.chave}')"><i class="fa-solid fa-pen"></i></button>
+                    ${btnEditar}
+                    ${btnStatus}
                     ${btnPDF} 
                     ${ins.doc ? `<a href="${ins.doc}" target="_blank" class="action-btn btn-view"><i class="fa-solid fa-paperclip"></i></a>` : ''}
                 </div>
             </td>
         </tr>
     `;
+}
+
+// --- FUNÇÃO PARA EDITAR DADOS (NOVO) ---
+function abrirEdicao(chave) {
+    const inscricao = window.inscricoesData.find(i => i.chave === chave);
+    if(!inscricao) return;
+    
+    let dados = {};
+    try { dados = JSON.parse(inscricao.dadosJson); } catch(e) {}
+
+    let formHtml = '<div style="text-align:left; max-height:400px; overflow-y:auto; padding-right:5px;">';
+    for (const [key, value] of Object.entries(dados)) {
+        formHtml += `
+            <label style="font-size:0.8rem; font-weight:bold; color:#64748b; display:block; margin-top:10px;">${key}</label>
+            <input type="text" id="edit_${key}" value="${value}" class="swal2-input" style="margin-top:5px; height:35px;">
+        `;
+    }
+    formHtml += '</div>';
+
+    Swal.fire({
+        title: 'Editar Dados da Inscrição',
+        html: formHtml,
+        width: '600px',
+        showCancelButton: true,
+        confirmButtonText: 'Salvar Alterações',
+        confirmButtonColor: '#2563eb',
+        preConfirm: () => {
+            const novosDados = {};
+            for (const key of Object.keys(dados)) {
+                const el = document.getElementById(`edit_${key}`);
+                if(el) novosDados[key] = el.value;
+            }
+            return novosDados;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({ title: 'Atualizando...', didOpen: () => Swal.showLoading() });
+            
+            fetch(URL_API, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'editarInscricao',
+                    senha: sessionStorage.getItem('admin_token'),
+                    chave: chave,
+                    novosDados: result.value
+                })
+            })
+            .then(res => res.json())
+            .then(json => {
+                if(json.status === 'success') {
+                    Swal.fire('Sucesso', 'Dados atualizados!', 'success')
+                        .then(() => carregarInscricoes());
+                } else {
+                    Swal.fire('Erro', json.message, 'error');
+                }
+            });
+        }
+    });
 }
 
 function gerarFicha(chave) {
