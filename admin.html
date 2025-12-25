@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - Educação</title>
+    
+    <!-- Fontes e Ícones -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Estilos -->
+    <link rel="stylesheet" href="style.css"> <!-- Reuso do estilo base -->
+    <link rel="stylesheet" href="admin.css"> <!-- Estilos específicos do admin -->
+</head>
+<body>
+
+    <!-- TELA DE LOGIN -->
+    <div id="login-screen" class="login-container">
+        <div class="card login-card">
+            <div class="brand" style="margin-bottom: 20px;">
+                <i class="fa-solid fa-user-shield" style="color: var(--primary);"></i>
+            </div>
+            <h2>Acesso Restrito</h2>
+            <p>Secretaria de Educação</p>
+            <form onsubmit="realizarLogin(event)">
+                <input type="password" id="admin-pass" placeholder="Senha de Administrador" required>
+                <button type="submit" class="btn-primary">Entrar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- PAINEL PRINCIPAL (Inicialmente oculto) -->
+    <div id="admin-panel" class="hidden">
+        
+        <!-- Navegação Lateral / Superior -->
+        <nav class="admin-nav">
+            <div class="nav-brand">
+                <i class="fa-solid fa-graduation-cap"></i> Admin
+            </div>
+            <div class="nav-links">
+                <button class="nav-btn active" onclick="switchTab('tab-eventos')">
+                    <i class="fa-regular fa-calendar"></i> Eventos
+                </button>
+                <button class="nav-btn" onclick="switchTab('tab-inscricoes')">
+                    <i class="fa-solid fa-users"></i> Inscrições
+                </button>
+                <button class="nav-btn" onclick="switchTab('tab-config')">
+                    <i class="fa-solid fa-gears"></i> Configurações
+                </button>
+            </div>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fa-solid fa-right-from-bracket"></i> Sair
+            </button>
+        </nav>
+
+        <main class="admin-content">
+            
+            <!-- ABA 1: EVENTOS -->
+            <section id="tab-eventos" class="tab-content active fade-in">
+                <div class="header-action">
+                    <h2>Gerenciar Eventos</h2>
+                    <button class="btn-primary" style="width: auto;" onclick="modalNovoEvento()">
+                        <i class="fa-solid fa-plus"></i> Novo Evento
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Título</th>
+                                <th>Status</th>
+                                <th>Encerramento</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-eventos-admin">
+                            <!-- JS preenche aqui -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ABA 2: INSCRIÇÕES -->
+            <section id="tab-inscricoes" class="tab-content hidden fade-in">
+                <div class="header-action">
+                    <h2>Inscrições Recebidas</h2>
+                    <button onclick="carregarInscricoes()" class="btn-refresh"><i class="fa-solid fa-rotate-right"></i> Atualizar</button>
+                </div>
+                
+                <div class="filters">
+                    <input type="text" id="filtro-nome" placeholder="Filtrar por nome..." onkeyup="filtrarTabela()">
+                    <select id="filtro-status" onchange="filtrarTabela()">
+                        <option value="">Todos Status</option>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Aprovada">Aprovada</option>
+                        <option value="Rejeitada">Rejeitada</option>
+                    </select>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Evento</th>
+                                <th>Chave</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-inscricoes-admin">
+                            <!-- JS preenche aqui -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ABA 3: CONFIGURAÇÕES -->
+            <section id="tab-config" class="tab-content hidden fade-in">
+                <h2>Configurações do Sistema</h2>
+                <div class="card form-card">
+                    <label>ID da Pasta no Google Drive (Documentos)</label>
+                    <input type="text" id="config-folder-id">
+                    
+                    <label>Senha de Administrador</label>
+                    <input type="text" id="config-admin-pass">
+                    
+                    <button class="btn-primary" onclick="salvarConfig()">Salvar Alterações</button>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Script SweetAlert e Admin Logic -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
