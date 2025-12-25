@@ -55,7 +55,6 @@ function switchTab(tabId) {
     document.getElementById(tabId).classList.add('active');
     
     // Marca o botão como ativo
-    // Nota: event é global no contexto do clique
     if (event && event.currentTarget) {
         event.currentTarget.classList.add('active');
     }
@@ -106,7 +105,11 @@ function addInstituicao() {
 
     fetch(URL_API, { 
         method: 'POST', 
-        body: JSON.stringify({ action: 'adicionarInstituicao', nome: nome })
+        body: JSON.stringify({ 
+            action: 'adicionarInstituicao', 
+            nome: nome,
+            senha: sessionStorage.getItem('admin_token')
+        })
     })
     .then(res => res.json())
     .then(() => {
@@ -137,7 +140,11 @@ function removerInst(nome) {
         if (result.isConfirmed) {
             fetch(URL_API, { 
                 method: 'POST', 
-                body: JSON.stringify({ action: 'removerInstituicao', nome: nome })
+                body: JSON.stringify({ 
+                    action: 'removerInstituicao', 
+                    nome: nome,
+                    senha: sessionStorage.getItem('admin_token')
+                })
             })
             .then(() => {
                 carregarInstituicoes();
@@ -488,7 +495,7 @@ function gerarFicha(chave) {
             .then(res => res.json())
             .then(json => {
                 if(json.status === 'success') {
-                    Swal.fire('Sucesso', 'Ficha gerada!', 'success')
+                    Swal.fire('Sucesso', 'Ficha gerada! A página irá atualizar.', 'success')
                     .then(() => carregarInscricoes());
                 } else {
                     Swal.fire('Erro', json.message, 'error');
