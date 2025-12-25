@@ -1,22 +1,25 @@
 /**
- * Portal Educacional - App Logic v5.2
- * Melhoria: Alerta amigável para CPF Duplicado
+ * Portal Educacional - App Logic v6.0
+ * Inclui: Select de Instituições, Mensagens de Alerta, Máscaras e PDF.
  */
 
-// ⚠️ URL da API (Mantida a mesma)
+// ⚠️ URL da API Atualizada
 const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
 
 const CAMPO_DEFS = {
     'NomeCompleto': { label: 'Nome Completo', type: 'text', placeholder: 'Digite seu nome completo' },
-    // CPF e Email são inseridos manualmente no código agora (fixos)
+    // CPF e Email são fixos no código
     'DataNascimento': { label: 'Data de Nascimento', type: 'date', placeholder: '' },
     'Telefone': { label: 'Celular (WhatsApp)', type: 'tel', placeholder: '(00) 00000-0000', mask: 'tel' },
     'Endereco': { label: 'Endereço Residencial', type: 'text', placeholder: 'Rua, Número, Complemento' },
-    'NomeInstituicao': { label: 'Instituição de Ensino', type: 'text', placeholder: 'Ex: Universidade X' },
+    'NomeInstituicao': { label: 'Instituição de Ensino', type: 'select' }, // Tipo especial SELECT
     'NomeCurso': { label: 'Curso', type: 'text', placeholder: 'Ex: Engenharia' },
     'PeriodoCurso': { label: 'Período/Semestre', type: 'text', placeholder: 'Ex: 3º Período' },
     'Matricula': { label: 'Nº Matrícula', type: 'text', placeholder: '' }
 };
+
+// Cache para não buscar a lista toda vez
+let listaInstituicoesCache = [];
 
 document.addEventListener('DOMContentLoaded', () => { carregarEventos(); });
 
@@ -68,6 +71,20 @@ function aplicarMascaraTelefone(value) {
     return value.replace(/\D/g, '').replace(/(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2').replace(/(-\d{4})\d+?$/, '$1');
 }
 
+function ativarMascaras() {
+    const inputCPF = document.querySelector('input[name="CPF"]');
+    if(inputCPF) { 
+        inputCPF.maxLength = 14; 
+        inputCPF.addEventListener('input', (e) => e.target.value = aplicarMascaraCPF(e.target.value)); 
+    }
+    
+    const inputTel = document.querySelector('input[name="Telefone"]');
+    if(inputTel) { 
+        inputTel.maxLength = 15; 
+        inputTel.addEventListener('input', (e) => e.target.value = aplicarMascaraTelefone(e.target.value)); 
+    }
+}
+
 // --- Lógica Principal ---
 
 function carregarEventos() {
@@ -89,7 +106,7 @@ function carregarEventos() {
                     <div class="card fade-in">
                         <h3>${ev.titulo}</h3>
                         <p>${ev.descricao}</p>
-                        <small>📅 Até: ${formatarData(ev.fim)}</small>
+                        <small>📅 Inscrições até: ${formatarData(ev.fim)}</small>
                         <button class="btn-primary" onclick='abrirInscricao(${JSON.stringify(ev)})'>
                             Inscrever-se <i class="fa-solid fa-arrow-right"></i>
                         </button>
@@ -99,7 +116,7 @@ function carregarEventos() {
         .catch(() => { toggleLoader(false); document.getElementById('cards-container').innerHTML = '<p style="text-align:center;color:red">Erro de conexão.</p>'; });
 }
 
-function abrirInscricao(evento) {
+async function abrirInscricao(evento) {
     document.getElementById('lista-eventos').classList.add('hidden');
     document.getElementById('fab-consulta').classList.add('hidden'); 
     document.getElementById('area-inscricao').classList.remove('hidden');
@@ -113,8 +130,17 @@ function abrirInscricao(evento) {
 
     const areaCampos = document.getElementById('campos-dinamicos');
     areaCampos.innerHTML = '';
+
+    // --- 1. MENSAGEM DE ALERTA ---
+    if(config.mensagemAlerta) {
+        areaCampos.innerHTML += `
+            <div style="background:#fef9c3; color:#854d0e; padding:15px; border-radius:8px; margin-bottom:20px; border:1px solid #facc15; font-size:0.9rem; line-height:1.5;">
+                <i class="fa-solid fa-circle-exclamation"></i> <strong>Aviso Importante:</strong><br> ${config.mensagemAlerta}
+            </div>
+        `;
+    }
     
-    // --- CAMPOS OBRIGATÓRIOS (FIXOS) ---
+    // --- 2. CAMPOS OBRIGATÓRIOS (FIXOS) ---
     areaCampos.innerHTML += `
         <div>
             <label>CPF *</label>
@@ -126,16 +152,50 @@ function abrirInscricao(evento) {
         </div>
     `;
 
-    // Campos Configuráveis
+    // Carregar lista de instituições se necessário e ainda não carregado
+    if(config.camposTexto && config.camposTexto.includes('NomeInstituicao') && listaInstituicoesCache.length === 0) {
+        try {
+            toggleLoader(true, "Carregando instituições...");
+            const res = await fetch(`${URL_API}?action=getInstituicoes`);
+            const json = await res.json();
+            listaInstituicoesCache = json.data || [];
+            toggleLoader(false);
+        } catch(e) {
+            console.error("Erro ao carregar instituições", e);
+            toggleLoader(false);
+        }
+    }
+
+    // --- 3. CAMPOS DINÂMICOS ---
     if(config.camposTexto) {
         config.camposTexto.forEach(key => {
             if(CAMPO_DEFS[key]) {
                 const def = CAMPO_DEFS[key];
-                areaCampos.innerHTML += `<div><label>${def.label}</label><input type="${def.type}" name="${key}" placeholder="${def.placeholder||''}" required></div>`;
+                
+                if (key === 'NomeInstituicao') {
+                    // Renderiza como SELECT
+                    let options = '<option value="">Selecione a Instituição...</option>';
+                    listaInstituicoesCache.forEach(inst => {
+                        options += `<option value="${inst}">${inst}</option>`;
+                    });
+                    // Adiciona opção "Outra" caso não esteja na lista
+                    options += `<option value="Outra">Outra (Não listada)</option>`;
+                    
+                    areaCampos.innerHTML += `
+                        <div>
+                            <label>${def.label}</label>
+                            <select name="${key}" required style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:8px; background:white;">${options}</select>
+                        </div>
+                    `;
+                } else {
+                    // Renderiza como INPUT
+                    areaCampos.innerHTML += `<div><label>${def.label}</label><input type="${def.type}" name="${key}" placeholder="${def.placeholder||''}" required></div>`;
+                }
             }
         });
     }
 
+    // --- 4. CAMPOS PERSONALIZADOS ---
     if(config.camposPersonalizados && config.camposPersonalizados.length > 0) {
         areaCampos.innerHTML += `<div style="grid-column: 1/-1; margin-top:15px; border-top:1px dashed #cbd5e1; padding-top:10px;"><h4 style="margin:0 0 10px 0; color:#2563eb; font-size:1rem;">Perguntas Específicas</h4></div>`;
         config.camposPersonalizados.forEach(p => {
@@ -145,17 +205,7 @@ function abrirInscricao(evento) {
     }
 
     // Ativa Máscaras
-    const inputCPF = document.querySelector('input[name="CPF"]');
-    if(inputCPF) { 
-        inputCPF.maxLength = 14; 
-        inputCPF.addEventListener('input', (e) => e.target.value = aplicarMascaraCPF(e.target.value)); 
-    }
-    
-    const inputTel = document.querySelector('input[name="Telefone"]');
-    if(inputTel) { 
-        inputTel.maxLength = 15; 
-        inputTel.addEventListener('input', (e) => e.target.value = aplicarMascaraTelefone(e.target.value)); 
-    }
+    ativarMascaras();
 
     // Uploads
     const divFoto = document.getElementById('div-upload-foto');
@@ -182,7 +232,8 @@ async function enviarInscricao(e) {
 
     toggleLoader(true, "Enviando...");
 
-    const inputs = document.querySelectorAll('#campos-dinamicos input');
+    // Coleta dados (INPUT e SELECT)
+    const inputs = document.querySelectorAll('#campos-dinamicos input, #campos-dinamicos select');
     let dadosCampos = {};
     inputs.forEach(inp => dadosCampos[inp.name] = inp.value);
 
@@ -205,27 +256,23 @@ async function enviarInscricao(e) {
             .then(json => {
                 toggleLoader(false);
                 if(json.status === 'success') {
-                    // --- SUCESSO E RESET ---
                     showSuccess('Sucesso!', `Sua Chave: <strong>${json.chave}</strong><br>Enviamos um e-mail de confirmação.`, () => {
                         document.getElementById('form-inscricao').reset(); 
                         voltarHome(); 
                     });
                 } else if (json.message && json.message.includes('inscrição realizada')) { 
-                    // --- TRATAMENTO DE DUPLICIDADE (NOVO) ---
-                    // Se a mensagem do backend for de duplicidade, mostra alerta amarelo específico
                     Swal.fire({
                         icon: 'warning',
                         title: 'Atenção!',
-                        html: `Já existe uma inscrição com este CPF para este evento.<br><br>Verifique seu e-mail para recuperar sua chave ou consulte na secretaria.`,
+                        html: `Já existe uma inscrição com este CPF para este evento.<br><br>Verifique seu e-mail para recuperar sua chave.`,
                         confirmButtonColor: '#f59e0b',
                         confirmButtonText: 'Entendi'
                     });
                 } else {
-                    // Erro genérico
-                    showError('Não foi possível realizar a inscrição', json.message);
+                    showError('Erro', json.message);
                 }
             });
-    } catch(err) { toggleLoader(false); showError('Erro', 'Falha na comunicação com o servidor.'); }
+    } catch(err) { toggleLoader(false); showError('Erro', 'Falha no upload.'); }
 }
 
 function consultarChave() {
