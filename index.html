@@ -77,23 +77,23 @@
 
                     <!-- Área de Upload de Documentos -->
                     <div class="upload-section">
-                        <h3><i class="fa-solid fa-cloud-arrow-up"></i> Documentação Obrigatória</h3>
-                        <p class="upload-info">Formatos aceitos: Imagens (JPG/PNG) e PDF.</p>
+                        <h3><i class="fa-solid fa-cloud-arrow-up"></i> Documentação</h3>
+                        <p class="upload-info">Os campos abaixo dependem das regras do evento.</p>
                         
-                        <!-- Upload Foto -->
-                        <div class="file-input-wrapper">
+                        <!-- Upload Foto (Com ID para controle via JS) -->
+                        <div id="div-upload-foto" class="file-input-wrapper hidden">
                             <label for="file-foto">
                                 <i class="fa-solid fa-user"></i> Foto 3x4 (Rosto visível)
                             </label>
-                            <input type="file" id="file-foto" accept="image/*" required>
+                            <input type="file" id="file-foto" accept="image/*">
                         </div>
 
-                        <!-- Upload Documento -->
-                        <div class="file-input-wrapper">
+                        <!-- Upload Documento (Com ID para controle via JS) -->
+                        <div id="div-upload-doc" class="file-input-wrapper hidden">
                             <label for="file-doc">
                                 <i class="fa-solid fa-file-pdf"></i> Declaração de Matrícula (PDF)
                             </label>
-                            <input type="file" id="file-doc" accept="application/pdf" required>
+                            <input type="file" id="file-doc" accept="application/pdf">
                         </div>
                     </div>
 
