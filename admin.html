@@ -10,8 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Estilos -->
-    <link rel="stylesheet" href="style.css"> <!-- Reuso do estilo base -->
-    <link rel="stylesheet" href="admin.css"> <!-- Estilos específicos do admin -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin.css">
 </head>
 <body>
 
@@ -33,7 +33,7 @@
     <!-- PAINEL PRINCIPAL (Inicialmente oculto) -->
     <div id="admin-panel" class="hidden">
         
-        <!-- Navegação Lateral / Superior -->
+        <!-- Navegação Lateral -->
         <nav class="admin-nav">
             <div class="nav-brand">
                 <i class="fa-solid fa-graduation-cap"></i> Admin
@@ -71,13 +71,10 @@
                                 <th>ID</th>
                                 <th>Título</th>
                                 <th>Status</th>
-                                <th>Encerramento</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
-                        <tbody id="lista-eventos-admin">
-                            <!-- JS preenche aqui -->
-                        </tbody>
+                        <tbody id="lista-eventos-admin"></tbody>
                     </table>
                 </div>
             </section>
@@ -89,14 +86,25 @@
                     <button onclick="carregarInscricoes()" class="btn-refresh"><i class="fa-solid fa-rotate-right"></i> Atualizar</button>
                 </div>
                 
+                <!-- FILTROS (ATUALIZADO COM SELEÇÃO DE EVENTO) -->
                 <div class="filters">
-                    <input type="text" id="filtro-nome" placeholder="Filtrar por nome..." onkeyup="filtrarTabela()">
+                    <!-- Filtro de Evento (Novo) -->
+                    <select id="filtro-evento" onchange="filtrarTabela()">
+                        <option value="">Todos os Eventos</option>
+                        <!-- Preenchido via JS -->
+                    </select>
+
+                    <!-- Filtro de Status -->
                     <select id="filtro-status" onchange="filtrarTabela()">
                         <option value="">Todos Status</option>
                         <option value="Pendente">Pendente</option>
                         <option value="Aprovada">Aprovada</option>
                         <option value="Rejeitada">Rejeitada</option>
+                        <option value="Ficha Emitida">Ficha Emitida</option>
                     </select>
+
+                    <!-- Filtro de Nome -->
+                    <input type="text" id="filtro-nome" placeholder="Buscar por Nome ou Chave..." onkeyup="filtrarTabela()">
                 </div>
 
                 <div class="table-responsive">
@@ -105,14 +113,12 @@
                             <tr>
                                 <th>Data</th>
                                 <th>Evento</th>
-                                <th>Chave</th>
+                                <th>Candidato / Chave</th>
                                 <th>Status</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
-                        <tbody id="lista-inscricoes-admin">
-                            <!-- JS preenche aqui -->
-                        </tbody>
+                        <tbody id="lista-inscricoes-admin"></tbody>
                     </table>
                 </div>
             </section>
@@ -121,20 +127,19 @@
             <section id="tab-config" class="tab-content hidden fade-in">
                 <h2>Configurações do Sistema</h2>
                 <div class="card form-card">
-                    <label>ID da Pasta no Google Drive (Documentos)</label>
-                    <input type="text" id="config-folder-id">
-                    
-                    <label>Senha de Administrador</label>
-                    <input type="text" id="config-admin-pass">
-                    
-                    <button class="btn-primary" onclick="salvarConfig()">Salvar Alterações</button>
+                    <p style="color:#666; margin-bottom:20px;">
+                        Para alterar a senha ou a pasta do Google Drive, acesse diretamente a planilha do Google Sheets na aba <strong>Config</strong>.
+                    </p>
+                    <a href="#" onclick="window.open('https://docs.google.com/spreadsheets/u/0/', '_blank')" class="btn-primary" style="text-decoration:none; display:inline-block; width:auto;">
+                        Abrir Google Sheets <i class="fa-solid fa-up-right-from-square"></i>
+                    </a>
                 </div>
             </section>
 
         </main>
     </div>
 
-    <!-- Script SweetAlert e Admin Logic -->
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="admin.js"></script>
 </body>
