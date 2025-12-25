@@ -32,36 +32,17 @@
     </header>
 
     <main>
-        
-        <!-- SEÇÃO 1: Consulta de Inscrição (AGORA NO TOPO) -->
-        <!-- Adicionei a classe 'consulta-compacta' para ficar bonito no topo -->
-        <section id="area-consulta" class="fade-in consulta-compacta">
-            <div class="search-box">
-                <div class="search-header-compact">
-                    <i class="fa-solid fa-magnifying-glass-location"></i>
-                    <span>Já se inscreveu? Consulte aqui:</span>
-                </div>
-                
-                <div class="input-group">
-                    <input type="text" id="busca-chave" placeholder="Digite sua Chave Única">
-                    <button onclick="consultarChave()"><i class="fa-solid fa-arrow-right"></i></button>
-                </div>
-                <div id="resultado-busca"></div>
-            </div>
-        </section>
-
-        <!-- SEÇÃO 2: Lista de Eventos -->
+        <!-- SEÇÃO 1: Lista de Eventos -->
         <section id="lista-eventos" class="fade-in">
             <div class="section-header">
                 <h2><i class="fa-regular fa-calendar-check"></i> Eventos Disponíveis</h2>
-                <p>Toque no evento para ver detalhes e se inscrever.</p>
+                <p>Selecione um evento para iniciar sua inscrição.</p>
             </div>
             <div id="cards-container"></div>
         </section>
 
-        <!-- SEÇÃO 3: Formulário de Inscrição -->
+        <!-- SEÇÃO 2: Formulário de Inscrição -->
         <section id="area-inscricao" class="hidden fade-in">
-            <!-- Espaçador para o botão não ficar coberto -->
             <div class="spacer-top"></div>
 
             <button class="btn-back" onclick="voltarHome()">
@@ -103,8 +84,31 @@
                 </form>
             </div>
         </section>
-
     </main>
+
+    <!-- BOTÃO FLUTUANTE (FAB) -->
+    <button id="fab-consulta" onclick="abrirModalConsulta()" title="Consultar Inscrição">
+        <i class="fa-solid fa-magnifying-glass"></i>
+    </button>
+
+    <!-- MODAL DE CONSULTA (Overlay) -->
+    <div id="modal-consulta" class="modal-overlay hidden">
+        <div class="modal-content fade-in">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-ticket"></i> Minha Inscrição</h3>
+                <button class="btn-close" onclick="fecharModalConsulta()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <p>Digite sua chave única para ver o status.</p>
+            
+            <div class="input-group">
+                <input type="text" id="busca-chave" placeholder="Ex: A1B2C3D4">
+                <button onclick="consultarChave()"><i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+            
+            <div id="resultado-busca"></div>
+        </div>
+    </div>
 
     <footer>
         <p>&copy; 2025 Secretaria de Educação</p>
