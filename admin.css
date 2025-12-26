@@ -355,8 +355,6 @@ body {
     min-width: 32px;
 }
 .action-btn:active { transform: scale(0.95); }
-.action-btn:hover { opacity: 0.9; }
-
 .btn-view { background: var(--secondary); }
 .btn-edit { background: var(--primary); }
 .btn-delete { background: #ef4444; }
@@ -409,11 +407,113 @@ body {
 
 .card.form-card { padding: 25px; }
 
-/* --- SweetAlert Custom --- */
-.swal2-input, .swal2-textarea { font-size: 0.9rem !important; margin: 5px auto !important; }
-.checkbox-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
-.checkbox-item { background: #f8fafc; padding: 8px 10px; border-radius: 6px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; }
-.checkbox-item:hover { border-color: var(--primary); background: #eff6ff; }
+/* --- ESTILOS DO MODAL (SweetAlert Customizados) --- */
+.swal-form-container {
+    text-align: left;
+    font-family: 'Poppins', sans-serif;
+}
+
+.swal-section {
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 1rem;
+}
+
+.swal-section:last-child {
+    border-bottom: none;
+}
+
+.swal-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.swal-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.swal-col {
+    flex: 1;
+}
+
+.swal2-input, .swal2-textarea { 
+    font-size: 0.95rem !important; 
+    margin: 0 !important; 
+    width: 100% !important; 
+    box-sizing: border-box !important; 
+    border: 1px solid #cbd5e1 !important; 
+    border-radius: 8px !important; 
+    padding: 10px !important;
+}
+
+.swal2-textarea {
+    height: 80px !important;
+}
+
+.swal-info-box {
+    background: #e0f2fe;
+    color: #0369a1;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #bae6fd;
+}
+
+/* Checkboxes Grid no Modal */
+.swal-checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.swal-checkbox-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.swal-checkbox-item:hover {
+    border-color: var(--primary);
+    background: #eff6ff;
+}
+
+.swal-checkbox-item input {
+    cursor: pointer;
+    accent-color: var(--primary);
+}
+
+.custom-fields-area {
+    background: #fffbeb;
+    padding: 15px;
+    border: 1px dashed #f59e0b;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.custom-field-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
 
 /* --- MODO DE IMPRESSÃO --- */
 #area-impressao { display: none; }
@@ -432,7 +532,8 @@ body {
 
 /* Mobile Adjustments */
 @media(max-width: 768px) {
-    .config-grid, .checkbox-grid { grid-template-columns: 1fr; }
+    .config-grid, .swal-checkbox-grid { grid-template-columns: 1fr; }
     .header-action, .filters { flex-direction: column; align-items: stretch; }
+    .swal-row { flex-direction: column; gap: 10px; }
     .data-table th, .data-table td { padding: 10px; }
 }
