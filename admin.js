@@ -69,6 +69,7 @@ function switchTab(tabId) {
 
     // Carrega dados específicos da aba
     if(tabId === 'tab-dashboard') carregarDashboard();
+    if(tabId === 'tab-eventos') carregarEventosAdmin();
     if(tabId === 'tab-inscricoes') carregarInscricoes();
     if(tabId === 'tab-config') carregarInstituicoes();
 }
@@ -281,7 +282,7 @@ function gerarRelatorioTransporte() {
 
 function carregarInstituicoes() {
     const div = document.getElementById('lista-instituicoes');
-    div.innerHTML = '<p style="padding:10px; color:#666;">Carregando...</p>';
+    div.innerHTML = '<p style="padding:10px; color:#666;">Carregando lista...</p>';
     
     fetch(`${URL_API}?action=getInstituicoes`)
         .then(res => res.json())
@@ -296,7 +297,7 @@ function carregarInstituicoes() {
                 div.innerHTML += `
                     <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; align-items:center;">
                         <span>${nome}</span>
-                        <button onclick="removerInst('${nome}')" style="background:none; border:none; color:#ef4444; cursor:pointer;" title="Remover">
+                        <button onclick="removerInst('${nome}')" style="background:none; border:none; color:#ef4444; cursor:pointer; padding:5px;">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>`;
@@ -308,10 +309,11 @@ function addInstituicao() {
     const input = document.getElementById('nova-inst');
     const nome = input.value.trim();
     
-    if(!nome) return Swal.fire('Atenção', 'Digite o nome.', 'warning');
+    if(!nome) return Swal.fire('Atenção', 'Digite o nome da instituição.', 'warning');
     
+    // Feedback visual
     const btn = event.currentTarget;
-    const original = btn.innerHTML;
+    const originalText = btn.innerHTML;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
     btn.disabled = true;
 
@@ -320,27 +322,34 @@ function addInstituicao() {
         body: JSON.stringify({ 
             action: 'adicionarInstituicao', 
             nome: nome,
-            senha: sessionStorage.getItem('admin_token') 
+            senha: sessionStorage.getItem('admin_token')
         })
     })
     .then(res => res.json())
     .then(() => {
         input.value = '';
-        btn.innerHTML = original;
+        btn.innerHTML = originalText;
         btn.disabled = false;
         carregarInstituicoes();
-        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Adicionado', showConfirmButton: false, timer: 1500 });
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Instituição adicionada',
+            showConfirmButton: false,
+            timer: 1500
+        });
     });
 }
 
 function removerInst(nome) {
     Swal.fire({
-        title: 'Remover?',
-        text: nome,
+        title: 'Remover Instituição?',
+        text: `Deseja remover "${nome}" da lista?`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#ef4444',
-        confirmButtonText: 'Sim'
+        confirmButtonText: 'Sim, remover'
     }).then((result) => {
         if (result.isConfirmed) {
             fetch(URL_API, { 
@@ -348,7 +357,7 @@ function removerInst(nome) {
                 body: JSON.stringify({ 
                     action: 'removerInstituicao', 
                     nome: nome,
-                    senha: sessionStorage.getItem('admin_token') 
+                    senha: sessionStorage.getItem('admin_token')
                 })
             })
             .then(() => {
@@ -371,10 +380,17 @@ function carregarEventosAdmin() {
             tbody.innerHTML = '';
             mapaEventos = {};
             
-            json.data.sort((a,b)=>b.id-a.id).forEach(ev=>{
-                mapaEventos[ev.id]=ev.titulo;
+            // Popula mapa global para usar no filtro depois
+            json.data.forEach(ev => mapaEventos[ev.id] = ev.titulo);
+            
+            // Ordena eventos (mais novos primeiro)
+            const eventosOrdenados = json.data.sort((a, b) => b.id - a.id);
+
+            eventosOrdenados.forEach(ev => {
+                const inicio = new Date(ev.inicio).toLocaleDateString();
+                const fim = new Date(ev.fim).toLocaleDateString();
                 
-                // Botão Toggle (Ativar/Inativar)
+                // Botão de Toggle Status
                 let btnAction = '';
                 if(ev.status === 'Ativo') {
                     btnAction = `<button class="action-btn btn-status-toggle active" onclick="toggleStatusEvento('${ev.id}', 'Inativo')" title="Encerrar Evento"><i class="fa-solid fa-pause"></i> Inativar</button>`;
@@ -387,12 +403,14 @@ function carregarEventosAdmin() {
                         <td>#${ev.id}</td>
                         <td>
                             <strong>${ev.titulo}</strong><br>
-                            <small class="text-muted"><i class="fa-regular fa-calendar"></i> ${new Date(ev.inicio).toLocaleDateString()} até ${new Date(ev.fim).toLocaleDateString()}</small>
+                            <small class="text-muted"><i class="fa-regular fa-calendar"></i> ${inicio} até ${fim}</small>
                         </td>
                         <td><span class="badge badge-${ev.status}">${ev.status}</span></td>
                         <td style="text-align:right;">
-                            ${btnAction}
-                            <button class="action-btn btn-edit" title="Bloqueado (Segurança)" onclick="Swal.fire('Info', 'Crie um novo evento para alterar dados.', 'info')"><i class="fa-solid fa-lock"></i></button>
+                             ${btnAction}
+                             <button class="action-btn btn-edit" title="Bloqueado para edição (Segurança)" onclick="Swal.fire('Evento Registrado', 'Para garantir a integridade dos dados, inative este evento e crie um novo.', 'info')">
+                                <i class="fa-solid fa-lock"></i>
+                             </button>
                         </td>
                     </tr>
                 `;
@@ -428,13 +446,14 @@ function toggleStatusEvento(id, novoStatus) {
 }
 
 function modalNovoEvento() {
-    let htmlCampos = '<div class="checkbox-grid">';
+    // Gera HTML dos checkboxes
+    let htmlCampos = '<div class="swal-checkbox-grid">';
     CAMPOS_PADRAO.forEach(c => {
         htmlCampos += `
-            <div class="checkbox-item">
+            <label class="swal-checkbox-item">
                 <input type="checkbox" id="check_${c.key}" value="${c.key}" checked>
-                <label for="check_${c.key}">${c.label}</label>
-            </div>
+                <span>${c.label}</span>
+            </label>
         `;
     });
     htmlCampos += '</div>';
@@ -442,77 +461,137 @@ function modalNovoEvento() {
     Swal.fire({
         title: 'Criar Novo Evento',
         width: '900px',
+        customClass: { container: 'admin-modal' },
         html: `
-            <style>.modal-label{display:block;text-align:left;margin-top:10px;font-weight:bold;font-size:0.9rem;}</style>
-            <input id="swal-titulo" class="swal2-input" placeholder="Título">
-            <input id="swal-desc" class="swal2-input" placeholder="Descrição">
-            <label class="modal-label" style="color:#eab308;">Mensagem de Alerta (Opcional)</label>
-            <textarea id="swal-msg" class="swal2-textarea" placeholder="Ex: Apenas para moradores da Zona Rural" style="margin-top:5px;"></textarea>
-            <div style="display:flex; gap:10px; margin-top:10px;">
-                <div style="flex:1"><label class="modal-label">Início</label><input type="date" id="swal-inicio" class="swal2-input"></div>
-                <div style="flex:1"><label class="modal-label">Fim</label><input type="date" id="swal-fim" class="swal2-input"></div>
+            <div class="swal-form-container">
+                
+                <div class="swal-section">
+                    <label class="swal-label">Dados Principais</label>
+                    <div class="swal-row">
+                        <div class="swal-col" style="flex:2;">
+                            <input id="swal-titulo" class="swal2-input" placeholder="Título do Evento (ex: Transporte 2025)">
+                        </div>
+                        <div class="swal-col" style="flex:3;">
+                            <input id="swal-desc" class="swal2-input" placeholder="Descrição curta">
+                        </div>
+                    </div>
+                    <label class="swal-label" style="margin-top:15px; color:#eab308;">Mensagem de Alerta (Opcional)</label>
+                    <textarea id="swal-msg" class="swal2-textarea" placeholder="Ex: Este evento é exclusivo para residentes da Zona Rural."></textarea>
+                    
+                    <div class="swal-row" style="margin-top:10px;">
+                        <div class="swal-col"><label style="font-size:0.8rem">Data Início</label><input type="date" id="swal-inicio" class="swal2-input"></div>
+                        <div class="swal-col"><label style="font-size:0.8rem">Data Fim</label><input type="date" id="swal-fim" class="swal2-input"></div>
+                    </div>
+                </div>
+
+                <div class="swal-section">
+                    <label class="swal-label">Configuração do Formulário</label>
+                    <div class="swal-info-box">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span><strong>CPF</strong> e <strong>E-mail</strong> são obrigatórios e incluídos automaticamente.</span>
+                    </div>
+                    ${htmlCampos}
+                </div>
+
+                <div class="swal-section">
+                    <label class="swal-label">Uploads Obrigatórios</label>
+                    <div style="display:flex; gap:20px;">
+                        <label class="swal-checkbox-item"><input type="checkbox" id="req_foto" checked> Foto 3x4</label>
+                        <label class="swal-checkbox-item"><input type="checkbox" id="req_doc" checked> Declaração</label>
+                    </div>
+                </div>
+
+                <div class="swal-section" style="border:none;">
+                    <label class="swal-label" style="color:#f59e0b;">Perguntas Personalizadas</label>
+                    <div class="custom-fields-area" id="custom_fields_container"></div>
+                    <button type="button" class="action-btn btn-view" style="width:100%; margin-top:5px;" id="btn-add-custom">
+                        <i class="fa-solid fa-plus"></i> Adicionar Pergunta Extra
+                    </button>
+                </div>
+
             </div>
-            <label class="modal-label">Campos</label>
-            <div style="background:#e0f2fe;color:#0284c7;padding:10px;border-radius:6px;font-size:0.85rem;margin-bottom:10px;">CPF e E-mail são obrigatórios.</div>
-            ${htmlCampos}
-            <label class="modal-label">Uploads</label>
-            <div style="display:flex; gap:20px; margin-top:5px;">
-                <div><input type="checkbox" id="req_foto" checked> Foto 3x4</div>
-                <div><input type="checkbox" id="req_doc" checked> Declaração</div>
-            </div>
-            <label class="modal-label" style="color:#f59e0b;">Perguntas Personalizadas</label>
-            <div class="custom-fields-area" id="custom_fields_container"></div>
-            <button type="button" class="action-btn btn-view" style="margin-top:5px; width:100%;" id="btn-add-custom">+ Adicionar Campo</button>
         `,
-        confirmButtonText: 'Criar',
+        confirmButtonText: 'Publicar Evento',
         showCancelButton: true,
+        confirmButtonColor: '#2563eb',
         didOpen: () => {
             const container = document.getElementById('custom_fields_container');
             const btn = document.getElementById('btn-add-custom');
             btn.addEventListener('click', () => {
                 const div = document.createElement('div');
                 div.className = 'custom-field-row';
-                div.innerHTML = `<input type="text" class="swal2-input custom-field-input" placeholder="Nome da Pergunta" style="height:35px;"><button type="button" class="action-btn btn-delete" onclick="this.parentElement.remove()">X</button>`;
+                div.innerHTML = `
+                    <input type="text" class="swal2-input custom-field-input" placeholder="Ex: Tamanho da Camisa" style="height:40px;">
+                    <button type="button" class="action-btn btn-delete" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>
+                `;
                 container.appendChild(div);
             });
         },
         preConfirm: () => {
+            const titulo = document.getElementById('swal-titulo').value;
+            const inicio = document.getElementById('swal-inicio').value;
+            const fim = document.getElementById('swal-fim').value;
+
+            if(!titulo || !inicio || !fim) {
+                Swal.showValidationMessage('Preencha título e datas');
+                return false;
+            }
+
             const selecionados = [];
-            CAMPOS_PADRAO.forEach(c => { if(document.getElementById(`check_${c.key}`).checked) selecionados.push(c.key); });
+            CAMPOS_PADRAO.forEach(c => {
+                if(document.getElementById(`check_${c.key}`).checked) selecionados.push(c.key);
+            });
+
             const personalizados = [];
-            document.querySelectorAll('.custom-field-input').forEach(input => { if(input.value.trim()) personalizados.push(input.value.trim()); });
-            
+            document.querySelectorAll('.custom-field-input').forEach(input => {
+                if(input.value.trim()) personalizados.push(input.value.trim());
+            });
+
             return {
-                titulo: document.getElementById('swal-titulo').value,
-                descricao: document.getElementById('swal-desc').value,
-                inicio: document.getElementById('swal-inicio').value,
-                fim: document.getElementById('swal-fim').value,
+                titulo, descricao: document.getElementById('swal-desc').value,
+                inicio, fim,
                 config: JSON.stringify({
                     mensagemAlerta: document.getElementById('swal-msg').value,
                     camposTexto: selecionados,
                     camposPersonalizados: personalizados,
-                    arquivos: { foto: document.getElementById('req_foto').checked, doc: document.getElementById('req_doc').checked }
+                    arquivos: { 
+                        foto: document.getElementById('req_foto').checked, 
+                        doc: document.getElementById('req_doc').checked 
+                    }
                 }),
                 status: 'Ativo'
             }
         }
-    }).then(res => { if(res.isConfirmed) salvarNovoEvento(res.value); });
+    }).then((result) => {
+        if (result.isConfirmed) salvarNovoEvento(result.value);
+    });
 }
 
 function salvarNovoEvento(dados) {
-    const payload = { action: 'criarEvento', senha: sessionStorage.getItem('admin_token'), dados: dados };
+    const payload = { 
+        action: 'criarEvento', 
+        senha: sessionStorage.getItem('admin_token'), 
+        dados: dados 
+    };
+    
     Swal.fire({ title: 'Salvando...', didOpen: () => Swal.showLoading() });
-    fetch(URL_API, { method: 'POST', body: JSON.stringify(payload) }).then(() => { Swal.fire('Sucesso', '', 'success'); carregarEventosAdmin(); });
+    
+    fetch(URL_API, { method: 'POST', body: JSON.stringify(payload) })
+        .then(res => res.json())
+        .then(() => {
+            Swal.fire('Sucesso', 'Evento Criado!', 'success');
+            carregarEventosAdmin();
+        });
 }
 
 // ============================================================
-// --- GESTÃO DE INSCRIÇÕES E PDF ---
+// --- GESTÃO DE INSCRIÇÕES ---
 // ============================================================
 
 function carregarInscricoes() {
     const token = sessionStorage.getItem('admin_token');
     
-    // Se mapa vazio, carrega eventos primeiro para ter os nomes
+    // Se mapa vazio (user foi direto pra aba inscrições), carrega eventos para ter nomes
     if(Object.keys(mapaEventos).length === 0) carregarEventosAdmin();
     
     document.getElementById('lista-inscricoes-admin').innerHTML = '<tr><td colspan="5" style="text-align:center">Carregando dados...</td></tr>';
@@ -523,23 +602,14 @@ function carregarInscricoes() {
             const tbody = document.getElementById('lista-inscricoes-admin');
             tbody.innerHTML = '';
             
+            // Ordena por data (recente primeiro)
             const inscricoes = json.data.sort((a, b) => new Date(b.data) - new Date(a.data));
-            window.inscricoesData = inscricoes;
+            window.inscricoesData = inscricoes; // Guarda para filtros
             
-            atualizarFiltroEventos(inscricoes);
+            // Atualiza os selects do Dashboard se necessário
             
             inscricoes.forEach(ins => renderLinhaInscricao(ins, tbody));
         });
-}
-
-function atualizarFiltroEventos(inscricoes) {
-    const select = document.getElementById('filtro-evento');
-    select.innerHTML = '<option value="">Todos os Eventos</option>';
-    
-    const ids = [...new Set(inscricoes.map(i => i.eventoId))];
-    ids.forEach(id => {
-        select.innerHTML += `<option value="${id}">${mapaEventos[id] || id}</option>`;
-    });
 }
 
 function renderLinhaInscricao(ins, tbody) {
@@ -556,7 +626,7 @@ function renderLinhaInscricao(ins, tbody) {
     }
 
     // Botões de Ação
-    const btnEditar = `<button class="action-btn" style="background:#f59e0b" onclick="abrirEdicao('${ins.chave}')" title="Editar"><i class="fa-solid fa-pen"></i></button>`;
+    const btnEditar = `<button class="action-btn" style="background:#f59e0b" onclick="abrirEdicao('${ins.chave}')" title="Editar Dados"><i class="fa-solid fa-pen"></i></button>`;
     const btnStatus = `<button class="action-btn btn-edit" onclick="mudarStatus('${ins.chave}')" title="Mudar Status"><i class="fa-solid fa-list-check"></i></button>`;
 
     tbody.innerHTML += `
@@ -580,7 +650,6 @@ function renderLinhaInscricao(ins, tbody) {
     `;
 }
 
-// --- FUNÇÃO PARA EDITAR DADOS (NOVO) ---
 function abrirEdicao(chave) {
     const inscricao = window.inscricoesData.find(i => i.chave === chave);
     if(!inscricao) return;
@@ -598,11 +667,11 @@ function abrirEdicao(chave) {
     formHtml += '</div>';
 
     Swal.fire({
-        title: 'Editar Dados',
+        title: 'Editar Dados da Inscrição',
         html: formHtml,
         width: '600px',
         showCancelButton: true,
-        confirmButtonText: 'Salvar',
+        confirmButtonText: 'Salvar Alterações',
         confirmButtonColor: '#2563eb',
         preConfirm: () => {
             const novosDados = {};
@@ -614,7 +683,8 @@ function abrirEdicao(chave) {
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            Swal.fire({ title: 'Salvando...', didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'Atualizando...', didOpen: () => Swal.showLoading() });
+            
             fetch(URL_API, {
                 method: 'POST',
                 body: JSON.stringify({
