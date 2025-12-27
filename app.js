@@ -367,7 +367,7 @@ async function enviarInscricao(e) {
     }
 }
 
-// --- LÓGICA DE CONSULTA ATUALIZADA ---
+// --- LÓGICA DE CONSULTA ATUALIZADA (SEM DOWNLOAD DE FICHA PARA O ALUNO) ---
 function consultarChave() {
     const c = document.getElementById('busca-chave').value.trim();
     if(!c) return showError('Atenção', 'Digite a chave.');
@@ -382,8 +382,8 @@ function consultarChave() {
                 const aprovado = situacao.includes('Aprovada') || situacao.includes('Emitida');
                 let cor = aprovado ? '#10b981' : '#f59e0b';
                 
-                // Botão da Ficha (se houver)
-                let btnFicha = j.data.link_ficha ? `<a href="${j.data.link_ficha}" target="_blank" class="btn-primary" style="margin-top:10px; background:#059669;">Baixar Ficha</a>` : '';
+                // Botão da Ficha REMOVIDO para o aluno
+                let btnFicha = ''; 
                 
                 // Botão da Carteirinha (Se aprovado e o evento permitir)
                 let btnCarteirinha = '';
