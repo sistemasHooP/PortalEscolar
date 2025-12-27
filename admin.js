@@ -1,9 +1,9 @@
 const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
 
 // --- CONFIGURAÇÃO DA LOGO ---
-// Substitua o link abaixo pelo link "Raw" da sua imagem no GitHub.
-// Exemplo: https://raw.githubusercontent.com/SEU_USUARIO/SEU_REPO/main/logo.png
-const URL_LOGO = 'https://raw.githubusercontent.com/github/explore/main/topics/bus/bus.png'; // Logo de exemplo (ônibus)
+// ATENÇÃO: Substitua 'SEU_USUARIO' e 'SEU_REPO' pelos nomes reais do seu GitHub.
+// O link deve ficar parecido com: https://raw.githubusercontent.com/joao/transporte/main/logo.png
+const URL_LOGO = 'https://raw.githubusercontent.com/SEU_USUARIO/SEU_REPO/main/logo.png'; 
 
 const CAMPOS_PADRAO = [
     { key: 'NomeCompleto', label: 'Nome Completo' }, { key: 'DataNascimento', label: 'Nascimento' },
@@ -196,7 +196,7 @@ function atualizarSelectsRelatorio(eventos, inscricoes) {
     Array.from(instituicoes).sort().forEach(inst => { if(inst) selInst.innerHTML += `<option value="${inst}">${inst}</option>`; });
 }
 
-// --- RELATÓRIO PROFISSIONAL ---
+// --- RELATÓRIO PROFISSIONAL (AJUSTE TELA CHEIA) ---
 function gerarRelatorioTransporte() {
     const eventoId = document.getElementById('relatorio-evento').value;
     const instFiltro = document.getElementById('relatorio-inst').value;
@@ -224,11 +224,9 @@ function gerarRelatorioTransporte() {
             config.camposTexto.forEach(campo => {
                 if (campo !== 'NomeCompleto') {
                     const def = CAMPOS_PADRAO.find(c => c.key === campo);
-                    // Lógica simples para largura das colunas
                     let width = '10%';
                     if(campo === 'Endereco') width = '20%';
                     if(campo === 'NomeInstituicao' || campo === 'NomeCurso') width = '15%';
-                    
                     colunas.push({ key: campo, label: def ? def.label : campo, width: width });
                 }
             });
@@ -265,37 +263,56 @@ function gerarRelatorioTransporte() {
         grupos[inst].push(linha);
     });
 
-    // 3. Gerar HTML com Design Aprimorado
+    // 3. Gerar HTML com Correção de Layout e Logo
     const dataHoje = new Date().toLocaleDateString('pt-BR');
     
+    // NOTA: O CSS abaixo (@media print) esconde tudo da página original e
+    // posiciona o relatório de forma absoluta ocupando 100% da largura.
     let htmlContent = `
         <style>
             @media print {
-                @page { size: A4 landscape; margin: 10mm; } /* Força Paisagem */
-                body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                .no-print { display: none !important; }
+                @page { size: A4 landscape; margin: 5mm; } /* Margem reduzida para 5mm */
+                body * { visibility: hidden; } /* Esconde o painel administrativo */
+                
+                #area-impressao, #area-impressao * { visibility: visible; } /* Mostra o relatório */
+                #area-impressao {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    margin: 0;
+                    padding: 0;
+                    background: white;
+                }
             }
-            .report-container { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; width: 100%; max-width: 100%; }
+            .report-container { 
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                color: #333; 
+                width: 100%; 
+                margin: 0;
+                padding: 10px;
+                box-sizing: border-box;
+            }
             
             /* Cabeçalho */
-            .report-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #2563eb; padding-bottom: 15px; margin-bottom: 20px; }
+            .report-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #2563eb; padding-bottom: 15px; margin-bottom: 10px; }
             .header-left { display: flex; align-items: center; gap: 20px; }
-            .report-logo { height: 60px; width: auto; max-width: 150px; object-fit: contain; }
-            .header-titles h1 { margin: 0; font-size: 24px; color: #1e293b; text-transform: uppercase; }
-            .header-titles p { margin: 5px 0 0 0; font-size: 14px; color: #64748b; }
-            .header-right { text-align: right; font-size: 12px; color: #94a3b8; }
+            .report-logo { height: 60px; width: auto; max-width: 150px; object-fit: contain; display: block; }
+            .header-titles h1 { margin: 0; font-size: 22px; color: #1e293b; text-transform: uppercase; }
+            .header-titles p { margin: 2px 0 0 0; font-size: 13px; color: #64748b; }
+            .header-right { text-align: right; font-size: 11px; color: #94a3b8; }
 
             /* Tabela */
-            .report-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 30px; }
-            .report-table th { background-color: #f1f5f9; color: #334155; font-weight: bold; text-transform: uppercase; padding: 10px 8px; border: 1px solid #cbd5e1; text-align: left; }
-            .report-table td { padding: 8px; border: 1px solid #e2e8f0; vertical-align: middle; }
-            .report-table tr:nth-child(even) { background-color: #f8fafc; } /* Efeito Zebrado */
-            .group-header { background-color: #e2e8f0 !important; font-size: 13px; font-weight: bold; color: #0f172a; text-align: left; padding: 10px !important; border: 1px solid #cbd5e1; }
+            .report-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 20px; }
+            .report-table th { background-color: #f1f5f9; color: #334155; font-weight: bold; text-transform: uppercase; padding: 6px 4px; border: 1px solid #cbd5e1; text-align: left; }
+            .report-table td { padding: 4px; border: 1px solid #e2e8f0; vertical-align: middle; }
+            .report-table tr:nth-child(even) { background-color: #f8fafc; }
+            .group-header { background-color: #e2e8f0 !important; font-size: 12px; font-weight: bold; color: #0f172a; text-align: left; padding: 6px !important; border: 1px solid #cbd5e1; }
             
             /* Rodapé */
-            .report-footer { margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid; }
-            .sign-box { text-align: center; width: 40%; }
-            .sign-line { border-top: 1px solid #333; margin-bottom: 5px; padding-top: 5px; font-weight: bold; font-size: 12px; }
+            .report-footer { margin-top: 30px; display: flex; justify-content: space-around; page-break-inside: avoid; }
+            .sign-box { text-align: center; width: 35%; }
+            .sign-line { border-top: 1px solid #333; margin-bottom: 5px; padding-top: 5px; font-weight: bold; font-size: 11px; }
         </style>
         
         <div class="report-container">
@@ -314,35 +331,24 @@ function gerarRelatorioTransporte() {
             </div>
     `;
 
-    // Monta Cabeçalho da Tabela
-    let thead = `<tr><th style="width:30px; text-align:center;">#</th>`;
-    colunas.forEach(col => {
-        thead += `<th style="width:${col.width || 'auto'}">${col.label}</th>`;
-    });
+    let thead = `<tr><th style="width:25px; text-align:center;">#</th>`;
+    colunas.forEach(col => { thead += `<th style="width:${col.width || 'auto'}">${col.label}</th>`; });
     thead += `</tr>`;
 
-    // Monta Grupos
     Object.keys(grupos).sort().forEach(grupoNome => {
         const lista = grupos[grupoNome];
         lista.sort((a,b) => (a['NomeCompleto']||'').localeCompare(b['NomeCompleto']||''));
-
         htmlContent += `<table class="report-table">`;
-        
-        // Título do Grupo dentro da tabela (se houver divisão)
         if(temInstituicao && Object.keys(grupos).length > 1) {
             htmlContent += `<thead><tr><td colspan="${colunas.length + 1}" class="group-header">${grupoNome} (${lista.length} alunos)</td></tr>${thead}</thead><tbody>`;
         } else {
             htmlContent += `<thead>${thead}</thead><tbody>`;
         }
-
         lista.forEach((linha, idx) => {
             htmlContent += `<tr><td style="text-align:center;">${idx+1}</td>`;
-            colunas.forEach(col => {
-                htmlContent += `<td>${linha[col.key]}</td>`;
-            });
+            colunas.forEach(col => { htmlContent += `<td>${linha[col.key]}</td>`; });
             htmlContent += `</tr>`;
         });
-
         htmlContent += `</tbody></table>`;
     });
 
@@ -360,9 +366,12 @@ function gerarRelatorioTransporte() {
         </div>
     `;
 
-    document.getElementById('area-impressao').innerHTML = htmlContent;
+    const area = document.getElementById('area-impressao');
+    area.innerHTML = htmlContent;
     Swal.close();
-    setTimeout(() => window.print(), 800);
+    
+    // Pequeno delay para garantir que a imagem (logo) carregue antes de imprimir
+    setTimeout(() => window.print(), 1000);
 }
 
 // --- EVENTOS E MODAL ---
