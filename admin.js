@@ -15,8 +15,24 @@ let paginaAtual = 1;
 const ITENS_POR_PAGINA = 50;
 let selecionados = new Set(); 
 
+// --- NOVO LOADING (BONITO) ---
+function showLoading(msg = 'Processando...') {
+    Swal.fire({
+        html: `
+            <div style="display:flex; flex-direction:column; align-items:center; gap:15px; padding:20px;">
+                <div class="spinner" style="border-color:#e2e8f0; border-top-color:#2563eb; width:50px; height:50px; border-width:4px;"></div>
+                <h3 style="font-family:'Poppins'; font-size:1.1rem; color:#1e293b; margin:0;">${msg}</h3>
+                <p style="font-family:'Poppins'; font-size:0.85rem; color:#64748b; margin:0;">Aguarde um momento...</p>
+            </div>
+        `,
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        width: '300px',
+        customClass: { popup: 'swal-loading-popup' }
+    });
+}
+
 // --- FUNÇÃO DE SEGURANÇA PARA DATAS ---
-// Isso resolve o problema de "Invalid Date"
 function safeDate(val) {
     if(!val) return '-';
     try {
@@ -44,7 +60,7 @@ function toggleSenha() {
 function realizarLogin(e) {
     e.preventDefault();
     const pass = document.getElementById('admin-pass').value;
-    Swal.fire({ title: 'Entrando...', didOpen: () => Swal.showLoading() });
+    showLoading('Autenticando...');
     
     fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'loginAdmin', senha: pass }) })
     .then(res => res.json()).then(json => {
@@ -54,7 +70,7 @@ function realizarLogin(e) {
             document.getElementById('admin-panel').classList.remove('hidden');
             sessionStorage.setItem('admin_token', pass);
             carregarDashboard();
-        } else { Swal.fire('Erro', 'Senha incorreta', 'error'); }
+        } else { Swal.fire({icon: 'error', title: 'Acesso Negado', text: 'Senha incorreta', confirmButtonColor: '#ef4444'}); }
     }).catch(() => Swal.fire('Erro', 'Falha na conexão', 'error'));
 }
 
@@ -75,6 +91,7 @@ function switchTab(tabId) {
 // --- DASHBOARD ---
 function carregarDashboard() {
     const token = sessionStorage.getItem('admin_token');
+    // Carregamento silencioso ou discreto ao trocar abas
     Promise.all([
         fetch(`${URL_API}?action=getTodosEventos`).then(r => r.json()),
         fetch(`${URL_API}?action=getInscricoesAdmin&token=${token}`).then(r => r.json())
@@ -82,9 +99,7 @@ function carregarDashboard() {
         mapaEventos = {}; 
         if(jsonEventos.data) jsonEventos.data.forEach(ev => mapaEventos[ev.id] = ev.titulo);
         
-        // Garante que jsonInscricoes.data existe
         const inscricoes = jsonInscricoes.data || [];
-        
         atualizarSelectsRelatorio(jsonEventos.data || [], inscricoes);
         
         const total = inscricoes.length;
@@ -132,16 +147,18 @@ function atualizarSelectsRelatorio(eventos, inscricoes) {
 function gerarRelatorioTransporte() {
     const eventoId = document.getElementById('relatorio-evento').value;
     const instFiltro = document.getElementById('relatorio-inst').value;
-    if(!eventoId) return Swal.fire('Atenção', 'Selecione um evento.', 'warning');
+    if(!eventoId) return Swal.fire({icon: 'warning', title: 'Atenção', text: 'Selecione um evento.'});
 
+    showLoading('Gerando Relatório...');
     const token = sessionStorage.getItem('admin_token');
     fetch(`${URL_API}?action=getInscricoesAdmin&token=${token}`).then(res => res.json()).then(json => {
+        Swal.close();
         const alunos = (json.data || []).filter(i => {
             let d = {}; try{d=JSON.parse(i.dadosJson)}catch(e){}
             return String(i.eventoId) === String(eventoId) && (instFiltro === "" || d.NomeInstituicao === instFiltro) && (i.status === 'Aprovada' || i.status === 'Ficha Emitida');
         });
 
-        if(alunos.length === 0) return Swal.fire('Vazio', 'Nenhum aluno APROVADO.', 'info');
+        if(alunos.length === 0) return Swal.fire({icon: 'info', title: 'Vazio', text: 'Nenhum aluno APROVADO encontrado.'});
 
         let linhas = '';
         alunos.forEach((aluno, idx) => {
@@ -158,7 +175,7 @@ function gerarRelatorioTransporte() {
     });
 }
 
-// --- EVENTOS E MODAL MELHORADO ---
+// --- EVENTOS E MODAL ---
 function carregarEventosAdmin() {
     fetch(`${URL_API}?action=getTodosEventos`).then(res => res.json()).then(json => {
         const tbody = document.getElementById('lista-eventos-admin'); 
@@ -210,18 +227,17 @@ function abrirEdicaoEvento(evento) {
     }).then((res) => {
         if(res.isConfirmed) {
             fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'editarEvento', senha: sessionStorage.getItem('admin_token'), id: evento.id, ...res.value }) })
-            .then(() => { Swal.fire('Salvo!', '', 'success'); carregarEventosAdmin(); });
+            .then(() => { Swal.fire({icon: 'success', title: 'Salvo!'}); carregarEventosAdmin(); });
         }
     });
 }
 
 function toggleStatusEvento(id, status) {
-    Swal.fire({title: 'Aguarde...', didOpen: ()=>Swal.showLoading()});
+    showLoading('Atualizando...');
     fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'alterarStatusEvento', senha: sessionStorage.getItem('admin_token'), id, novoStatus: status }) })
     .then(() => { Swal.close(); carregarEventosAdmin(); });
 }
 
-// MODAL NOVO EVENTO (NOVO LAYOUT)
 function modalNovoEvento() {
     let htmlCampos = '<div class="checkbox-grid">';
     CAMPOS_PADRAO.forEach(c => htmlCampos += `<label class="checkbox-card"><input type="checkbox" id="check_${c.key}" value="${c.key}" checked> ${c.label}</label>`);
@@ -270,9 +286,9 @@ function modalNovoEvento() {
         }
     }).then((res) => {
         if(res.isConfirmed) {
-            Swal.fire({title: 'Criando...', didOpen: ()=>Swal.showLoading()});
+            showLoading('Criando Evento...');
             fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'criarEvento', senha: sessionStorage.getItem('admin_token'), dados: res.value }) })
-            .then(() => { Swal.fire('Sucesso!', 'Evento criado.', 'success'); carregarEventosAdmin(); });
+            .then(() => { Swal.fire({icon: 'success', title: 'Sucesso!'}); carregarEventosAdmin(); });
         }
     });
 }
@@ -376,12 +392,12 @@ function acaoEmMassa(status) {
         icon: 'warning', showCancelButton: true, confirmButtonText: 'Sim' 
     }).then((res) => {
         if(res.isConfirmed) {
-            Swal.showLoading();
+            showLoading('Atualizando em massa...');
             fetch(URL_API, {
                 method: 'POST',
                 body: JSON.stringify({ action: 'atualizarStatusEmMassa', senha: sessionStorage.getItem('admin_token'), chaves: Array.from(selecionados), novoStatus: status })
             }).then(() => {
-                Swal.fire('Atualizado!', '', 'success');
+                Swal.fire({icon: 'success', title: 'Atualizado!'});
                 todasInscricoes.forEach(i => { if(selecionados.has(i.chave)) i.status = status; });
                 resetEFiltrar();
             });
