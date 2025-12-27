@@ -580,7 +580,7 @@ function modalNovoEvento() {
     });
 }
 
-// --- INSCRIÇÕES ---
+// --- INSCRIÇÕES (MODIFICADO: Carrega eventos para ter config) ---
 function carregarInscricoes() {
     const tbody = document.getElementById('lista-inscricoes-admin');
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Carregando...</td></tr>';
@@ -596,10 +596,30 @@ function carregarInscricoes() {
         `;
     }
 
-    fetch(`${URL_API}?action=getInscricoesAdmin&token=${sessionStorage.getItem('admin_token')}`).then(r => r.json()).then(json => {
+    // 1. Carrega Eventos (Para ter o mapa e configurações)
+    fetch(`${URL_API}?action=getTodosEventos`)
+    .then(r => r.json())
+    .then(jsonEventos => {
+        if(jsonEventos.data) {
+             jsonEventos.data.forEach(ev => { 
+                 mapaEventos[ev.id] = ev.titulo; 
+                 cacheEventos[ev.id] = ev; 
+             });
+             // Atualiza filtro de eventos
+             const select = document.getElementById('filtro-evento');
+             if(select && select.options.length <= 1) {
+                 Object.keys(mapaEventos).forEach(id => select.innerHTML += `<option value="${id}">${mapaEventos[id]}</option>`);
+             }
+        }
+        // 2. Carrega Inscrições
+        return fetch(`${URL_API}?action=getInscricoesAdmin&token=${sessionStorage.getItem('admin_token')}`);
+    })
+    .then(r => r.json())
+    .then(json => {
         todasInscricoes = (json.data || []).sort((a,b) => new Date(b.data) - new Date(a.data));
         resetEFiltrar();
-    }).catch(() => {
+    })
+    .catch(() => {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">Erro ao carregar.</td></tr>';
     });
 }
@@ -614,10 +634,6 @@ function resetEFiltrar() {
         const nome = (d.NomeCompleto || "").toLowerCase();
         return (nome.includes(termo) || i.chave.toLowerCase().includes(termo)) && (status === "" || i.status === status) && (eventoId === "" || String(i.eventoId) === String(eventoId));
     });
-    if(document.getElementById('filtro-evento').options.length <= 1) {
-        const select = document.getElementById('filtro-evento');
-        Object.keys(mapaEventos).forEach(id => select.innerHTML += `<option value="${id}">${mapaEventos[id]}</option>`);
-    }
     document.getElementById('lista-inscricoes-admin').innerHTML = '';
     renderizarProximaPagina();
 }
@@ -645,12 +661,17 @@ function renderizarProximaPagina() {
     document.getElementById('btn-load-more').style.display = (paginaAtual * ITENS_POR_PAGINA < inscricoesFiltradas.length + ITENS_POR_PAGINA) ? 'block' : 'none';
 }
 
-// --- FUNÇÃO ATUALIZADA: EDIÇÃO COM UPLOAD E SALVAMENTO ---
+// --- FUNÇÃO ATUALIZADA: EDIÇÃO CONDICIONAL ---
 function abrirEdicaoInscricao(chave) {
     const inscricao = todasInscricoes.find(i => i.chave === chave);
     if (!inscricao) return;
     let dados = {};
     try { dados = JSON.parse(inscricao.dadosJson); } catch(e) {}
+    
+    // Busca config do evento para saber se exibe uploads
+    let evento = cacheEventos[inscricao.eventoId] || {};
+    let configEvento = {};
+    try { configEvento = JSON.parse(evento.config || '{}'); } catch(e) {}
     
     let formHtml = '<div style="display:flex; flex-direction:column; gap:10px; text-align:left; max-height:400px; overflow-y:auto; padding:5px;">';
     const ignorar = ['linkFoto', 'linkDoc'];
@@ -663,18 +684,33 @@ function abrirEdicaoInscricao(chave) {
         }
     }
     
-    // Campos de Upload (Novos)
-    formHtml += `
-        <hr style="margin:15px 0; border:0; border-top:1px solid #eee;">
-        <h4 style="margin:0 0 10px 0; color:#1e40af; font-size:0.9rem;">Substituir Arquivos</h4>
-        <div style="background:#f8fafc; padding:10px; border-radius:8px;">
-            <label style="font-size:0.85rem; font-weight:600; display:block;">Nova Foto 3x4:</label>
-            <input type="file" id="edit_upload_foto" accept="image/*" class="swal-input" style="font-size:0.8rem;">
-            
-            <label style="font-size:0.85rem; font-weight:600; display:block; margin-top:10px;">Nova Declaração (PDF):</label>
-            <input type="file" id="edit_upload_doc" accept="application/pdf" class="swal-input" style="font-size:0.8rem;">
-        </div>
-    `;
+    // Campos de Upload (SÓ SE O EVENTO EXIGIR)
+    const pedeFoto = configEvento.arquivos && configEvento.arquivos.foto;
+    const pedeDoc = configEvento.arquivos && configEvento.arquivos.doc;
+
+    if (pedeFoto || pedeDoc) {
+        formHtml += `
+            <hr style="margin:15px 0; border:0; border-top:1px solid #eee;">
+            <h4 style="margin:0 0 10px 0; color:#1e40af; font-size:0.9rem;">Substituir Arquivos</h4>
+            <div style="background:#f8fafc; padding:10px; border-radius:8px;">
+        `;
+        
+        if (pedeFoto) {
+            formHtml += `
+                <label style="font-size:0.85rem; font-weight:600; display:block;">Nova Foto 3x4:</label>
+                <input type="file" id="edit_upload_foto" accept="image/*" class="swal-input" style="font-size:0.8rem;">
+            `;
+        }
+        
+        if (pedeDoc) {
+            formHtml += `
+                <label style="font-size:0.85rem; font-weight:600; display:block; margin-top:10px;">Nova Declaração (PDF):</label>
+                <input type="file" id="edit_upload_doc" accept="application/pdf" class="swal-input" style="font-size:0.8rem;">
+            `;
+        }
+        
+        formHtml += `</div>`;
+    }
     
     formHtml += '</div>';
     
@@ -692,14 +728,13 @@ function abrirEdicaoInscricao(chave) {
             
             // Coleta Arquivos
             const arqs = {};
-            const fileFoto = document.getElementById('edit_upload_foto').files[0];
-            if(fileFoto) {
-                arqs.foto = { data: await toBase64(fileFoto), mime: 'image/jpeg' };
+            if (pedeFoto) {
+                const fileFoto = document.getElementById('edit_upload_foto').files[0];
+                if(fileFoto) arqs.foto = { data: await toBase64(fileFoto), mime: 'image/jpeg' };
             }
-            
-            const fileDoc = document.getElementById('edit_upload_doc').files[0];
-            if(fileDoc) {
-                arqs.doc = { data: await toBase64(fileDoc), mime: 'application/pdf' };
+            if (pedeDoc) {
+                const fileDoc = document.getElementById('edit_upload_doc').files[0];
+                if(fileDoc) arqs.doc = { data: await toBase64(fileDoc), mime: 'application/pdf' };
             }
 
             return { novosDados, arquivos: Object.keys(arqs).length > 0 ? arqs : null };
@@ -719,7 +754,6 @@ function abrirEdicaoInscricao(chave) {
             }).then(res => res.json()).then(json => {
                 if(json.status === 'success') { 
                     Swal.fire({icon: 'success', title: 'Dados Atualizados!'}); 
-                    // Atualiza cache local para refletir na tela sem recarregar tudo
                     let jsonNovo = { ...dados, ...result.value.novosDados }; 
                     inscricao.dadosJson = JSON.stringify(jsonNovo); 
                     resetEFiltrar(); 
@@ -789,8 +823,6 @@ const toBase64 = f => new Promise((r, j) => {
 // --- IMPRESSÃO CARTEIRINHA ADM ---
 function imprimirCarteirinhaAdmin(chave) {
     showLoading('Gerando Carteirinha...');
-    
-    // Busca dados ATUALIZADOS do servidor (para pegar a foto em Base64)
     fetch(`${URL_API}?action=consultarInscricao&chave=${chave}`)
     .then(r => r.json())
     .then(j => {
@@ -799,13 +831,12 @@ function imprimirCarteirinhaAdmin(chave) {
         
         const aluno = j.data.aluno;
         
-        // Tratamento da Foto
+        // Tratamento de Imagem
         let imgSrc = 'https://via.placeholder.com/150?text=FOTO';
         if (aluno.foto) {
-            if (aluno.foto.startsWith('data:image') || aluno.foto.startsWith('http')) {
+             if (aluno.foto.startsWith('data:image') || aluno.foto.startsWith('http')) {
                 // Se for URL do Drive, tenta formatar para visualização direta
                 if (aluno.foto.includes('drive.google.com') && !aluno.foto.startsWith('data:image')) {
-                     // Função auxiliar local para formatar
                      let id = '';
                      const parts = aluno.foto.split(/\/d\/|id=/);
                      if (parts.length > 1) id = parts[1].split(/\/|&/)[0];
@@ -853,7 +884,6 @@ function imprimirCarteirinhaAdmin(chave) {
             printLayer.id = 'print-layer';
             document.body.appendChild(printLayer);
         }
-        
         printLayer.innerHTML = htmlCarteirinha;
         setTimeout(() => window.print(), 500);
     });
