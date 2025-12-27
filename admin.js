@@ -415,15 +415,62 @@ function carregarEventosAdmin() {
     });
 }
 
+// --- FUNÇÃO ATUALIZADA: Editar Evento COMPLETO ---
 function abrirEdicaoEvento(evento) {
     let config = {}; try { config = JSON.parse(evento.config); } catch(e){}
+    
+    const checkFicha = config.exigeFicha ? 'checked' : '';
+    const checkCart = config.emiteCarteirinha ? 'checked' : '';
+
     Swal.fire({
         title: 'Editar Evento',
-        html: `<div class="modal-form-grid"><div class="modal-full"><label class="swal-label">Prorrogar Data Fim</label><input type="date" id="edit_fim" class="swal-input" value="${evento.fim ? evento.fim.split('T')[0] : ''}"></div><div class="modal-full"><label class="swal-label">Mensagem de Alerta</label><textarea id="edit_msg" class="swal-input" style="height:80px;">${config.mensagemAlerta || ''}</textarea></div></div>`,
+        html: `
+            <div class="modal-form-grid">
+                <div class="modal-full">
+                    <label class="swal-label">Prorrogar Data Fim</label>
+                    <input type="date" id="edit_fim" class="swal-input" value="${evento.fim ? evento.fim.split('T')[0] : ''}">
+                </div>
+                <div class="modal-full">
+                    <label class="swal-label">Mensagem de Alerta</label>
+                    <textarea id="edit_msg" class="swal-input" style="height:80px;">${config.mensagemAlerta || ''}</textarea>
+                </div>
+                
+                <div class="modal-full" style="text-align:left; margin-top:10px;">
+                    <label class="checkbox-card" style="border-color: #f59e0b; background: #fffbeb; margin-bottom:5px;">
+                        <input type="checkbox" id="edit_req_ficha" ${checkFicha}> 
+                        <strong>Exigir Ficha Presencial?</strong>
+                    </label>
+                    <label class="checkbox-card" style="border-color: #3b82f6; background: #eff6ff;">
+                        <input type="checkbox" id="edit_emitir_carteirinha" ${checkCart}> 
+                        <strong>Emitir Carteirinha Digital?</strong>
+                    </label>
+                </div>
+            </div>`,
         width: '500px', showCancelButton: true, confirmButtonText: 'Salvar', confirmButtonColor: '#2563eb',
-        preConfirm: () => { return { fim: document.getElementById('edit_fim').value, msg: document.getElementById('edit_msg').value }; }
+        preConfirm: () => { 
+            return { 
+                fim: document.getElementById('edit_fim').value, 
+                msg: document.getElementById('edit_msg').value,
+                exigeFicha: document.getElementById('edit_req_ficha').checked,
+                emiteCarteirinha: document.getElementById('edit_emitir_carteirinha').checked
+            }; 
+        }
     }).then((res) => {
-        if(res.isConfirmed) fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'editarEvento', senha: sessionStorage.getItem('admin_token'), id: evento.id, ...res.value }) }).then(() => { Swal.fire({icon: 'success', title: 'Salvo!'}); carregarEventosAdmin(); });
+        if(res.isConfirmed) {
+            showLoading('Salvando...');
+            fetch(URL_API, { 
+                method: 'POST', 
+                body: JSON.stringify({ 
+                    action: 'editarEvento', 
+                    senha: sessionStorage.getItem('admin_token'), 
+                    id: evento.id, 
+                    ...res.value 
+                }) 
+            }).then(() => { 
+                Swal.fire({icon: 'success', title: 'Salvo!'}); 
+                carregarEventosAdmin(); 
+            }); 
+        }
     });
 }
 
