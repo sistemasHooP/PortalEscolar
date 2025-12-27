@@ -9,36 +9,57 @@ const CAMPOS_PADRAO = [
 
 let mapaEventos = {}; 
 let chartEventosInstance = null; let chartStatusInstance = null;
-
-// Variáveis para Lazy Loading e Bulk
-let todasInscricoes = [];     // Guarda TUDO que veio da API
-let inscricoesFiltradas = []; // Guarda o que passou no filtro atual
+let todasInscricoes = [];     
+let inscricoesFiltradas = []; 
 let paginaAtual = 1;
 const ITENS_POR_PAGINA = 50;
-let selecionados = new Set(); // Guarda IDs dos checkbox marcados
+let selecionados = new Set(); 
+
+// --- FUNÇÃO DE SEGURANÇA PARA DATAS ---
+// Isso resolve o problema de "Invalid Date"
+function safeDate(val) {
+    if(!val) return '-';
+    try {
+        const d = new Date(val);
+        if(isNaN(d.getTime())) return '-';
+        return d.toLocaleDateString('pt-BR');
+    } catch(e) { return '-'; }
+}
 
 // --- AUTH ---
 function toggleSenha() {
     const input = document.getElementById('admin-pass');
-    input.type = input.type === 'password' ? 'text' : 'password';
+    const icon = document.querySelector('.password-toggle');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
 }
 
 function realizarLogin(e) {
     e.preventDefault();
     const pass = document.getElementById('admin-pass').value;
+    Swal.fire({ title: 'Entrando...', didOpen: () => Swal.showLoading() });
+    
     fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'loginAdmin', senha: pass }) })
     .then(res => res.json()).then(json => {
+        Swal.close();
         if(json.auth) {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('admin-panel').classList.remove('hidden');
             sessionStorage.setItem('admin_token', pass);
             carregarDashboard();
         } else { Swal.fire('Erro', 'Senha incorreta', 'error'); }
-    });
+    }).catch(() => Swal.fire('Erro', 'Falha na conexão', 'error'));
 }
+
 function logout() { sessionStorage.removeItem('admin_token'); location.reload(); }
 
-// --- NAV ---
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
@@ -58,19 +79,24 @@ function carregarDashboard() {
         fetch(`${URL_API}?action=getTodosEventos`).then(r => r.json()),
         fetch(`${URL_API}?action=getInscricoesAdmin&token=${token}`).then(r => r.json())
     ]).then(([jsonEventos, jsonInscricoes]) => {
-        mapaEventos = {}; jsonEventos.data.forEach(ev => mapaEventos[ev.id] = ev.titulo);
-        atualizarSelectsRelatorio(jsonEventos.data, jsonInscricoes.data);
+        mapaEventos = {}; 
+        if(jsonEventos.data) jsonEventos.data.forEach(ev => mapaEventos[ev.id] = ev.titulo);
         
-        const total = jsonInscricoes.data.length;
-        const aprovados = jsonInscricoes.data.filter(i => i.status.includes('Aprovada') || i.status.includes('Emitida')).length;
+        // Garante que jsonInscricoes.data existe
+        const inscricoes = jsonInscricoes.data || [];
+        
+        atualizarSelectsRelatorio(jsonEventos.data || [], inscricoes);
+        
+        const total = inscricoes.length;
+        const aprovados = inscricoes.filter(i => i.status.includes('Aprovada') || i.status.includes('Emitida')).length;
         
         document.getElementById('stat-total').innerText = total;
         document.getElementById('stat-aprovados').innerText = aprovados;
-        document.getElementById('stat-pendentes').innerText = jsonInscricoes.data.filter(i => i.status === 'Pendente').length;
+        document.getElementById('stat-pendentes').innerText = inscricoes.filter(i => i.status === 'Pendente').length;
 
         const contagemEventos = {}; const contagemStatus = {};
-        jsonInscricoes.data.forEach(i => {
-            const nome = mapaEventos[i.eventoId] || 'Outro';
+        inscricoes.forEach(i => {
+            const nome = mapaEventos[i.eventoId] || 'Desconhecido';
             contagemEventos[nome] = (contagemEventos[nome] || 0) + 1;
             contagemStatus[i.status] = (contagemStatus[i.status] || 0) + 1;
         });
@@ -91,7 +117,6 @@ function renderizarGraficos(dadosEventos, dadosStatus) {
     });
 }
 
-// --- RELATÓRIOS ---
 function atualizarSelectsRelatorio(eventos, inscricoes) {
     const selEvento = document.getElementById('relatorio-evento');
     selEvento.innerHTML = '<option value="">Selecione...</option>';
@@ -111,7 +136,7 @@ function gerarRelatorioTransporte() {
 
     const token = sessionStorage.getItem('admin_token');
     fetch(`${URL_API}?action=getInscricoesAdmin&token=${token}`).then(res => res.json()).then(json => {
-        const alunos = json.data.filter(i => {
+        const alunos = (json.data || []).filter(i => {
             let d = {}; try{d=JSON.parse(i.dadosJson)}catch(e){}
             return String(i.eventoId) === String(eventoId) && (instFiltro === "" || d.NomeInstituicao === instFiltro) && (i.status === 'Aprovada' || i.status === 'Ficha Emitida');
         });
@@ -133,21 +158,28 @@ function gerarRelatorioTransporte() {
     });
 }
 
-// --- EVENTOS (AGORA COM EDIÇÃO) ---
+// --- EVENTOS E MODAL MELHORADO ---
 function carregarEventosAdmin() {
     fetch(`${URL_API}?action=getTodosEventos`).then(res => res.json()).then(json => {
-        const tbody = document.getElementById('lista-eventos-admin'); tbody.innerHTML = '';
-        mapaEventos = {}; json.data.forEach(ev => mapaEventos[ev.id] = ev.titulo);
+        const tbody = document.getElementById('lista-eventos-admin'); 
+        tbody.innerHTML = '';
+        mapaEventos = {};
+        
+        if(!json.data || json.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhum evento encontrado.</td></tr>';
+            return;
+        }
+
+        json.data.forEach(ev => mapaEventos[ev.id] = ev.titulo);
         
         json.data.sort((a,b) => b.id - a.id).forEach(ev => {
             let btnAction = ev.status === 'Ativo' ? 
-                `<button class="action-btn btn-status-toggle active" onclick="toggleStatusEvento('${ev.id}','Inativo')"><i class="fa-solid fa-pause"></i></button>` : 
-                `<button class="action-btn btn-status-toggle inactive" onclick="toggleStatusEvento('${ev.id}','Ativo')"><i class="fa-solid fa-play"></i></button>`;
+                `<button class="action-btn btn-status-toggle active" onclick="toggleStatusEvento('${ev.id}','Inativo')" title="Desativar"><i class="fa-solid fa-pause"></i></button>` : 
+                `<button class="action-btn btn-status-toggle inactive" onclick="toggleStatusEvento('${ev.id}','Ativo')" title="Ativar"><i class="fa-solid fa-play"></i></button>`;
             
-            // Botão de Edição Desbloqueado
             tbody.innerHTML += `<tr>
                 <td>#${ev.id}</td>
-                <td><strong>${ev.titulo}</strong><br><small>${new Date(ev.inicio).toLocaleDateString()} - ${new Date(ev.fim).toLocaleDateString()}</small></td>
+                <td><strong>${ev.titulo}</strong><br><small>${safeDate(ev.inicio)} até ${safeDate(ev.fim)}</small></td>
                 <td><span class="badge badge-${ev.status}">${ev.status}</span></td>
                 <td style="text-align:right;">${btnAction}
                 <button class="action-btn btn-edit" onclick='abrirEdicaoEvento(${JSON.stringify(ev)})'><i class="fa-solid fa-pen"></i></button></td>
@@ -161,12 +193,19 @@ function abrirEdicaoEvento(evento) {
     Swal.fire({
         title: 'Editar Evento',
         html: `
-            <label class="swal-label">Prorrogar Data Fim</label>
-            <input type="date" id="edit_fim" class="swal2-input" value="${evento.fim.split('T')[0]}">
-            <label class="swal-label" style="margin-top:15px;">Mensagem de Alerta</label>
-            <textarea id="edit_msg" class="swal2-textarea">${config.mensagemAlerta || ''}</textarea>
+            <div class="modal-form-grid">
+                <div class="modal-full">
+                    <label class="swal-label">Prorrogar Data Fim</label>
+                    <input type="date" id="edit_fim" class="swal-input" value="${evento.fim ? evento.fim.split('T')[0] : ''}">
+                </div>
+                <div class="modal-full">
+                    <label class="swal-label">Mensagem de Alerta (Aviso no topo do form)</label>
+                    <textarea id="edit_msg" class="swal-input" style="height:80px;">${config.mensagemAlerta || ''}</textarea>
+                </div>
+            </div>
         `,
-        showCancelButton: true, confirmButtonText: 'Salvar',
+        width: '500px',
+        showCancelButton: true, confirmButtonText: 'Salvar Alterações',
         preConfirm: () => { return { fim: document.getElementById('edit_fim').value, msg: document.getElementById('edit_msg').value }; }
     }).then((res) => {
         if(res.isConfirmed) {
@@ -177,26 +216,50 @@ function abrirEdicaoEvento(evento) {
 }
 
 function toggleStatusEvento(id, status) {
+    Swal.fire({title: 'Aguarde...', didOpen: ()=>Swal.showLoading()});
     fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'alterarStatusEvento', senha: sessionStorage.getItem('admin_token'), id, novoStatus: status }) })
-    .then(() => carregarEventosAdmin());
+    .then(() => { Swal.close(); carregarEventosAdmin(); });
 }
 
+// MODAL NOVO EVENTO (NOVO LAYOUT)
 function modalNovoEvento() {
-    let htmlCampos = '<div class="swal-checkbox-grid">';
-    CAMPOS_PADRAO.forEach(c => htmlCampos += `<label class="swal-checkbox-item"><input type="checkbox" id="check_${c.key}" value="${c.key}" checked> ${c.label}</label>`);
+    let htmlCampos = '<div class="checkbox-grid">';
+    CAMPOS_PADRAO.forEach(c => htmlCampos += `<label class="checkbox-card"><input type="checkbox" id="check_${c.key}" value="${c.key}" checked> ${c.label}</label>`);
     htmlCampos += '</div>';
 
     Swal.fire({
-        title: 'Novo Evento', width: '800px',
-        html: `<div class="swal-form-container">
-            <input id="swal-titulo" class="swal2-input" placeholder="Título">
-            <input id="swal-desc" class="swal2-input" placeholder="Descrição">
-            <div class="swal-row"><input type="date" id="swal-inicio" class="swal2-input"><input type="date" id="swal-fim" class="swal2-input"></div>
-            <label class="swal-label">Campos</label>${htmlCampos}
-            <label class="swal-label">Uploads</label>
-            <div style="display:flex; gap:15px;"><label><input type="checkbox" id="req_foto" checked> Foto</label><label><input type="checkbox" id="req_doc" checked> Doc</label></div>
-        </div>`,
-        showCancelButton: true, confirmButtonText: 'Criar',
+        title: 'Criar Novo Evento', width: '800px',
+        html: `
+            <div class="modal-form-grid">
+                <div class="modal-full">
+                    <label class="swal-label">Título do Evento</label>
+                    <input id="swal-titulo" class="swal-input" placeholder="Ex: Transporte 2025.1">
+                </div>
+                <div class="modal-full">
+                    <label class="swal-label">Descrição Curta</label>
+                    <input id="swal-desc" class="swal-input" placeholder="Ex: Cadastro para alunos da Zona Rural">
+                </div>
+                <div class="modal-row">
+                    <div><label class="swal-label">Início</label><input type="date" id="swal-inicio" class="swal-input"></div>
+                    <div><label class="swal-label">Fim</label><input type="date" id="swal-fim" class="swal-input"></div>
+                </div>
+                
+                <div class="modal-full" style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0;">
+                    <label class="swal-label" style="color:var(--primary);">Quais campos o aluno deve preencher?</label>
+                    <p style="font-size:0.8rem; color:#666; margin:0 0 10px 0;">CPF e E-mail já são obrigatórios.</p>
+                    ${htmlCampos}
+                </div>
+
+                <div class="modal-full">
+                    <label class="swal-label">Documentos Obrigatórios</label>
+                    <div style="display:flex; gap:20px;">
+                        <label class="checkbox-card"><input type="checkbox" id="req_foto" checked> Foto 3x4</label>
+                        <label class="checkbox-card"><input type="checkbox" id="req_doc" checked> Declaração/Comprovante</label>
+                    </div>
+                </div>
+            </div>
+        `,
+        showCancelButton: true, confirmButtonText: 'Publicar Evento', confirmButtonColor: '#2563eb',
         preConfirm: () => {
             const sels = []; CAMPOS_PADRAO.forEach(c => { if(document.getElementById(`check_${c.key}`).checked) sels.push(c.key); });
             return {
@@ -207,18 +270,23 @@ function modalNovoEvento() {
         }
     }).then((res) => {
         if(res.isConfirmed) {
+            Swal.fire({title: 'Criando...', didOpen: ()=>Swal.showLoading()});
             fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'criarEvento', senha: sessionStorage.getItem('admin_token'), dados: res.value }) })
-            .then(() => { Swal.fire('Criado!', '', 'success'); carregarEventosAdmin(); });
+            .then(() => { Swal.fire('Sucesso!', 'Evento criado.', 'success'); carregarEventosAdmin(); });
         }
     });
 }
 
-// --- INSCRIÇÕES (LAZY LOAD & BULK) ---
+// --- INSCRIÇÕES ---
 function carregarInscricoes() {
-    document.getElementById('lista-inscricoes-admin').innerHTML = '<tr><td colspan="6" style="text-align:center">Carregando...</td></tr>';
+    const tbody = document.getElementById('lista-inscricoes-admin');
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Carregando dados...</td></tr>';
+    
     fetch(`${URL_API}?action=getInscricoesAdmin&token=${sessionStorage.getItem('admin_token')}`).then(r => r.json()).then(json => {
-        todasInscricoes = json.data.sort((a,b) => new Date(b.data) - new Date(a.data));
+        todasInscricoes = (json.data || []).sort((a,b) => new Date(b.data) - new Date(a.data));
         resetEFiltrar();
+    }).catch(() => {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">Erro ao carregar.</td></tr>';
     });
 }
 
@@ -237,7 +305,6 @@ function resetEFiltrar() {
                (eventoId === "" || String(i.eventoId) === String(eventoId));
     });
 
-    // Popula filtro de eventos se vazio
     if(document.getElementById('filtro-evento').options.length <= 1) {
         const select = document.getElementById('filtro-evento');
         Object.keys(mapaEventos).forEach(id => select.innerHTML += `<option value="${id}">${mapaEventos[id]}</option>`);
@@ -253,18 +320,25 @@ function renderizarProximaPagina() {
     const fim = inicio + ITENS_POR_PAGINA;
     const lote = inscricoesFiltradas.slice(inicio, fim);
 
+    if(paginaAtual === 1 && lote.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Nenhuma inscrição encontrada.</td></tr>';
+        document.getElementById('btn-load-more').style.display = 'none';
+        return;
+    }
+
     lote.forEach(ins => {
         let d = {}; try { d = JSON.parse(ins.dadosJson); } catch(e){}
         const checked = selecionados.has(ins.chave) ? 'checked' : '';
         tbody.innerHTML += `<tr>
             <td><input type="checkbox" class="bulk-check" value="${ins.chave}" ${checked} onclick="toggleCheck('${ins.chave}')"></td>
-            <td>${new Date(ins.data).toLocaleDateString()}</td>
+            <td>${safeDate(ins.data)}</td>
             <td><small>${mapaEventos[ins.eventoId]||ins.eventoId}</small></td>
-            <td><strong>${d.NomeCompleto||'Aluno'}</strong><br><small>${ins.chave}</small></td>
+            <td><strong>${d.NomeCompleto||'Aluno'}</strong><br><small style="color:#64748b;">${ins.chave}</small></td>
             <td><span class="badge badge-${ins.status.replace(/\s/g, '')}">${ins.status}</span></td>
             <td>
                 <button class="action-btn btn-edit" onclick="mudarStatus('${ins.chave}')"><i class="fa-solid fa-list-check"></i></button>
                 ${ins.link_ficha ? `<a href="${ins.link_ficha}" target="_blank" class="action-btn btn-view"><i class="fa-solid fa-file-pdf"></i></a>` : ''}
+                ${ins.doc ? `<a href="${ins.doc}" target="_blank" class="action-btn btn-view" title="Ver Doc"><i class="fa-solid fa-paperclip"></i></a>` : ''}
             </td>
         </tr>`;
     });
@@ -273,7 +347,6 @@ function renderizarProximaPagina() {
     document.getElementById('btn-load-more').style.display = (fim < inscricoesFiltradas.length) ? 'block' : 'none';
 }
 
-// --- LÓGICA BULK ---
 function toggleCheck(chave) {
     if(selecionados.has(chave)) selecionados.delete(chave); else selecionados.add(chave);
     atualizarBarraBulk();
@@ -309,7 +382,6 @@ function acaoEmMassa(status) {
                 body: JSON.stringify({ action: 'atualizarStatusEmMassa', senha: sessionStorage.getItem('admin_token'), chaves: Array.from(selecionados), novoStatus: status })
             }).then(() => {
                 Swal.fire('Atualizado!', '', 'success');
-                // Atualiza localmente para não precisar recarregar tudo
                 todasInscricoes.forEach(i => { if(selecionados.has(i.chave)) i.status = status; });
                 resetEFiltrar();
             });
@@ -317,13 +389,12 @@ function acaoEmMassa(status) {
     });
 }
 
-// --- INSTITUIÇÕES ---
 function carregarInstituicoes() {
     fetch(`${URL_API}?action=getInstituicoes`).then(r => r.json()).then(json => {
         const div = document.getElementById('lista-instituicoes'); div.innerHTML = '';
-        json.data.forEach(nome => {
+        if(json.data) json.data.forEach(nome => {
             div.innerHTML += `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee;">
-                <span>${nome}</span><button onclick="removerInst('${nome}')" style="border:none; color:red;"><i class="fa-solid fa-trash"></i></button>
+                <span>${nome}</span><button onclick="removerInst('${nome}')" style="border:none; color:red; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
             </div>`;
         });
     });
@@ -342,7 +413,9 @@ function mudarStatus(chave) {
     Swal.fire({ title: 'Mudar Status', input: 'select', inputOptions: { 'Pendente': 'Pendente', 'Aprovada': 'Aprovada', 'Rejeitada': 'Rejeitada' }, showCancelButton: true })
     .then((res) => {
         if(res.isConfirmed) fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'atualizarStatus', senha: sessionStorage.getItem('admin_token'), chave, novoStatus: res.value }) }).then(() => {
-            todasInscricoes.find(i => i.chave === chave).status = res.value; resetEFiltrar();
+            const item = todasInscricoes.find(i => i.chave === chave);
+            if(item) item.status = res.value; 
+            resetEFiltrar();
         });
     });
 }
