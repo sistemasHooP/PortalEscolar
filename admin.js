@@ -1,19 +1,21 @@
 const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
 
 // --- CONFIGURAÇÃO DA LOGO ---
-const URL_LOGO = './logo.png'; 
+// DICA: Troque por uma URL pública ou Base64 para garantir que apareça na impressão
+const URL_LOGO = 'https://cdn-icons-png.flaticon.com/512/3203/3203242.png'; 
 
 const CAMPOS_PADRAO = [
-    { key: 'NomeCompleto', label: 'Nome Completo' }, { key: 'DataNascimento', label: 'Nascimento' },
-    { key: 'Telefone', label: 'Celular' }, { key: 'Endereco', label: 'Endereço' },
-    { key: 'NomeInstituicao', label: 'Instituição' }, { key: 'NomeCurso', label: 'Curso' },
-    { key: 'PeriodoCurso', label: 'Período' }, { key: 'Matricula', label: 'Matrícula' }
+    { key: 'NomeCompleto', label: 'Nome Completo' }, { key: 'CPF', label: 'CPF' },
+    { key: 'DataNascimento', label: 'Nascimento' }, { key: 'Telefone', label: 'Celular' }, 
+    { key: 'Endereco', label: 'Endereço' }, { key: 'NomeInstituicao', label: 'Instituição' }, 
+    { key: 'NomeCurso', label: 'Curso' }, { key: 'PeriodoCurso', label: 'Período' }, 
+    { key: 'Matricula', label: 'Matrícula' }, { key: 'Email', label: 'E-mail' }
 ];
 
 let mapaEventos = {}; 
 let cacheEventos = {}; 
 let chartEventosInstance = null; let chartStatusInstance = null;
-let todasInscricoes = [];     
+let todasInscricoes = [];      
 let inscricoesFiltradas = []; 
 let dashboardData = []; 
 let paginaAtual = 1;
@@ -179,12 +181,13 @@ function atualizarSelectsRelatorio(eventos, inscricoes) {
     Array.from(instituicoes).sort().forEach(inst => { if(inst) selInst.innerHTML += `<option value="${inst}">${inst}</option>`; });
 }
 
-// --- RELATÓRIO PROFISSIONAL (CORRIGIDO PARA CABER NA PÁGINA) ---
+// --- RELATÓRIO DINÂMICO ---
 function gerarRelatorioTransporte() {
     const eventoId = document.getElementById('relatorio-evento').value;
     const instFiltro = document.getElementById('relatorio-inst').value;
     const tituloEvento = eventoId ? mapaEventos[eventoId] : "Relatório Geral";
 
+    // Filtra apenas aprovados ou fichas emitidas para transporte
     const alunos = dashboardData.filter(i => {
         let d = {}; try{d=JSON.parse(i.dadosJson)}catch(e){}
         return (eventoId === "" || String(i.eventoId) === String(eventoId)) &&
@@ -192,168 +195,83 @@ function gerarRelatorioTransporte() {
                (i.status === 'Aprovada' || i.status === 'Ficha Emitida');
     });
 
-    if(alunos.length === 0) return Swal.fire({icon: 'info', title: 'Vazio', text: 'Nenhum aluno APROVADO encontrado.'});
+    if(alunos.length === 0) return Swal.fire({icon: 'info', title: 'Vazio', text: 'Nenhum aluno APROVADO encontrado para gerar lista de transporte.'});
 
-    showLoading('Gerando Layout do Relatório...');
+    showLoading('Gerando Relatório Dinâmico...');
 
-    // 1. Definição de Colunas (Sem larguras fixas exageradas)
+    // 1. Definição Dinâmica de Colunas
     let colunas = [];
+    
+    // Se selecionou um evento específico, usamos a config dele
     if (eventoId && cacheEventos[eventoId]) {
-        let config = {}; try { config = JSON.parse(cacheEventos[eventoId].config); } catch(e) {}
+        let config = {}; 
+        try { config = typeof cacheEventos[eventoId].config === 'string' ? JSON.parse(cacheEventos[eventoId].config) : cacheEventos[eventoId].config; } catch(e) {}
         
-        // Coluna principal (Nome)
+        // Sempre mostra o Nome primeiro
         colunas.push({ key: 'NomeCompleto', label: 'Nome do Aluno' });
         
-        if (config.camposTexto) {
+        // Adiciona campos de texto configurados (CPF, Telefone, Curso, etc)
+        if (config.camposTexto && Array.isArray(config.camposTexto)) {
             config.camposTexto.forEach(campo => {
-                if (campo !== 'NomeCompleto') {
+                if (campo !== 'NomeCompleto') { // Evita duplicar nome
                     const def = CAMPOS_PADRAO.find(c => c.key === campo);
                     colunas.push({ key: campo, label: def ? def.label : campo });
                 }
             });
         }
-        if (config.camposPersonalizados) {
+
+        // Adiciona perguntas personalizadas (Tamanho Camisa, Alergia, etc)
+        if (config.camposPersonalizados && Array.isArray(config.camposPersonalizados)) {
             config.camposPersonalizados.forEach(campo => {
                 colunas.push({ key: campo, label: campo });
             });
         }
     } else {
+        // Se for "Todos os Eventos", usa um layout padrão resumido
         colunas = [
             { key: 'NomeCompleto', label: 'Nome do Aluno' },
             { key: 'NomeInstituicao', label: 'Instituição' },
             { key: 'NomeCurso', label: 'Curso' },
-            { key: 'Endereco', label: 'Endereço' },
             { key: 'Telefone', label: 'Contato' }
         ];
     }
-    // Assinatura sempre no final
+    
+    // Adiciona Assinatura no final
     colunas.push({ key: 'Assinatura', label: 'Assinatura', empty: true });
 
-    // 2. Agrupamento
+    // 2. Agrupamento por Instituição (se aplicável)
     const temInstituicao = colunas.some(c => c.key === 'NomeInstituicao');
     const grupos = {};
+    
     alunos.forEach(aluno => {
-        let d = JSON.parse(aluno.dadosJson);
-        const inst = temInstituicao ? (d.NomeInstituicao || 'Não Informada') : 'Lista de Inscritos';
+        let d = {}; try { d = JSON.parse(aluno.dadosJson); } catch(e) { d = {}; }
+        const inst = temInstituicao ? (d.NomeInstituicao || 'Outros') : 'Lista de Inscritos';
+        
         if(!grupos[inst]) grupos[inst] = [];
+        
         let linha = {};
         colunas.forEach(col => {
-            if(col.empty) linha[col.key] = '';
-            else linha[col.key] = d[col.key] || '-';
+            if(col.key === 'Assinatura') linha[col.key] = '';
+            else linha[col.key] = d[col.key] !== undefined ? d[col.key] : '-';
         });
         grupos[inst].push(linha);
     });
 
-    // 3. HTML & CSS Otimizado para Impressão A4
+    // 3. Montagem do HTML
     const dataHoje = new Date().toLocaleDateString('pt-BR');
-    
     let htmlContent = `
-        <style>
-            @media print {
-                @page { 
-                    size: A4 landscape; 
-                    margin: 10mm; /* Margem segura padrão A4 */
-                }
-                body {
-                    margin: 0; 
-                    padding: 0;
-                    background: white;
-                    -webkit-print-color-adjust: exact;
-                }
-                /* Esconde tudo que não é o relatório */
-                body > *:not(#area-impressao) { display: none !important; }
-                
-                #area-impressao {
-                    display: block !important;
-                    position: relative !important;
-                    width: 100% !important;
-                    margin: 0 !important;
-                    left: 0 !important;
-                    top: 0 !important;
-                }
-            }
-            
-            /* Estilos do Relatório */
-            .report-container { 
-                font-family: 'Arial', sans-serif; 
-                color: #000; 
-                width: 100%;
-            }
-            
-            .report-header { 
-                display: flex; 
-                align-items: center; 
-                justify-content: space-between; 
-                border-bottom: 2px solid #000; 
-                padding-bottom: 10px; 
-                margin-bottom: 15px; 
-            }
-            .header-left { display: flex; align-items: center; gap: 15px; }
-            .report-logo { height: 60px; max-width: 200px; object-fit: contain; }
-            .header-titles h1 { margin: 0; font-size: 18px; text-transform: uppercase; font-weight: 800; }
-            .header-titles p { margin: 2px 0 0 0; font-size: 12px; }
-            .header-right { text-align: right; font-size: 11px; }
-
-            /* Tabela Ajustável */
-            .report-table { 
-                width: 100%; 
-                border-collapse: collapse; 
-                font-size: 10px; /* Fonte reduzida para caber mais colunas */
-                margin-bottom: 20px;
-                table-layout: auto; /* Deixa o navegador calcular a melhor largura */
-            }
-            
-            .report-table th, .report-table td { 
-                border: 1px solid #000; 
-                padding: 6px 4px; 
-                text-align: left;
-                vertical-align: middle;
-                word-wrap: break-word; /* Quebra palavras longas se necessário */
-            }
-            
-            .report-table th { 
-                background-color: #e5e7eb; 
-                font-weight: bold; 
-                text-transform: uppercase; 
-                font-size: 9px;
-            }
-            
-            .report-table tr:nth-child(even) { background-color: #f9fafb; }
-            .group-header { 
-                background-color: #d1d5db !important; 
-                font-size: 11px; 
-                font-weight: bold; 
-                padding: 8px !important; 
-            }
-            
-            /* Colunas Específicas (Ajuste fino) */
-            .col-assinatura { width: 15%; }
-            .col-index { width: 30px; text-align: center !important; }
-
-            /* Rodapé */
-            .report-footer { 
-                margin-top: 30px; 
-                display: flex; 
-                justify-content: space-between; 
-                page-break-inside: avoid; 
-                padding: 0 50px;
-            }
-            .sign-box { text-align: center; width: 40%; }
-            .sign-line { border-top: 1px solid #000; margin-bottom: 5px; padding-top: 5px; font-weight: bold; font-size: 11px; }
-        </style>
-        
         <div class="report-container">
             <div class="report-header">
                 <div class="header-left">
                     <img src="${URL_LOGO}" alt="Logo" class="report-logo" onerror="this.style.display='none'">
                     <div class="header-titles">
-                        <h1>Relatório de Inscritos</h1>
+                        <h1>Relatório de Transporte</h1>
                         <p>${tituloEvento}</p>
                     </div>
                 </div>
                 <div class="header-right">
                     Emitido em: ${dataHoje}<br>
-                    Total Aprovados: ${alunos.length}
+                    Total Listado: ${alunos.length}
                 </div>
             </div>
     `;
@@ -361,20 +279,20 @@ function gerarRelatorioTransporte() {
     // Cabeçalho da Tabela
     let thead = `<tr><th class="col-index">#</th>`;
     colunas.forEach(col => {
-        // Se for assinatura, adiciona classe especial
         const classe = col.key === 'Assinatura' ? 'class="col-assinatura"' : '';
         thead += `<th ${classe}>${col.label}</th>`;
     });
     thead += `</tr>`;
 
-    // Corpo da Tabela
+    // Corpo da Tabela por Grupo
     Object.keys(grupos).sort().forEach(grupoNome => {
         const lista = grupos[grupoNome];
+        // Ordena alfabeticamente
         lista.sort((a,b) => (a['NomeCompleto']||'').localeCompare(b['NomeCompleto']||''));
         
         htmlContent += `<table class="report-table">`;
         if(temInstituicao && Object.keys(grupos).length > 1) {
-            htmlContent += `<thead><tr><td colspan="${colunas.length + 1}" class="group-header">${grupoNome} (${lista.length} alunos)</td></tr>${thead}</thead><tbody>`;
+            htmlContent += `<thead><tr><td colspan="${colunas.length + 1}" class="group-header">${grupoNome} (${lista.length})</td></tr>${thead}</thead><tbody>`;
         } else {
             htmlContent += `<thead>${thead}</thead><tbody>`;
         }
@@ -393,11 +311,9 @@ function gerarRelatorioTransporte() {
             <div class="report-footer">
                 <div class="sign-box">
                     <div class="sign-line">Responsável pelo Transporte</div>
-                    <div style="font-size:10px;">Assinatura / Carimbo</div>
                 </div>
                 <div class="sign-box">
-                    <div class="sign-line">Setor Administrativo</div>
-                    <div style="font-size:10px;">Data: ____/____/_______</div>
+                    <div class="sign-line">Secretaria de Educação</div>
                 </div>
             </div>
         </div>
@@ -407,7 +323,8 @@ function gerarRelatorioTransporte() {
     area.innerHTML = htmlContent;
     Swal.close();
     
-    setTimeout(() => window.print(), 800);
+    // Pequeno delay para garantir que imagens carreguem antes de abrir o print
+    setTimeout(() => window.print(), 500);
 }
 
 // --- EVENTOS E MODAL ---
