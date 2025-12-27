@@ -182,15 +182,14 @@ function atualizarSelectsRelatorio(eventos, inscricoes) {
 }
 
 // =========================================================
-// --- NOVO GERADOR DE RELATÓRIO DINÂMICO & SELECIONÁVEL ---
+// --- GERADOR DE RELATÓRIO DINÂMICO & SELECIONÁVEL ---
 // =========================================================
 
-// Passo 1: Seleção de Colunas
 function gerarRelatorioTransporte() {
     const eventoId = document.getElementById('relatorio-evento').value;
     const instFiltro = document.getElementById('relatorio-inst').value;
     
-    // Filtrar dados
+    // Filtra apenas aprovados ou fichas emitidas
     const alunosFiltrados = dashboardData.filter(i => {
         let d = {}; try { d = JSON.parse(i.dadosJson); } catch (e) {}
         return (eventoId === "" || String(i.eventoId) === String(eventoId)) &&
@@ -202,11 +201,9 @@ function gerarRelatorioTransporte() {
         return Swal.fire({ icon: 'info', title: 'Atenção', text: 'Nenhum aluno APROVADO encontrado com esses filtros.' });
     }
 
-    // Coletar todas as chaves possíveis dos formulários desses alunos
+    // Coleta todas as chaves
     const todasChaves = new Set();
-    // Chaves que sempre queremos sugerir primeiro
     const chavesPrioritarias = ['NomeCompleto', 'NomeInstituicao', 'NomeCurso', 'PeriodoCurso', 'Telefone'];
-    // Chaves para ignorar
     const ignorar = ['linkFoto', 'linkDoc', 'Assinatura'];
 
     alunosFiltrados.forEach(aluno => {
@@ -218,7 +215,7 @@ function gerarRelatorioTransporte() {
         } catch (e) {}
     });
 
-    // Ordenar chaves: Prioritárias primeiro, depois o resto alfabeticamente
+    // Ordena chaves
     const listaChaves = Array.from(todasChaves).sort((a, b) => {
         const idxA = chavesPrioritarias.indexOf(a);
         const idxB = chavesPrioritarias.indexOf(b);
@@ -228,7 +225,7 @@ function gerarRelatorioTransporte() {
         return a.localeCompare(b);
     });
 
-    // Criar HTML do Modal de Seleção
+    // Modal de seleção
     let htmlChecks = `<div class="checkbox-grid" style="max-height:300px; overflow-y:auto; padding:5px;">`;
     listaChaves.forEach(chave => {
         const label = CAMPOS_PADRAO.find(c => c.key === chave)?.label || chave;
@@ -265,26 +262,21 @@ function gerarRelatorioTransporte() {
     });
 }
 
-// Passo 2: Construção e Impressão
 function construirRelatorioFinal(alunos, colunasKeys, eventoId) {
     showLoading('Gerando Layout...');
 
     const tituloEvento = eventoId ? (mapaEventos[eventoId] || 'Evento') : "Relatório Geral";
     const dataHoje = new Date().toLocaleDateString('pt-BR');
 
-    // 1. Agrupar por Instituição
+    // Agrupa por instituição
     const grupos = {};
     alunos.forEach(aluno => {
         let d = {}; try { d = JSON.parse(aluno.dadosJson); } catch(e){}
-        // Normaliza o nome da instituição ou usa 'Sem Instituição'
         const inst = d.NomeInstituicao ? d.NomeInstituicao.trim() : 'Outros / Sem Instituição';
-        
         if (!grupos[inst]) grupos[inst] = [];
         grupos[inst].push(d);
     });
 
-    // 2. Montar HTML
-    // Adiciona Assinatura no final se não foi selecionada (opcional, mas bom pra listas de presença)
     if (!colunasKeys.includes('Assinatura')) colunasKeys.push('Assinatura');
 
     let htmlContent = `
@@ -304,7 +296,7 @@ function construirRelatorioFinal(alunos, colunasKeys, eventoId) {
             </div>
     `;
 
-    // Cabeçalho da Tabela (Baseado na Seleção)
+    // Cabeçalho da Tabela
     let thead = `<tr><th class="col-index">#</th>`;
     colunasKeys.forEach(k => {
         const label = k === 'Assinatura' ? 'Assinatura' : (CAMPOS_PADRAO.find(c => c.key === k)?.label || k);
@@ -313,15 +305,13 @@ function construirRelatorioFinal(alunos, colunasKeys, eventoId) {
     });
     thead += `</tr>`;
 
-    // Iterar Grupos (Instituições)
-    const nomesInstituicoes = Object.keys(grupos).sort(); // Ordem alfabética das escolas
+    // Gera tabelas por grupo
+    const nomesInstituicoes = Object.keys(grupos).sort(); 
 
     nomesInstituicoes.forEach(instNome => {
         const listaAlunos = grupos[instNome];
-        // Ordenar alunos por nome dentro da escola
         listaAlunos.sort((a,b) => (a['NomeCompleto']||'').localeCompare(b['NomeCompleto']||''));
 
-        // Cria uma tabela separada para cada instituição
         htmlContent += `
             <div style="margin-top: 20px; margin-bottom: 5px; font-weight: bold; background: #e5e7eb; padding: 5px 10px; border: 1px solid #000; border-bottom: none; font-size: 11px;">
                 INSTITUIÇÃO: ${instNome.toUpperCase()} (${listaAlunos.length} ALUNOS)
@@ -358,7 +348,7 @@ function construirRelatorioFinal(alunos, colunasKeys, eventoId) {
         </div>
     `;
 
-    // 3. Injeção e Impressão
+    // Injeção e Impressão via Camada Dedicada
     let printLayer = document.getElementById('print-layer');
     if (!printLayer) {
         printLayer = document.createElement('div');
@@ -369,7 +359,6 @@ function construirRelatorioFinal(alunos, colunasKeys, eventoId) {
     printLayer.innerHTML = htmlContent;
     Swal.close();
     
-    // Pequeno delay para garantir renderização da imagem local (se houver cache)
     setTimeout(() => window.print(), 500);
 }
 
@@ -449,6 +438,16 @@ function modalNovoEvento() {
                     </div>
                 </div>
 
+                <!-- SWITCH PARA EXIGÊNCIA DE FICHA -->
+                <div class="modal-full">
+                    <label class="swal-label">Configurações de Processo</label>
+                    <label class="checkbox-card" style="border-color: #f59e0b; background: #fffbeb;">
+                        <input type="checkbox" id="req_ficha" checked> 
+                        <strong>Exigir Ficha/Assinatura Presencial?</strong>
+                        <br><span style="font-size:0.75rem; color:#b45309; font-weight:normal; margin-left:24px;">Se marcado, o aluno receberá aviso para assinar ficha na secretaria.</span>
+                    </label>
+                </div>
+
                 <div class="modal-full">
                     <label class="swal-label">Uploads Obrigatórios</label>
                     <div style="display:flex; gap:20px;">
@@ -489,7 +488,8 @@ function modalNovoEvento() {
                     camposTexto: sels, 
                     camposPersonalizados: extras,
                     observacoesTexto: document.getElementById('txt_obs_admin').value,
-                    arquivos: { foto: document.getElementById('req_foto').checked, doc: document.getElementById('req_doc').checked } 
+                    arquivos: { foto: document.getElementById('req_foto').checked, doc: document.getElementById('req_doc').checked },
+                    exigeFicha: document.getElementById('req_ficha').checked // ENVIA CONFIG AO BACKEND
                 }, 
                 status: 'Ativo'
             }
