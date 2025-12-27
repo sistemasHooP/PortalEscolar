@@ -26,19 +26,10 @@ function showLoading(msg = 'Processando...') {
     Swal.fire({
         html: `
             <div style="display:flex; flex-direction:column; align-items:center; gap:15px; padding:20px;">
-                <!-- Logo pulsando em vez de spinner -->
                 <img src="${URL_LOGO}" style="width:80px; height:auto; animation: pulse-swal 1.5s infinite ease-in-out;" onerror="this.style.display='none'">
-                
                 <h3 style="font-family:sans-serif; font-size:1.1rem; color:#1e293b; margin:0;">${msg}</h3>
                 <p style="font-family:sans-serif; font-size:0.85rem; color:#64748b; margin:0;">Aguarde um momento...</p>
-                
-                <style>
-                    @keyframes pulse-swal { 
-                        0% { transform: scale(1); opacity: 1; } 
-                        50% { transform: scale(1.1); opacity: 0.8; } 
-                        100% { transform: scale(1); opacity: 1; } 
-                    }
-                </style>
+                <style>@keyframes pulse-swal { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }</style>
             </div>
         `,
         showConfirmButton: false, allowOutsideClick: false, width: '300px'
@@ -78,7 +69,6 @@ function realizarLogin(e) {
 // --- LOGOUT REDIRECT ---
 function logout() { 
     sessionStorage.removeItem('admin_token'); 
-    // Redireciona para o link fornecido
     window.location.href = 'https://sistemashoop.github.io/PortalEscolar/'; 
 }
 
@@ -93,7 +83,7 @@ function switchTab(tabId) {
     if(tabId === 'tab-inscricoes') carregarInscricoes();
     if(tabId === 'tab-config') {
         carregarInstituicoes();
-        carregarConfigDrive(); // Carrega o ID do Drive ao abrir a aba
+        carregarConfigDrive(); 
     }
 }
 
@@ -415,7 +405,6 @@ function carregarEventosAdmin() {
     });
 }
 
-// --- FUNÇÃO ATUALIZADA: Editar Evento COMPLETO ---
 function abrirEdicaoEvento(evento) {
     let config = {}; try { config = JSON.parse(evento.config); } catch(e){}
     
@@ -642,46 +631,101 @@ function renderizarProximaPagina() {
         let d = {}; try { d = JSON.parse(ins.dadosJson); } catch(e){}
         const checked = selecionados.has(ins.chave) ? 'checked' : '';
         let btnFicha = ins.link_ficha ? `<a href="${ins.link_ficha}" target="_blank" class="action-btn btn-view" style="background:#059669;" title="Baixar PDF"><i class="fa-solid fa-file-pdf"></i></a>` : `<button class="action-btn" style="background:#6366f1;" onclick="gerarFicha('${ins.chave}')" title="Gerar Ficha"><i class="fa-solid fa-print"></i></button>`;
+        let btnCartAdm = `<button class="action-btn" style="background:#3b82f6;" onclick="imprimirCarteirinhaAdmin('${ins.chave}')" title="Carteirinha"><i class="fa-solid fa-id-card"></i></button>`;
         
         tbody.innerHTML += `<tr>
             <td><input type="checkbox" class="bulk-check" value="${ins.chave}" ${checked} onclick="toggleCheck('${ins.chave}')"></td>
             <td>${safeDate(ins.data)}</td><td><small>${mapaEventos[ins.eventoId]||ins.eventoId}</small></td>
             <td><strong>${d.NomeCompleto||'Aluno'}</strong><br><small style="color:#64748b;">${ins.chave}</small></td>
             <td><span class="badge badge-${ins.status.replace(/\s/g, '')}">${ins.status}</span></td>
-            <td><div style="display:flex; gap:5px; justify-content:flex-end;"><button class="action-btn" style="background:#f59e0b;" onclick="abrirEdicaoInscricao('${ins.chave}')" title="Editar Dados"><i class="fa-solid fa-pen"></i></button><button class="action-btn btn-edit" onclick="mudarStatus('${ins.chave}')" title="Alterar Status"><i class="fa-solid fa-list-check"></i></button>${btnFicha}${ins.doc ? `<a href="${ins.doc}" target="_blank" class="action-btn btn-view" title="Ver Anexo"><i class="fa-solid fa-paperclip"></i></a>` : ''}</div></td>
+            <td><div style="display:flex; gap:5px; justify-content:flex-end;"><button class="action-btn" style="background:#f59e0b;" onclick="abrirEdicaoInscricao('${ins.chave}')" title="Editar Dados"><i class="fa-solid fa-pen"></i></button><button class="action-btn btn-edit" onclick="mudarStatus('${ins.chave}')" title="Alterar Status"><i class="fa-solid fa-list-check"></i></button>${btnCartAdm}${btnFicha}${ins.doc ? `<a href="${ins.doc}" target="_blank" class="action-btn btn-view" title="Ver Anexo"><i class="fa-solid fa-paperclip"></i></a>` : ''}</div></td>
         </tr>`;
     });
     paginaAtual++;
     document.getElementById('btn-load-more').style.display = (paginaAtual * ITENS_POR_PAGINA < inscricoesFiltradas.length + ITENS_POR_PAGINA) ? 'block' : 'none';
 }
 
+// --- FUNÇÃO ATUALIZADA: EDIÇÃO COM UPLOAD E SALVAMENTO ---
 function abrirEdicaoInscricao(chave) {
     const inscricao = todasInscricoes.find(i => i.chave === chave);
     if (!inscricao) return;
     let dados = {};
     try { dados = JSON.parse(inscricao.dadosJson); } catch(e) {}
+    
     let formHtml = '<div style="display:flex; flex-direction:column; gap:10px; text-align:left; max-height:400px; overflow-y:auto; padding:5px;">';
     const ignorar = ['linkFoto', 'linkDoc'];
+    
+    // Campos de Texto
     for (const [key, val] of Object.entries(dados)) {
         if (!ignorar.includes(key)) {
             const labelAmigavel = CAMPOS_PADRAO.find(c => c.key === key)?.label || key;
             formHtml += `<div><label style="font-size:0.85rem; font-weight:600; color:#64748b;">${labelAmigavel}</label><input type="text" id="edit_aluno_${key}" value="${val}" class="swal-input" style="padding:8px;"></div>`;
         }
     }
+    
+    // Campos de Upload (Novos)
+    formHtml += `
+        <hr style="margin:15px 0; border:0; border-top:1px solid #eee;">
+        <h4 style="margin:0 0 10px 0; color:#1e40af; font-size:0.9rem;">Substituir Arquivos</h4>
+        <div style="background:#f8fafc; padding:10px; border-radius:8px;">
+            <label style="font-size:0.85rem; font-weight:600; display:block;">Nova Foto 3x4:</label>
+            <input type="file" id="edit_upload_foto" accept="image/*" class="swal-input" style="font-size:0.8rem;">
+            
+            <label style="font-size:0.85rem; font-weight:600; display:block; margin-top:10px;">Nova Declaração (PDF):</label>
+            <input type="file" id="edit_upload_doc" accept="application/pdf" class="swal-input" style="font-size:0.8rem;">
+        </div>
+    `;
+    
     formHtml += '</div>';
+    
     Swal.fire({
         title: 'Editar Dados do Aluno', html: formHtml, width: '600px', showCancelButton: true, confirmButtonText: 'Salvar', confirmButtonColor: '#2563eb',
-        preConfirm: () => {
+        preConfirm: async () => {
             const novosDados = {};
-            for (const key of Object.keys(dados)) { if (!ignorar.includes(key)) { const el = document.getElementById(`edit_aluno_${key}`); if (el) novosDados[key] = el.value; } }
-            return novosDados;
+            // Coleta dados de texto
+            for (const key of Object.keys(dados)) { 
+                if (!ignorar.includes(key)) { 
+                    const el = document.getElementById(`edit_aluno_${key}`); 
+                    if (el) novosDados[key] = el.value; 
+                } 
+            }
+            
+            // Coleta Arquivos
+            const arqs = {};
+            const fileFoto = document.getElementById('edit_upload_foto').files[0];
+            if(fileFoto) {
+                arqs.foto = { data: await toBase64(fileFoto), mime: 'image/jpeg' };
+            }
+            
+            const fileDoc = document.getElementById('edit_upload_doc').files[0];
+            if(fileDoc) {
+                arqs.doc = { data: await toBase64(fileDoc), mime: 'application/pdf' };
+            }
+
+            return { novosDados, arquivos: Object.keys(arqs).length > 0 ? arqs : null };
         }
     }).then((result) => {
         if (result.isConfirmed) {
             showLoading('Salvando...');
-            fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'editarInscricao', senha: sessionStorage.getItem('admin_token'), chave: chave, novosDados: result.value }) }).then(res => res.json()).then(json => {
-                if(json.status === 'success') { Swal.fire({icon: 'success', title: 'Dados Atualizados!'}); let jsonNovo = { ...dados, ...result.value }; inscricao.dadosJson = JSON.stringify(jsonNovo); resetEFiltrar(); } 
-                else { Swal.fire('Erro', json.message, 'error'); }
+            fetch(URL_API, { 
+                method: 'POST', 
+                body: JSON.stringify({ 
+                    action: 'editarInscricao', 
+                    senha: sessionStorage.getItem('admin_token'), 
+                    chave: chave, 
+                    novosDados: result.value.novosDados,
+                    arquivos: result.value.arquivos // Envia arquivos se houver
+                }) 
+            }).then(res => res.json()).then(json => {
+                if(json.status === 'success') { 
+                    Swal.fire({icon: 'success', title: 'Dados Atualizados!'}); 
+                    // Atualiza cache local para refletir na tela sem recarregar tudo
+                    let jsonNovo = { ...dados, ...result.value.novosDados }; 
+                    inscricao.dadosJson = JSON.stringify(jsonNovo); 
+                    resetEFiltrar(); 
+                } else { 
+                    Swal.fire('Erro', json.message, 'error'); 
+                }
             });
         }
     });
@@ -731,6 +775,87 @@ function mudarStatus(chave) {
                 Swal.fire({icon: 'success', title: 'Status Atualizado!', timer: 1500, showConfirmButton: false});
             });
         }
+    });
+}
+
+// --- FILE HELPER ---
+const toBase64 = f => new Promise((r, j) => { 
+    const rd = new FileReader(); 
+    rd.readAsDataURL(f); 
+    rd.onload = () => r(rd.result.split(',')[1]); 
+    rd.onerror = e => j(e); 
+});
+
+// --- IMPRESSÃO CARTEIRINHA ADM ---
+function imprimirCarteirinhaAdmin(chave) {
+    showLoading('Gerando Carteirinha...');
+    
+    // Busca dados ATUALIZADOS do servidor (para pegar a foto em Base64)
+    fetch(`${URL_API}?action=consultarInscricao&chave=${chave}`)
+    .then(r => r.json())
+    .then(j => {
+        Swal.close();
+        if(j.status !== 'success') return Swal.fire('Erro', 'Dados não encontrados.', 'error');
+        
+        const aluno = j.data.aluno;
+        
+        // Tratamento da Foto
+        let imgSrc = 'https://via.placeholder.com/150?text=FOTO';
+        if (aluno.foto) {
+            if (aluno.foto.startsWith('data:image') || aluno.foto.startsWith('http')) {
+                // Se for URL do Drive, tenta formatar para visualização direta
+                if (aluno.foto.includes('drive.google.com') && !aluno.foto.startsWith('data:image')) {
+                     // Função auxiliar local para formatar
+                     let id = '';
+                     const parts = aluno.foto.split(/\/d\/|id=/);
+                     if (parts.length > 1) id = parts[1].split(/\/|&/)[0];
+                     imgSrc = id ? `https://lh3.googleusercontent.com/d/${id}` : aluno.foto;
+                } else {
+                     imgSrc = aluno.foto;
+                }
+            }
+        }
+
+        const htmlCarteirinha = `
+            <div class="carteirinha-container" style="page-break-inside: avoid; margin: 20px auto;">
+                <div class="carteirinha-card" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                    <div class="cart-header">
+                        <img src="${URL_LOGO}" alt="Logo" class="cart-logo" style="background:white; border-radius:50%;">
+                        <div>
+                            <h3>TRANSPORTE ESCOLAR</h3>
+                            <small>Secretaria de Educação</small>
+                        </div>
+                    </div>
+                    <div class="cart-body">
+                        <div class="cart-photo">
+                            <img src="${imgSrc}" alt="Foto" style="width:100%; height:100%; object-fit:cover;">
+                        </div>
+                        <div class="cart-info">
+                            <h2 style="font-size:16px; margin:0 0 5px 0;">${aluno.nome}</h2>
+                            <p style="font-size:11px; margin:0;">${aluno.instituicao}</p>
+                            <p style="font-size:11px; margin:0;">${aluno.curso}</p>
+                            <div class="cart-meta">
+                                <span>Mat: <b>${aluno.matricula}</b></span>
+                                <span>Validade: <b>${aluno.validade}</b></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cart-footer">
+                        <span>Uso Pessoal e Intransferível</span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        let printLayer = document.getElementById('print-layer');
+        if (!printLayer) {
+            printLayer = document.createElement('div');
+            printLayer.id = 'print-layer';
+            document.body.appendChild(printLayer);
+        }
+        
+        printLayer.innerHTML = htmlCarteirinha;
+        setTimeout(() => window.print(), 500);
     });
 }
 
