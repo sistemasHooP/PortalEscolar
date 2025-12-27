@@ -1,7 +1,7 @@
 const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
 
 // --- CONFIGURAÇÃO DA LOGO ---
-// DICA: Troque por uma URL pública ou Base64 para garantir que apareça na impressão
+// Se não tiver logo, pode deixar vazio ou colocar uma URL válida
 const URL_LOGO = 'https://cdn-icons-png.flaticon.com/512/3203/3203242.png'; 
 
 const CAMPOS_PADRAO = [
@@ -181,13 +181,13 @@ function atualizarSelectsRelatorio(eventos, inscricoes) {
     Array.from(instituicoes).sort().forEach(inst => { if(inst) selInst.innerHTML += `<option value="${inst}">${inst}</option>`; });
 }
 
-// --- RELATÓRIO DINÂMICO ---
+// --- RELATÓRIO DINÂMICO (CORRIGIDO: CAMADA DE IMPRESSÃO INDEPENDENTE) ---
 function gerarRelatorioTransporte() {
     const eventoId = document.getElementById('relatorio-evento').value;
     const instFiltro = document.getElementById('relatorio-inst').value;
     const tituloEvento = eventoId ? mapaEventos[eventoId] : "Relatório Geral";
 
-    // Filtra apenas aprovados ou fichas emitidas para transporte
+    // Filtra apenas aprovados ou fichas emitidas
     const alunos = dashboardData.filter(i => {
         let d = {}; try{d=JSON.parse(i.dadosJson)}catch(e){}
         return (eventoId === "" || String(i.eventoId) === String(eventoId)) &&
@@ -197,37 +197,30 @@ function gerarRelatorioTransporte() {
 
     if(alunos.length === 0) return Swal.fire({icon: 'info', title: 'Vazio', text: 'Nenhum aluno APROVADO encontrado para gerar lista de transporte.'});
 
-    showLoading('Gerando Relatório Dinâmico...');
+    showLoading('Gerando Relatório...');
 
     // 1. Definição Dinâmica de Colunas
     let colunas = [];
-    
-    // Se selecionou um evento específico, usamos a config dele
     if (eventoId && cacheEventos[eventoId]) {
         let config = {}; 
         try { config = typeof cacheEventos[eventoId].config === 'string' ? JSON.parse(cacheEventos[eventoId].config) : cacheEventos[eventoId].config; } catch(e) {}
         
-        // Sempre mostra o Nome primeiro
         colunas.push({ key: 'NomeCompleto', label: 'Nome do Aluno' });
         
-        // Adiciona campos de texto configurados (CPF, Telefone, Curso, etc)
         if (config.camposTexto && Array.isArray(config.camposTexto)) {
             config.camposTexto.forEach(campo => {
-                if (campo !== 'NomeCompleto') { // Evita duplicar nome
+                if (campo !== 'NomeCompleto') {
                     const def = CAMPOS_PADRAO.find(c => c.key === campo);
                     colunas.push({ key: campo, label: def ? def.label : campo });
                 }
             });
         }
-
-        // Adiciona perguntas personalizadas (Tamanho Camisa, Alergia, etc)
         if (config.camposPersonalizados && Array.isArray(config.camposPersonalizados)) {
             config.camposPersonalizados.forEach(campo => {
                 colunas.push({ key: campo, label: campo });
             });
         }
     } else {
-        // Se for "Todos os Eventos", usa um layout padrão resumido
         colunas = [
             { key: 'NomeCompleto', label: 'Nome do Aluno' },
             { key: 'NomeInstituicao', label: 'Instituição' },
@@ -235,20 +228,15 @@ function gerarRelatorioTransporte() {
             { key: 'Telefone', label: 'Contato' }
         ];
     }
-    
-    // Adiciona Assinatura no final
     colunas.push({ key: 'Assinatura', label: 'Assinatura', empty: true });
 
-    // 2. Agrupamento por Instituição (se aplicável)
+    // 2. Agrupamento
     const temInstituicao = colunas.some(c => c.key === 'NomeInstituicao');
     const grupos = {};
-    
     alunos.forEach(aluno => {
         let d = {}; try { d = JSON.parse(aluno.dadosJson); } catch(e) { d = {}; }
         const inst = temInstituicao ? (d.NomeInstituicao || 'Outros') : 'Lista de Inscritos';
-        
         if(!grupos[inst]) grupos[inst] = [];
-        
         let linha = {};
         colunas.forEach(col => {
             if(col.key === 'Assinatura') linha[col.key] = '';
@@ -284,10 +272,9 @@ function gerarRelatorioTransporte() {
     });
     thead += `</tr>`;
 
-    // Corpo da Tabela por Grupo
+    // Corpo da Tabela
     Object.keys(grupos).sort().forEach(grupoNome => {
         const lista = grupos[grupoNome];
-        // Ordena alfabeticamente
         lista.sort((a,b) => (a['NomeCompleto']||'').localeCompare(b['NomeCompleto']||''));
         
         htmlContent += `<table class="report-table">`;
@@ -296,7 +283,6 @@ function gerarRelatorioTransporte() {
         } else {
             htmlContent += `<thead>${thead}</thead><tbody>`;
         }
-
         lista.forEach((linha, idx) => {
             htmlContent += `<tr><td class="col-index">${idx+1}</td>`;
             colunas.forEach(col => {
@@ -309,21 +295,27 @@ function gerarRelatorioTransporte() {
 
     htmlContent += `
             <div class="report-footer">
-                <div class="sign-box">
-                    <div class="sign-line">Responsável pelo Transporte</div>
-                </div>
-                <div class="sign-box">
-                    <div class="sign-line">Secretaria de Educação</div>
-                </div>
+                <div class="sign-box"><div class="sign-line">Responsável pelo Transporte</div></div>
+                <div class="sign-box"><div class="sign-line">Secretaria de Educação</div></div>
             </div>
         </div>
     `;
 
-    const area = document.getElementById('area-impressao');
-    area.innerHTML = htmlContent;
+    // 4. INJEÇÃO NA CAMADA DE IMPRESSÃO (NOVO MÉTODO)
+    // Verifica se a div de impressão já existe no BODY, se não, cria.
+    let printLayer = document.getElementById('print-layer');
+    if (!printLayer) {
+        printLayer = document.createElement('div');
+        printLayer.id = 'print-layer';
+        document.body.appendChild(printLayer);
+    }
+    
+    // Injeta o conteúdo
+    printLayer.innerHTML = htmlContent;
+    
     Swal.close();
     
-    // Pequeno delay para garantir que imagens carreguem antes de abrir o print
+    // Dispara a impressão
     setTimeout(() => window.print(), 500);
 }
 
