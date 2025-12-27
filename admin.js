@@ -237,7 +237,7 @@ function toggleStatusEvento(id, status) {
     .then(() => { Swal.close(); carregarEventosAdmin(); });
 }
 
-// MODAL NOVO EVENTO (ATUALIZADO: Observações Admin)
+// MODAL NOVO EVENTO (COM AVISO CPF/EMAIL E CAMPO DE OBSERVAÇÃO)
 function modalNovoEvento() {
     let htmlCampos = '<div class="checkbox-grid">';
     CAMPOS_PADRAO.forEach(c => htmlCampos += `<label class="checkbox-card"><input type="checkbox" id="check_${c.key}" value="${c.key}" checked> ${c.label}</label>`);
@@ -255,18 +255,21 @@ function modalNovoEvento() {
                 </div>
                 
                 <div class="modal-full" style="background:#f8fafc; padding:15px; border:1px solid #e2e8f0; border-radius:8px;">
-                    <label class="swal-label" style="color:var(--primary);">Configuração do Formulário</label>
-                    <p style="font-size:0.8rem; color:#666;">Campos que o aluno preencherá:</p>
-                    ${htmlCampos}
+                    <div style="background:#eff6ff; color:#1e40af; padding:8px; border-radius:6px; font-size:0.85rem; margin-bottom:10px; border:1px solid #dbeafe; display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <strong>CPF e E-mail</strong> são obrigatórios e já estarão no formulário.
+                    </div>
                     
-                    <hr style="margin:15px 0; border:0; border-top:1px dashed #ccc;">
+                    <label class="swal-label" style="color:var(--primary);">Outros Campos Obrigatórios:</label>
+                    ${htmlCampos}
+                    <hr style="margin:10px 0; border:0; border-top:1px dashed #ccc;">
                     
                     <label class="swal-label">Campos Extras Personalizados</label>
                     <div id="container-extras" style="display:flex; flex-direction:column; gap:5px; margin-bottom:10px;"></div>
                     <button type="button" class="action-btn btn-view" style="width:100%;" id="btn-add-extra">+ Adicionar Pergunta</button>
                     
                     <div class="modal-full" style="margin-top:15px;">
-                        <label class="swal-label">Observações / Instruções (Exibido no formulário)</label>
+                        <label class="swal-label">Instruções / Observações para o Aluno (Exibido no formulário)</label>
                         <textarea id="txt_obs_admin" class="swal-input" style="height:80px;" placeholder="Ex: Trazer comprovante de residência original no dia da entrega."></textarea>
                     </div>
                 </div>
@@ -301,7 +304,7 @@ function modalNovoEvento() {
                 config: { 
                     camposTexto: sels, 
                     camposPersonalizados: extras,
-                    observacoesTexto: document.getElementById('txt_obs_admin').value, // Salva o texto do admin
+                    observacoesTexto: document.getElementById('txt_obs_admin').value,
                     arquivos: { foto: document.getElementById('req_foto').checked, doc: document.getElementById('req_doc').checked } 
                 }, 
                 status: 'Ativo'
@@ -350,7 +353,7 @@ function resetEFiltrar() {
 function renderizarProximaPagina() {
     const tbody = document.getElementById('lista-inscricoes-admin');
     const lote = inscricoesFiltradas.slice((paginaAtual - 1) * ITENS_POR_PAGINA, paginaAtual * ITENS_POR_PAGINA);
-    if(paginaAtual === 1 && lote.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Nenhuma inscrição encontrada.</td></tr>'; document.getElementById('btn-load-more').style.display = 'none'; return; }
+    if(paginaAtual === 1 && lote.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Nenhuma inscrição encontrada.</td></tr>'; document.getElementById('btn-load-more').style.display = 'none'; return; }
     
     lote.forEach(ins => {
         let d = {}; try { d = JSON.parse(ins.dadosJson); } catch(e){}
@@ -368,7 +371,7 @@ function renderizarProximaPagina() {
             <td>${safeDate(ins.data)}</td><td><small>${mapaEventos[ins.eventoId]||ins.eventoId}</small></td>
             <td><strong>${d.NomeCompleto||'Aluno'}</strong><br><small style="color:#64748b;">${ins.chave}</small></td>
             <td><span class="badge badge-${ins.status.replace(/\s/g, '')}">${ins.status}</span></td>
-            <td><div style="display:flex; gap:5px; justify-content:flex-end;"><button class="action-btn btn-edit" onclick="mudarStatus('${ins.chave}')"><i class="fa-solid fa-list-check"></i></button>${btnFicha}${ins.doc ? `<a href="${ins.doc}" target="_blank" class="action-btn btn-view"><i class="fa-solid fa-paperclip"></i></a>` : ''}</div></td>
+            <td><div style="display:flex; gap:5px; justify-content:flex-end;"><button class="action-btn btn-edit" onclick="mudarStatus('${ins.chave}')"><i class="fa-solid fa-list-check"></i></button>${btnFicha}${ins.doc ? `<a href="${ins.doc}" target="_blank" class="action-btn btn-view" title="Ver Anexo"><i class="fa-solid fa-paperclip"></i></a>` : ''}</div></td>
         </tr>`;
     });
     paginaAtual++;
@@ -384,7 +387,7 @@ function acaoEmMassa(s) {
     Swal.fire({title: `Marcar ${selecionados.size} como ${s}?`, showCancelButton: true}).then((r) => {
         if(r.isConfirmed) {
             showLoading('Atualizando...');
-            fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'atualizarStatusEmMassa', senha: sessionStorage.getItem('admin_token'), chaves: Array.from(selecionados), novoStatus: s }) }).then(() => { Swal.fire('Sucesso!', '', 'success'); todasInscricoes.forEach(i => { if(selecionados.has(i.chave)) i.status = s; }); resetEFiltrar(); });
+            fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'atualizarStatusEmMassa', senha: sessionStorage.getItem('admin_token'), chaves: Array.from(selecionados), novoStatus: s }) }).then(() => { Swal.fire({icon: 'success', title: 'Atualizado!'}); todasInscricoes.forEach(i => { if(selecionados.has(i.chave)) i.status = s; }); resetEFiltrar(); });
         }
     });
 }
