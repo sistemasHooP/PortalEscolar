@@ -469,13 +469,23 @@ function modalNovoEvento() {
                     </div>
                 </div>
 
+                <!-- SWITCHES CONFIGURAÇÃO -->
                 <div class="modal-full">
                     <label class="swal-label">Configurações de Processo</label>
-                    <label class="checkbox-card" style="border-color: #f59e0b; background: #fffbeb;">
-                        <input type="checkbox" id="req_ficha" checked> 
-                        <strong>Exigir Ficha/Assinatura Presencial?</strong>
-                        <br><span style="font-size:0.75rem; color:#b45309; font-weight:normal; margin-left:24px;">Se marcado, o aluno receberá aviso para assinar ficha na secretaria.</span>
-                    </label>
+                    <div style="display:flex; gap:10px; flex-direction: column;">
+                        <label class="checkbox-card" style="border-color: #f59e0b; background: #fffbeb;">
+                            <input type="checkbox" id="req_ficha" checked> 
+                            <strong>Exigir Ficha/Assinatura Presencial?</strong>
+                            <br><span style="font-size:0.75rem; color:#b45309; font-weight:normal; margin-left:24px;">Se marcado, o aluno receberá aviso para assinar ficha na secretaria.</span>
+                        </label>
+                        
+                        <!-- NOVO SWITCH: CARTEIRINHA DIGITAL -->
+                        <label class="checkbox-card" style="border-color: #3b82f6; background: #eff6ff;">
+                            <input type="checkbox" id="emitir_carteirinha"> 
+                            <strong>Emitir Carteirinha Digital?</strong>
+                            <br><span style="font-size:0.75rem; color:#1e40af; font-weight:normal; margin-left:24px;">Habilita a carteirinha no portal do aluno após aprovação.</span>
+                        </label>
+                    </div>
                 </div>
 
                 <div class="modal-full">
@@ -519,7 +529,8 @@ function modalNovoEvento() {
                     camposPersonalizados: extras,
                     observacoesTexto: document.getElementById('txt_obs_admin').value,
                     arquivos: { foto: document.getElementById('req_foto').checked, doc: document.getElementById('req_doc').checked },
-                    exigeFicha: document.getElementById('req_ficha').checked // NOVA CONFIGURAÇÃO
+                    exigeFicha: document.getElementById('req_ficha').checked,
+                    emiteCarteirinha: document.getElementById('emitir_carteirinha').checked
                 }, 
                 status: 'Ativo'
             }
