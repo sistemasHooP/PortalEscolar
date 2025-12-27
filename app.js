@@ -370,6 +370,7 @@ async function enviarInscricao(e) {
     }
 }
 
+// --- LÓGICA DE CONSULTA ATUALIZADA (CARTEIRINHA) ---
 function consultarChave() {
     const c = document.getElementById('busca-chave').value.trim();
     if(!c) return showError('Atenção', 'Digite a chave.');
@@ -380,19 +381,52 @@ function consultarChave() {
         .then(r => r.json())
         .then(j => {
             if(j.status === 'success') {
-                let cor = j.data.situacao.includes('Aprovada')||j.data.situacao.includes('Emitida') ? '#10b981' : '#f59e0b';
-                let btn = j.data.link_ficha ? `<a href="${j.data.link_ficha}" target="_blank" class="btn-primary" style="text-align:center; text-decoration:none; margin-top:10px;">Baixar Ficha</a>` : '';
+                const situacao = j.data.situacao;
+                const aprovado = situacao.includes('Aprovada') || situacao.includes('Emitida');
+                let cor = aprovado ? '#10b981' : '#f59e0b';
                 
+                // Botão da Ficha (se houver)
+                let btnFicha = j.data.link_ficha ? `<a href="${j.data.link_ficha}" target="_blank" class="btn-primary" style="margin-top:10px; background:#059669;">Baixar Ficha</a>` : '';
+                
+                // Botão da Carteirinha (Se aprovado e o evento permitir)
+                let btnCarteirinha = '';
+                if (aprovado && j.data.emiteCarteirinha) {
+                    btnCarteirinha = `<button class="btn-primary" style="margin-top:10px;" onclick='abrirCarteirinha(${JSON.stringify(j.data.aluno)})'><i class="fa-solid fa-id-card"></i> Carteirinha Digital</button>`;
+                }
+
                 document.getElementById('resultado-busca').innerHTML = `
-                    <div class="card" style="border-left:5px solid ${cor}; background:#f0f9ff;">
-                        <h3 style="color:${cor}; margin:0;">${j.data.situacao}</h3>
-                        <p>Data: ${formatarData(j.data.data_inscricao)}</p>
-                        ${btn}
+                    <div class="card" style="border-left:5px solid ${cor}; background:#f0f9ff; text-align:left;">
+                        <h3 style="color:${cor}; margin:0; font-size:1.1rem;">${situacao}</h3>
+                        <p style="font-size:0.9rem; color:#64748b;">Inscrito em: ${formatarData(j.data.data_inscricao)}</p>
+                        ${btnFicha}
+                        ${btnCarteirinha}
                     </div>`;
             } else {
                 document.getElementById('resultado-busca').innerHTML = `<p style="color:red;">${j.message}</p>`;
             }
         });
+}
+
+function abrirCarteirinha(aluno) {
+    // Preenche os dados
+    document.getElementById('cart-nome').innerText = aluno.nome || 'Aluno';
+    document.getElementById('cart-inst').innerText = aluno.instituicao || 'Instituição';
+    document.getElementById('cart-curso').innerText = aluno.curso || '';
+    document.getElementById('cart-mat').innerText = aluno.matricula || '-';
+    document.getElementById('cart-validade').innerText = aluno.validade;
+    
+    // Foto (se não tiver, usa placeholder)
+    const img = document.getElementById('cart-img');
+    if (aluno.foto && aluno.foto.includes('http')) {
+        img.src = aluno.foto;
+    } else {
+        img.src = 'https://via.placeholder.com/150?text=FOTO';
+    }
+
+    // Abre Modal
+    document.getElementById('modal-carteirinha').classList.remove('hidden');
+    // Fecha modal de consulta para limpar a tela
+    fecharModalConsulta();
 }
 
 function voltarHome() { 
