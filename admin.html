@@ -26,7 +26,7 @@
             
             <form onsubmit="realizarLogin(event)">
                 <div class="input-wrapper">
-                    <!-- Ícone Esquerdo (Pointer events none no CSS impede bloqueio) -->
+                    <!-- Ícone Esquerdo -->
                     <i class="fa-solid fa-lock icon-left"></i>
                     
                     <!-- Input -->
@@ -195,12 +195,18 @@
                         </div>
                         <div id="lista-instituicoes" style="max-height:300px; overflow-y:auto; border:1px solid #eee; border-radius:8px;"></div>
                     </div>
+                    
+                    <!-- Card de Configuração do Drive (Substituiu Planilha) -->
                     <div style="background:white; padding:20px; border-radius:12px; border:1px solid #e2e8f0;">
-                        <h3>Planilha de Dados</h3>
-                        <p style="color:#666;">Acesse os dados brutos ou altere a senha de administrador.</p>
-                        <a href="https://docs.google.com/spreadsheets/u/0/" target="_blank" class="btn-primary" style="background:#10b981; text-decoration:none; justify-content:center;">
-                            Abrir Google Sheets
-                        </a>
+                        <h3>Configuração de Armazenamento</h3>
+                        <p style="color:#666; font-size:0.9rem; margin-bottom:15px;">Defina o ID da pasta do Google Drive onde os arquivos (fotos e docs) serão salvos.</p>
+                        
+                        <label style="font-size:0.85rem; font-weight:600; color:#64748b;">ID da Pasta Google Drive</label>
+                        <div style="display:flex; gap:10px;">
+                            <input type="text" id="config-drive-id" placeholder="Ex: 1A2b3C..." class="swal-input">
+                            <button class="btn-primary" style="width:auto; margin:0;" onclick="salvarConfigDrive()"><i class="fa-solid fa-save"></i></button>
+                        </div>
+                        <p style="font-size:0.75rem; color:#999; margin-top:5px;">Se vazio, os arquivos irão para a raiz do Drive.</p>
                     </div>
                 </div>
             </section>
