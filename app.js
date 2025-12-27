@@ -203,7 +203,7 @@ async function abrirInscricao(evento) {
         `;
     }
     
-    // Campos Obrigatórios Fixos (COM ASTERISCO E REQUIRED)
+    // Campos Obrigatórios Fixos
     area.innerHTML += `
         <div>
             <label>CPF <span style="color:red">*</span></label>
@@ -229,7 +229,6 @@ async function abrirInscricao(evento) {
         config.camposTexto.forEach(key => {
             if(CAMPO_DEFS[key]) {
                 const def = CAMPO_DEFS[key];
-                // ADICIONA ASTERISCO NO LABEL
                 const labelHTML = `<label>${def.label} <span style="color:red">*</span></label>`;
                 
                 if (key === 'NomeInstituicao' && listaInstituicoesCache.length > 0) {
@@ -254,11 +253,10 @@ async function abrirInscricao(evento) {
         });
     }
 
-    // Campos Personalizados Extras (Obrigatórios)
+    // Campos Personalizados Extras
     if(config.camposPersonalizados && config.camposPersonalizados.length > 0) {
         area.innerHTML += `<div style="grid-column:1/-1; margin-top:15px; border-top:1px dashed #ccc; padding-top:10px;"><h4>Perguntas Adicionais</h4></div>`;
         config.camposPersonalizados.forEach(p => {
-            // ADICIONA ASTERISCO E REQUIRED NOS CAMPOS EXTRAS
             area.innerHTML += `
                 <div>
                     <label>${p} <span style="color:red">*</span></label>
@@ -415,10 +413,10 @@ function abrirCarteirinha(aluno) {
     document.getElementById('cart-mat').innerText = aluno.matricula || '-';
     document.getElementById('cart-validade').innerText = aluno.validade;
     
-    // Foto (se não tiver, usa placeholder)
+    // Foto com tratamento de URL
     const img = document.getElementById('cart-img');
     if (aluno.foto && aluno.foto.includes('http')) {
-        img.src = aluno.foto;
+        img.src = formatarUrlDrive(aluno.foto);
     } else {
         img.src = 'https://via.placeholder.com/150?text=FOTO';
     }
@@ -427,6 +425,27 @@ function abrirCarteirinha(aluno) {
     document.getElementById('modal-carteirinha').classList.remove('hidden');
     // Fecha modal de consulta para limpar a tela
     fecharModalConsulta();
+}
+
+// --- FUNÇÃO HELPER PARA CONVERTER LINK DRIVE ---
+function formatarUrlDrive(url) {
+    if (!url) return '';
+    let id = '';
+    
+    // Padrão 1: .../d/ID_DO_ARQUIVO/...
+    if (url.indexOf('/d/') !== -1) {
+        id = url.split('/d/')[1].split('/')[0];
+    } 
+    // Padrão 2: ...id=ID_DO_ARQUIVO...
+    else if (url.indexOf('id=') !== -1) {
+        id = url.split('id=')[1].split('&')[0];
+    }
+
+    if (id) {
+        // Link direto para embed
+        return `https://drive.google.com/uc?export=view&id=${id}`;
+    }
+    return url; // Retorna original se não achar ID
 }
 
 function voltarHome() { 
