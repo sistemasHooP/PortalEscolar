@@ -24,7 +24,7 @@ body {
     color: var(--text-dark);
 }
 
-/* --- TELA DE LOGIN (CORRIGIDA) --- */
+/* --- TELA DE LOGIN --- */
 .login-container {
     height: 100vh;
     display: flex;
@@ -43,7 +43,6 @@ body {
     box-shadow: 0 10px 25px rgba(0,0,0,0.1);
 }
 
-/* Correção do Input de Senha */
 .input-wrapper {
     position: relative;
     margin-bottom: 20px;
@@ -56,7 +55,7 @@ body {
     top: 50%;
     transform: translateY(-50%);
     color: #94a3b8;
-    pointer-events: none; /* CRÍTICO: Permite clicar através do ícone */
+    pointer-events: none;
     z-index: 10;
 }
 
@@ -68,12 +67,12 @@ body {
     color: #94a3b8;
     cursor: pointer;
     z-index: 10;
-    padding: 5px; /* Aumenta área de clique */
+    padding: 5px;
 }
 
 #admin-pass {
     width: 100%;
-    padding: 15px 45px 15px 45px; /* Espaço para ícones esq e dir */
+    padding: 15px 45px 15px 45px;
     border-radius: 50px;
     background: #f8fafc;
     border: 1px solid #cbd5e1;
@@ -255,17 +254,27 @@ body {
 }
 .filters select, .filters input { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; flex: 1; min-width: 150px; }
 
-/* --- CORREÇÃO DO MODAL (SWEETALERT) --- */
+/* --- CUSTOMIZAÇÃO DO MODAL (SWEETALERT2) --- */
+/* Forçar fonte e remover padding padrão */
 .swal2-popup {
     font-family: 'Poppins', sans-serif !important;
     padding: 0 !important;
 }
 
+/* Ajuste de largura para aproveitar mais a tela no PC */
+@media(min-width: 992px) {
+    div:where(.swal2-container) div:where(.swal2-popup) {
+        width: auto !important;
+        max-width: 900px !important; /* Bem mais largo no PC */
+        min-width: 600px;
+    }
+}
+
 .swal2-html-container {
     margin: 0 !important;
     text-align: left !important;
-    padding: 20px !important;
-    max-height: 70vh !important;
+    padding: 25px !important;
+    max-height: 75vh !important; /* Altura máxima com scroll */
     overflow-y: auto !important;
 }
 
@@ -285,15 +294,15 @@ body {
 /* Checkboxes Bonitos no Modal */
 .checkbox-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Colunas mais largas */
     gap: 10px;
     margin-top: 5px;
 }
 .checkbox-card {
-    background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem;
+    background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 0.95rem;
 }
 .checkbox-card:hover { border-color: var(--primary); background: #eff6ff; }
-.checkbox-card input { cursor: pointer; accent-color: var(--primary); }
+.checkbox-card input { cursor: pointer; accent-color: var(--primary); transform: scale(1.2); }
 
 /* Barra Flutuante (Bulk) */
 .bulk-actions-bar {
@@ -304,7 +313,7 @@ body {
 }
 .hidden-bar { display: none !important; }
 
-/* --- ÁREA DE IMPRESSÃO / RELATÓRIO (CAMADA DEDICADA) --- */
+/* --- ÁREA DE IMPRESSÃO / RELATÓRIO / CARTEIRINHA --- */
 
 /* O #print-layer é criado dinamicamente pelo JS diretamente no BODY */
 #print-layer { 
@@ -333,7 +342,7 @@ body {
 
     @page { 
         size: A4 landscape; 
-        margin: 1cm; 
+        margin: 5mm; 
     }
 
     /* Estilos Específicos do Relatório */
@@ -355,6 +364,8 @@ body {
     .report-logo { 
         height: 50px; 
         margin-right: 15px; 
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
     
     .header-left { display: flex; align-items: center; }
@@ -379,12 +390,13 @@ body {
         text-align: left; 
     }
     
-    .report-table th { background-color: #eee !important; font-weight: bold; }
+    .report-table th { background-color: #eee !important; font-weight: bold; -webkit-print-color-adjust: exact; }
     
     .group-header { 
         background-color: #ddd !important; 
         font-weight: bold; 
-        text-align: left; 
+        text-align: left;
+        -webkit-print-color-adjust: exact;
     }
 
     /* Assinatura */
@@ -396,6 +408,17 @@ body {
     }
     .sign-box { text-align: center; width: 40%; }
     .sign-line { border-top: 1px solid #000; padding-top: 5px; font-size: 10px; font-weight: bold; }
+    
+    /* Estilos da Carteirinha na Impressão */
+    .carteirinha-container {
+        page-break-inside: avoid;
+    }
+    .carteirinha-card {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        box-shadow: none !important;
+        border: 1px solid #ccc;
+    }
 }
 
 @media(max-width: 768px) {
