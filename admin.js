@@ -15,7 +15,7 @@ let paginaAtual = 1;
 const ITENS_POR_PAGINA = 50;
 let selecionados = new Set(); 
 
-// --- NOVO LOADING (BONITO) ---
+// --- LOADING ---
 function showLoading(msg = 'Processando...') {
     Swal.fire({
         html: `
@@ -32,7 +32,6 @@ function showLoading(msg = 'Processando...') {
     });
 }
 
-// --- FUNÇÃO DE SEGURANÇA PARA DATAS ---
 function safeDate(val) {
     if(!val) return '-';
     try {
@@ -91,7 +90,6 @@ function switchTab(tabId) {
 // --- DASHBOARD ---
 function carregarDashboard() {
     const token = sessionStorage.getItem('admin_token');
-    // Carregamento silencioso ou discreto ao trocar abas
     Promise.all([
         fetch(`${URL_API}?action=getTodosEventos`).then(r => r.json()),
         fetch(`${URL_API}?action=getInscricoesAdmin&token=${token}`).then(r => r.json())
@@ -190,10 +188,10 @@ function carregarEventosAdmin() {
         json.data.forEach(ev => mapaEventos[ev.id] = ev.titulo);
         
         json.data.sort((a,b) => b.id - a.id).forEach(ev => {
-            // CORREÇÃO: Cores fortes e contraste alto
+            // Cores ajustadas para visibilidade
             let btnAction = ev.status === 'Ativo' ? 
-                `<button class="action-btn" style="background:#eab308; color:#000;" onclick="toggleStatusEvento('${ev.id}','Inativo')" title="Pausar Evento"><i class="fa-solid fa-pause"></i></button>` : 
-                `<button class="action-btn" style="background:#22c55e; color:#fff;" onclick="toggleStatusEvento('${ev.id}','Ativo')" title="Ativar Evento"><i class="fa-solid fa-play"></i></button>`;
+                `<button class="action-btn" style="background:#eab308; color:#000;" onclick="toggleStatusEvento('${ev.id}','Inativo')" title="Pausar"><i class="fa-solid fa-pause"></i></button>` : 
+                `<button class="action-btn" style="background:#22c55e; color:#fff;" onclick="toggleStatusEvento('${ev.id}','Ativo')" title="Ativar"><i class="fa-solid fa-play"></i></button>`;
             
             tbody.innerHTML += `<tr>
                 <td>#${ev.id}</td>
@@ -239,6 +237,7 @@ function toggleStatusEvento(id, status) {
     .then(() => { Swal.close(); carregarEventosAdmin(); });
 }
 
+// MODAL NOVO EVENTO (ATUALIZADO: Observações Admin)
 function modalNovoEvento() {
     let htmlCampos = '<div class="checkbox-grid">';
     CAMPOS_PADRAO.forEach(c => htmlCampos += `<label class="checkbox-card"><input type="checkbox" id="check_${c.key}" value="${c.key}" checked> ${c.label}</label>`);
@@ -248,41 +247,64 @@ function modalNovoEvento() {
         title: 'Criar Novo Evento', width: '800px',
         html: `
             <div class="modal-form-grid">
-                <div class="modal-full">
-                    <label class="swal-label">Título do Evento</label>
-                    <input id="swal-titulo" class="swal-input" placeholder="Ex: Transporte 2025.1">
-                </div>
-                <div class="modal-full">
-                    <label class="swal-label">Descrição Curta</label>
-                    <input id="swal-desc" class="swal-input" placeholder="Ex: Cadastro para alunos da Zona Rural">
-                </div>
+                <input id="swal-titulo" class="swal-input" placeholder="Título do Evento">
+                <input id="swal-desc" class="swal-input" placeholder="Descrição Curta">
                 <div class="modal-row">
                     <div><label class="swal-label">Início</label><input type="date" id="swal-inicio" class="swal-input"></div>
                     <div><label class="swal-label">Fim</label><input type="date" id="swal-fim" class="swal-input"></div>
                 </div>
                 
-                <div class="modal-full" style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0;">
-                    <label class="swal-label" style="color:var(--primary);">Quais campos o aluno deve preencher?</label>
-                    <p style="font-size:0.8rem; color:#666; margin:0 0 10px 0;">CPF e E-mail já são obrigatórios.</p>
+                <div class="modal-full" style="background:#f8fafc; padding:15px; border:1px solid #e2e8f0; border-radius:8px;">
+                    <label class="swal-label" style="color:var(--primary);">Configuração do Formulário</label>
+                    <p style="font-size:0.8rem; color:#666;">Campos que o aluno preencherá:</p>
                     ${htmlCampos}
+                    
+                    <hr style="margin:15px 0; border:0; border-top:1px dashed #ccc;">
+                    
+                    <label class="swal-label">Campos Extras Personalizados</label>
+                    <div id="container-extras" style="display:flex; flex-direction:column; gap:5px; margin-bottom:10px;"></div>
+                    <button type="button" class="action-btn btn-view" style="width:100%;" id="btn-add-extra">+ Adicionar Pergunta</button>
+                    
+                    <div class="modal-full" style="margin-top:15px;">
+                        <label class="swal-label">Observações / Instruções (Exibido no formulário)</label>
+                        <textarea id="txt_obs_admin" class="swal-input" style="height:80px;" placeholder="Ex: Trazer comprovante de residência original no dia da entrega."></textarea>
+                    </div>
                 </div>
 
                 <div class="modal-full">
-                    <label class="swal-label">Documentos Obrigatórios</label>
+                    <label class="swal-label">Uploads Obrigatórios</label>
                     <div style="display:flex; gap:20px;">
                         <label class="checkbox-card"><input type="checkbox" id="req_foto" checked> Foto 3x4</label>
-                        <label class="checkbox-card"><input type="checkbox" id="req_doc" checked> Declaração/Comprovante</label>
+                        <label class="checkbox-card"><input type="checkbox" id="req_doc" checked> Declaração</label>
                     </div>
                 </div>
             </div>
         `,
-        showCancelButton: true, confirmButtonText: 'Publicar Evento', confirmButtonColor: '#2563eb',
+        showCancelButton: true, confirmButtonText: 'Publicar', confirmButtonColor: '#2563eb',
+        didOpen: () => {
+            document.getElementById('btn-add-extra').addEventListener('click', () => {
+                const div = document.createElement('div');
+                div.innerHTML = `<div style="display:flex; gap:5px;"><input type="text" class="swal-input extra-field" placeholder="Nome do campo (ex: Tamanho da Camisa)" style="margin-bottom:5px; flex:1;"><button type="button" class="action-btn btn-delete" onclick="this.parentElement.parentElement.remove()">X</button></div>`;
+                document.getElementById('container-extras').appendChild(div);
+            });
+        },
         preConfirm: () => {
-            const sels = []; CAMPOS_PADRAO.forEach(c => { if(document.getElementById(`check_${c.key}`).checked) sels.push(c.key); });
+            const sels = []; 
+            CAMPOS_PADRAO.forEach(c => { if(document.getElementById(`check_${c.key}`).checked) sels.push(c.key); });
+            
+            const extras = [];
+            document.querySelectorAll('.extra-field').forEach(inp => { if(inp.value.trim()) extras.push(inp.value.trim()); });
+
             return {
                 titulo: document.getElementById('swal-titulo').value, descricao: document.getElementById('swal-desc').value,
                 inicio: document.getElementById('swal-inicio').value, fim: document.getElementById('swal-fim').value,
-                config: { camposTexto: sels, arquivos: { foto: document.getElementById('req_foto').checked, doc: document.getElementById('req_doc').checked } }, status: 'Ativo'
+                config: { 
+                    camposTexto: sels, 
+                    camposPersonalizados: extras,
+                    observacoesTexto: document.getElementById('txt_obs_admin').value, // Salva o texto do admin
+                    arquivos: { foto: document.getElementById('req_foto').checked, doc: document.getElementById('req_doc').checked } 
+                }, 
+                status: 'Ativo'
             }
         }
     }).then((res) => {
@@ -297,7 +319,7 @@ function modalNovoEvento() {
 // --- INSCRIÇÕES ---
 function carregarInscricoes() {
     const tbody = document.getElementById('lista-inscricoes-admin');
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Carregando dados...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Carregando...</td></tr>';
     
     fetch(`${URL_API}?action=getInscricoesAdmin&token=${sessionStorage.getItem('admin_token')}`).then(r => r.json()).then(json => {
         todasInscricoes = (json.data || []).sort((a,b) => new Date(b.data) - new Date(a.data));
@@ -308,177 +330,79 @@ function carregarInscricoes() {
 }
 
 function resetEFiltrar() {
-    paginaAtual = 1;
-    desmarcarTudo();
+    paginaAtual = 1; desmarcarTudo();
     const termo = document.getElementById('filtro-nome').value.toLowerCase();
     const status = document.getElementById('filtro-status').value;
     const eventoId = document.getElementById('filtro-evento').value;
-
     inscricoesFiltradas = todasInscricoes.filter(i => {
         let d = {}; try { d = JSON.parse(i.dadosJson); } catch(e){}
         const nome = (d.NomeCompleto || "").toLowerCase();
-        return (nome.includes(termo) || i.chave.toLowerCase().includes(termo)) &&
-               (status === "" || i.status === status) &&
-               (eventoId === "" || String(i.eventoId) === String(eventoId));
+        return (nome.includes(termo) || i.chave.toLowerCase().includes(termo)) && (status === "" || i.status === status) && (eventoId === "" || String(i.eventoId) === String(eventoId));
     });
-
     if(document.getElementById('filtro-evento').options.length <= 1) {
         const select = document.getElementById('filtro-evento');
         Object.keys(mapaEventos).forEach(id => select.innerHTML += `<option value="${id}">${mapaEventos[id]}</option>`);
     }
-
     document.getElementById('lista-inscricoes-admin').innerHTML = '';
     renderizarProximaPagina();
 }
 
 function renderizarProximaPagina() {
     const tbody = document.getElementById('lista-inscricoes-admin');
-    const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
-    const fim = inicio + ITENS_POR_PAGINA;
-    const lote = inscricoesFiltradas.slice(inicio, fim);
-
-    if(paginaAtual === 1 && lote.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Nenhuma inscrição encontrada.</td></tr>';
-        document.getElementById('btn-load-more').style.display = 'none';
-        return;
-    }
-
+    const lote = inscricoesFiltradas.slice((paginaAtual - 1) * ITENS_POR_PAGINA, paginaAtual * ITENS_POR_PAGINA);
+    if(paginaAtual === 1 && lote.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Nenhuma inscrição encontrada.</td></tr>'; document.getElementById('btn-load-more').style.display = 'none'; return; }
+    
     lote.forEach(ins => {
         let d = {}; try { d = JSON.parse(ins.dadosJson); } catch(e){}
         const checked = selecionados.has(ins.chave) ? 'checked' : '';
         
-        // BOTÃO GERAR FICHA REINSERIDO E CORES VISÍVEIS
         let btnFicha = '';
         if(ins.link_ficha && ins.link_ficha.length > 5) {
             btnFicha = `<a href="${ins.link_ficha}" target="_blank" class="action-btn btn-view" style="background:#059669;" title="Baixar PDF"><i class="fa-solid fa-file-pdf"></i></a>`;
         } else {
-            // Botão para gerar a ficha se não existir
             btnFicha = `<button class="action-btn" style="background:#6366f1;" onclick="gerarFicha('${ins.chave}')" title="Gerar Ficha"><i class="fa-solid fa-print"></i></button>`;
         }
 
         tbody.innerHTML += `<tr>
             <td><input type="checkbox" class="bulk-check" value="${ins.chave}" ${checked} onclick="toggleCheck('${ins.chave}')"></td>
-            <td>${safeDate(ins.data)}</td>
-            <td><small>${mapaEventos[ins.eventoId]||ins.eventoId}</small></td>
+            <td>${safeDate(ins.data)}</td><td><small>${mapaEventos[ins.eventoId]||ins.eventoId}</small></td>
             <td><strong>${d.NomeCompleto||'Aluno'}</strong><br><small style="color:#64748b;">${ins.chave}</small></td>
             <td><span class="badge badge-${ins.status.replace(/\s/g, '')}">${ins.status}</span></td>
-            <td>
-                <div style="display:flex; gap:5px; justify-content:flex-end;">
-                    <button class="action-btn btn-edit" onclick="mudarStatus('${ins.chave}')" title="Alterar Status"><i class="fa-solid fa-list-check"></i></button>
-                    ${btnFicha}
-                    ${ins.doc ? `<a href="${ins.doc}" target="_blank" class="action-btn btn-view" title="Ver Anexo"><i class="fa-solid fa-paperclip"></i></a>` : ''}
-                </div>
-            </td>
+            <td><div style="display:flex; gap:5px; justify-content:flex-end;"><button class="action-btn btn-edit" onclick="mudarStatus('${ins.chave}')"><i class="fa-solid fa-list-check"></i></button>${btnFicha}${ins.doc ? `<a href="${ins.doc}" target="_blank" class="action-btn btn-view"><i class="fa-solid fa-paperclip"></i></a>` : ''}</div></td>
         </tr>`;
     });
-
     paginaAtual++;
-    document.getElementById('btn-load-more').style.display = (fim < inscricoesFiltradas.length) ? 'block' : 'none';
+    document.getElementById('btn-load-more').style.display = (paginaAtual * ITENS_POR_PAGINA < inscricoesFiltradas.length + ITENS_POR_PAGINA) ? 'block' : 'none';
 }
 
-function toggleCheck(chave) {
-    if(selecionados.has(chave)) selecionados.delete(chave); else selecionados.add(chave);
-    atualizarBarraBulk();
-}
-function toggleAllChecks() {
-    const master = document.getElementById('check-all').checked;
-    document.querySelectorAll('.bulk-check').forEach(ck => {
-        ck.checked = master;
-        if(master) selecionados.add(ck.value); else selecionados.delete(ck.value);
-    });
-    atualizarBarraBulk();
-}
-function atualizarBarraBulk() {
-    const bar = document.getElementById('bulk-bar');
-    document.getElementById('bulk-count').innerText = selecionados.size;
-    if(selecionados.size > 0) bar.classList.remove('hidden-bar'); else bar.classList.add('hidden-bar');
-}
-function desmarcarTudo() {
-    selecionados.clear();
-    document.getElementById('check-all').checked = false;
-    document.querySelectorAll('.bulk-check').forEach(ck => ck.checked = false);
-    atualizarBarraBulk();
-}
-function acaoEmMassa(status) {
-    Swal.fire({ 
-        title: `Marcar ${selecionados.size} como ${status}?`, 
-        icon: 'warning', showCancelButton: true, confirmButtonText: 'Sim' 
-    }).then((res) => {
-        if(res.isConfirmed) {
-            showLoading('Atualizando em massa...');
-            fetch(URL_API, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'atualizarStatusEmMassa', senha: sessionStorage.getItem('admin_token'), chaves: Array.from(selecionados), novoStatus: status })
-            }).then(() => {
-                Swal.fire({icon: 'success', title: 'Atualizado!'});
-                todasInscricoes.forEach(i => { if(selecionados.has(i.chave)) i.status = status; });
-                resetEFiltrar();
-            });
+function toggleCheck(k) { if(selecionados.has(k)) selecionados.delete(k); else selecionados.add(k); atualizarBarraBulk(); }
+function toggleAllChecks() { const m = document.getElementById('check-all').checked; document.querySelectorAll('.bulk-check').forEach(c => { c.checked = m; if(m) selecionados.add(c.value); else selecionados.delete(c.value); }); atualizarBarraBulk(); }
+function atualizarBarraBulk() { const b = document.getElementById('bulk-bar'); document.getElementById('bulk-count').innerText = selecionados.size; if(selecionados.size > 0) b.classList.remove('hidden-bar'); else b.classList.add('hidden-bar'); }
+function desmarcarTudo() { selecionados.clear(); document.getElementById('check-all').checked = false; document.querySelectorAll('.bulk-check').forEach(c => c.checked = false); atualizarBarraBulk(); }
+
+function acaoEmMassa(s) {
+    Swal.fire({title: `Marcar ${selecionados.size} como ${s}?`, showCancelButton: true}).then((r) => {
+        if(r.isConfirmed) {
+            showLoading('Atualizando...');
+            fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'atualizarStatusEmMassa', senha: sessionStorage.getItem('admin_token'), chaves: Array.from(selecionados), novoStatus: s }) }).then(() => { Swal.fire('Sucesso!', '', 'success'); todasInscricoes.forEach(i => { if(selecionados.has(i.chave)) i.status = s; }); resetEFiltrar(); });
         }
     });
 }
 
-// FUNÇÃO GERAR FICHA (RESTAURADA)
 function gerarFicha(chave) {
-    Swal.fire({
-        title: 'Gerar Ficha?',
-        text: "O status será alterado para 'Ficha Emitida'.",
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Sim, Gerar',
-        confirmButtonColor: '#4f46e5'
-    }).then((result) => {
-        if(result.isConfirmed) {
-            showLoading('Gerando documento...');
-            fetch(URL_API, {
-                method: 'POST',
-                body: JSON.stringify({
-                    action: 'gerarFichaPDF',
-                    senha: sessionStorage.getItem('admin_token'),
-                    chave: chave
-                })
-            })
-            .then(res => res.json())
-            .then(json => {
+    Swal.fire({ title: 'Gerar Ficha Oficial?', text: "O status mudará para 'Ficha Emitida'.", icon: 'question', showCancelButton: true, confirmButtonText: 'Sim', confirmButtonColor: '#4f46e5' }).then((r) => {
+        if(r.isConfirmed) {
+            showLoading('Gerando PDF...');
+            fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'gerarFichaPDF', senha: sessionStorage.getItem('admin_token'), chave: chave }) })
+            .then(res => res.json()).then(json => {
                 Swal.close();
-                if(json.status === 'success') {
-                    Swal.fire('Sucesso', 'Ficha gerada!', 'success');
-                    // Atualiza localmente
-                    const item = todasInscricoes.find(i => i.chave === chave);
-                    if(item) {
-                        item.status = 'Ficha Emitida';
-                        item.link_ficha = json.link; // Se a API retornar link
-                    }
-                    resetEFiltrar();
-                } else {
-                    Swal.fire('Erro', json.message, 'error');
-                }
+                if(json.status === 'success') { Swal.fire('Sucesso', 'Ficha gerada!', 'success'); const item = todasInscricoes.find(i => i.chave === chave); if(item) { item.status = 'Ficha Emitida'; item.link_ficha = json.link; } resetEFiltrar(); } 
+                else { Swal.fire('Erro', json.message, 'error'); }
             });
         }
     });
 }
 
-function carregarInstituicoes() {
-    fetch(`${URL_API}?action=getInstituicoes`).then(r => r.json()).then(json => {
-        const div = document.getElementById('lista-instituicoes'); div.innerHTML = '';
-        if(json.data) json.data.forEach(nome => {
-            div.innerHTML += `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee;">
-                <span>${nome}</span><button onclick="removerInst('${nome}')" style="border:none; color:red; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
-            </div>`;
-        });
-    });
-}
-function addInstituicao() {
-    const nome = document.getElementById('nova-inst').value;
-    if(nome) fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'adicionarInstituicao', nome, senha: sessionStorage.getItem('admin_token') }) }).then(() => {
-        document.getElementById('nova-inst').value = ''; carregarInstituicoes();
-    });
-}
-function removerInst(nome) {
-    fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'removerInstituicao', nome, senha: sessionStorage.getItem('admin_token') }) }).then(() => carregarInstituicoes());
-}
-
-// POPUP DE STATUS (MELHORADO E ALINHADO)
 function mudarStatus(chave) {
     Swal.fire({
         title: 'Atualizar Status',
@@ -493,12 +417,8 @@ function mudarStatus(chave) {
                 </select>
             </div>
         `,
-        showCancelButton: true,
-        confirmButtonText: 'Salvar',
-        confirmButtonColor: '#2563eb',
-        preConfirm: () => {
-            return document.getElementById('novo_status').value;
-        }
+        showCancelButton: true, confirmButtonText: 'Salvar', confirmButtonColor: '#2563eb',
+        preConfirm: () => { return document.getElementById('novo_status').value; }
     }).then((res) => {
         if(res.isConfirmed) {
             showLoading('Atualizando...');
@@ -511,3 +431,7 @@ function mudarStatus(chave) {
         }
     });
 }
+
+function carregarInstituicoes() { fetch(`${URL_API}?action=getInstituicoes`).then(r => r.json()).then(json => { const d = document.getElementById('lista-instituicoes'); d.innerHTML = ''; if(json.data) json.data.forEach(n => d.innerHTML += `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;">${n} <button onclick="removerInst('${n}')" style="color:red; border:none; cursor:pointer;">X</button></div>`); }); }
+function addInstituicao() { const n = document.getElementById('nova-inst').value; if(n) fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'adicionarInstituicao', nome: n, senha: sessionStorage.getItem('admin_token') }) }).then(() => { document.getElementById('nova-inst').value = ''; carregarInstituicoes(); }); }
+function removerInst(n) { fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'removerInstituicao', nome: n, senha: sessionStorage.getItem('admin_token') }) }).then(() => carregarInstituicoes()); }
