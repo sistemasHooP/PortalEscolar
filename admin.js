@@ -1,7 +1,6 @@
 const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
 
 // --- CONFIGURAÇÃO DA LOGO ---
-// Certifique-se que o arquivo logo.png está na mesma pasta do admin.html no GitHub
 const URL_LOGO = './logo.png'; 
 
 const CAMPOS_PADRAO = [
@@ -22,15 +21,24 @@ let paginaAtual = 1;
 const ITENS_POR_PAGINA = 50;
 let selecionados = new Set(); 
 
-// --- LOADING ---
+// --- LOADING COM LOGO PULSANDO ---
 function showLoading(msg = 'Processando...') {
     Swal.fire({
         html: `
             <div style="display:flex; flex-direction:column; align-items:center; gap:15px; padding:20px;">
-                <div class="spinner" style="border-color:#e2e8f0; border-top-color:#2563eb; width:50px; height:50px; border-width:4px; border-radius:50%; border-style:solid; animation:spin 1s linear infinite;"></div>
+                <!-- Logo pulsando em vez de spinner -->
+                <img src="${URL_LOGO}" style="width:80px; height:auto; animation: pulse-swal 1.5s infinite ease-in-out;" onerror="this.style.display='none'">
+                
                 <h3 style="font-family:sans-serif; font-size:1.1rem; color:#1e293b; margin:0;">${msg}</h3>
                 <p style="font-family:sans-serif; font-size:0.85rem; color:#64748b; margin:0;">Aguarde um momento...</p>
-                <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+                
+                <style>
+                    @keyframes pulse-swal { 
+                        0% { transform: scale(1); opacity: 1; } 
+                        50% { transform: scale(1.1); opacity: 0.8; } 
+                        100% { transform: scale(1); opacity: 1; } 
+                    }
+                </style>
             </div>
         `,
         showConfirmButton: false, allowOutsideClick: false, width: '300px'
@@ -67,7 +75,12 @@ function realizarLogin(e) {
     }).catch(() => Swal.fire('Erro', 'Sem conexão', 'error'));
 }
 
-function logout() { sessionStorage.removeItem('admin_token'); location.reload(); }
+// --- LOGOUT REDIRECT ---
+function logout() { 
+    sessionStorage.removeItem('admin_token'); 
+    // Redireciona para o link fornecido
+    window.location.href = 'https://sistemashoop.github.io/PortalEscolar/'; 
+}
 
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -78,7 +91,36 @@ function switchTab(tabId) {
     if(tabId === 'tab-dashboard') carregarDashboard();
     if(tabId === 'tab-eventos') carregarEventosAdmin();
     if(tabId === 'tab-inscricoes') carregarInscricoes();
-    if(tabId === 'tab-config') carregarInstituicoes();
+    if(tabId === 'tab-config') {
+        carregarInstituicoes();
+        carregarConfigDrive(); // Carrega o ID do Drive ao abrir a aba
+    }
+}
+
+// --- CONFIGURAÇÃO DRIVE ---
+function carregarConfigDrive() {
+    fetch(`${URL_API}?action=getConfigDrive&token=${sessionStorage.getItem('admin_token')}`)
+    .then(r => r.json())
+    .then(json => {
+        if(json.status === 'success') {
+            document.getElementById('config-drive-id').value = json.idPasta || '';
+        }
+    });
+}
+
+function salvarConfigDrive() {
+    const id = document.getElementById('config-drive-id').value;
+    showLoading('Salvando...');
+    fetch(URL_API, { 
+        method: 'POST', 
+        body: JSON.stringify({ 
+            action: 'salvarConfigDrive', 
+            senha: sessionStorage.getItem('admin_token'),
+            idPasta: id 
+        }) 
+    }).then(() => {
+        Swal.fire({icon: 'success', title: 'Salvo!', timer: 1500});
+    });
 }
 
 // --- LAYOUT HELPER ---
@@ -181,15 +223,11 @@ function atualizarSelectsRelatorio(eventos, inscricoes) {
     Array.from(instituicoes).sort().forEach(inst => { if(inst) selInst.innerHTML += `<option value="${inst}">${inst}</option>`; });
 }
 
-// =========================================================
-// --- GERADOR DE RELATÓRIO DINÂMICO & SELECIONÁVEL ---
-// =========================================================
-
+// --- RELATÓRIO DINÂMICO ---
 function gerarRelatorioTransporte() {
     const eventoId = document.getElementById('relatorio-evento').value;
     const instFiltro = document.getElementById('relatorio-inst').value;
     
-    // Filtra apenas aprovados ou fichas emitidas
     const alunosFiltrados = dashboardData.filter(i => {
         let d = {}; try { d = JSON.parse(i.dadosJson); } catch (e) {}
         return (eventoId === "" || String(i.eventoId) === String(eventoId)) &&
@@ -201,7 +239,6 @@ function gerarRelatorioTransporte() {
         return Swal.fire({ icon: 'info', title: 'Atenção', text: 'Nenhum aluno APROVADO encontrado com esses filtros.' });
     }
 
-    // Coleta todas as chaves
     const todasChaves = new Set();
     const chavesPrioritarias = ['NomeCompleto', 'NomeInstituicao', 'NomeCurso', 'PeriodoCurso', 'Telefone'];
     const ignorar = ['linkFoto', 'linkDoc', 'Assinatura'];
@@ -215,7 +252,6 @@ function gerarRelatorioTransporte() {
         } catch (e) {}
     });
 
-    // Ordena chaves
     const listaChaves = Array.from(todasChaves).sort((a, b) => {
         const idxA = chavesPrioritarias.indexOf(a);
         const idxB = chavesPrioritarias.indexOf(b);
@@ -225,7 +261,6 @@ function gerarRelatorioTransporte() {
         return a.localeCompare(b);
     });
 
-    // Modal de seleção
     let htmlChecks = `<div class="checkbox-grid" style="max-height:300px; overflow-y:auto; padding:5px;">`;
     listaChaves.forEach(chave => {
         const label = CAMPOS_PADRAO.find(c => c.key === chave)?.label || chave;
@@ -268,7 +303,6 @@ function construirRelatorioFinal(alunos, colunasKeys, eventoId) {
     const tituloEvento = eventoId ? (mapaEventos[eventoId] || 'Evento') : "Relatório Geral";
     const dataHoje = new Date().toLocaleDateString('pt-BR');
 
-    // Agrupa por instituição
     const grupos = {};
     alunos.forEach(aluno => {
         let d = {}; try { d = JSON.parse(aluno.dadosJson); } catch(e){}
@@ -296,7 +330,6 @@ function construirRelatorioFinal(alunos, colunasKeys, eventoId) {
             </div>
     `;
 
-    // Cabeçalho da Tabela
     let thead = `<tr><th class="col-index">#</th>`;
     colunasKeys.forEach(k => {
         const label = k === 'Assinatura' ? 'Assinatura' : (CAMPOS_PADRAO.find(c => c.key === k)?.label || k);
@@ -305,7 +338,6 @@ function construirRelatorioFinal(alunos, colunasKeys, eventoId) {
     });
     thead += `</tr>`;
 
-    // Gera tabelas por grupo
     const nomesInstituicoes = Object.keys(grupos).sort(); 
 
     nomesInstituicoes.forEach(instNome => {
@@ -348,7 +380,6 @@ function construirRelatorioFinal(alunos, colunasKeys, eventoId) {
         </div>
     `;
 
-    // Injeção e Impressão via Camada Dedicada
     let printLayer = document.getElementById('print-layer');
     if (!printLayer) {
         printLayer = document.createElement('div');
@@ -438,7 +469,6 @@ function modalNovoEvento() {
                     </div>
                 </div>
 
-                <!-- SWITCH PARA EXIGÊNCIA DE FICHA -->
                 <div class="modal-full">
                     <label class="swal-label">Configurações de Processo</label>
                     <label class="checkbox-card" style="border-color: #f59e0b; background: #fffbeb;">
@@ -489,7 +519,7 @@ function modalNovoEvento() {
                     camposPersonalizados: extras,
                     observacoesTexto: document.getElementById('txt_obs_admin').value,
                     arquivos: { foto: document.getElementById('req_foto').checked, doc: document.getElementById('req_doc').checked },
-                    exigeFicha: document.getElementById('req_ficha').checked // ENVIA CONFIG AO BACKEND
+                    exigeFicha: document.getElementById('req_ficha').checked // NOVA CONFIGURAÇÃO
                 }, 
                 status: 'Ativo'
             }
