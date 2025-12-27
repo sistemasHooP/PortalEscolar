@@ -184,7 +184,7 @@ async function abrirInscricao(evento) {
     const area = document.getElementById('campos-dinamicos'); 
     area.innerHTML = '';
     
-    // Alerta de topo (Amarelo - Atenção)
+    // Alerta de topo
     if(config.mensagemAlerta) {
         area.innerHTML += `
             <div class="info-banner">
@@ -193,7 +193,7 @@ async function abrirInscricao(evento) {
             </div>`;
     }
     
-    // Observações Gerais (Azul - Instruções do Admin) - SOMENTE LEITURA
+    // Observações Gerais
     if(config.observacoesTexto) {
         area.innerHTML += `
             <div style="background:#f0f9ff; color:#0369a1; padding:15px; border-radius:8px; border-left:4px solid #3b82f6; margin-bottom:20px; font-size:0.95rem;">
@@ -203,7 +203,7 @@ async function abrirInscricao(evento) {
         `;
     }
     
-    // Campos Obrigatórios Fixos
+    // Campos Obrigatórios
     area.innerHTML += `
         <div>
             <label>CPF <span style="color:red">*</span></label>
@@ -214,7 +214,7 @@ async function abrirInscricao(evento) {
             <input type="email" name="Email" placeholder="seu@email.com" required>
         </div>`;
 
-    // Carregar instituições se necessário
+    // Carregar instituições
     if(config.camposTexto && config.camposTexto.includes('NomeInstituicao') && listaInstituicoesCache.length === 0) {
         try { 
             toggleLoader(true,"Carregando..."); 
@@ -224,7 +224,7 @@ async function abrirInscricao(evento) {
         } catch(e){} finally { toggleLoader(false); }
     }
 
-    // Campos Padrão Dinâmicos
+    // Campos Dinâmicos
     if(config.camposTexto) {
         config.camposTexto.forEach(key => {
             if(CAMPO_DEFS[key]) {
@@ -253,7 +253,6 @@ async function abrirInscricao(evento) {
         });
     }
 
-    // Campos Personalizados Extras
     if(config.camposPersonalizados && config.camposPersonalizados.length > 0) {
         area.innerHTML += `<div style="grid-column:1/-1; margin-top:15px; border-top:1px dashed #ccc; padding-top:10px;"><h4>Perguntas Adicionais</h4></div>`;
         config.camposPersonalizados.forEach(p => {
@@ -368,7 +367,7 @@ async function enviarInscricao(e) {
     }
 }
 
-// --- LÓGICA DE CONSULTA ATUALIZADA (CARTEIRINHA) ---
+// --- LÓGICA DE CONSULTA ATUALIZADA ---
 function consultarChave() {
     const c = document.getElementById('busca-chave').value.trim();
     if(!c) return showError('Atenção', 'Digite a chave.');
@@ -413,10 +412,26 @@ function abrirCarteirinha(aluno) {
     document.getElementById('cart-mat').innerText = aluno.matricula || '-';
     document.getElementById('cart-validade').innerText = aluno.validade;
     
-    // Foto com tratamento de URL
+    // Tratamento de Imagem
     const img = document.getElementById('cart-img');
-    if (aluno.foto && aluno.foto.includes('http')) {
-        img.src = formatarUrlDrive(aluno.foto);
+    img.src = 'https://via.placeholder.com/150?text=Carregando...'; // Reset visual
+    
+    if (aluno.foto) {
+        // Verifica se é Base64 (data:image) OU URL comum (http)
+        if (aluno.foto.startsWith('data:image') || aluno.foto.startsWith('http')) {
+            // Se for link do Drive, tenta formatar para LH3 (para garantir exibição)
+            if (aluno.foto.includes('drive.google.com') && !aluno.foto.startsWith('data:image')) {
+                 img.src = formatarUrlDrive(aluno.foto);
+            } else {
+                 img.src = aluno.foto;
+            }
+        } else {
+            img.src = 'https://via.placeholder.com/150?text=FOTO';
+        }
+        
+        img.onerror = function() {
+            this.src = 'https://via.placeholder.com/150?text=FOTO';
+        };
     } else {
         img.src = 'https://via.placeholder.com/150?text=FOTO';
     }
@@ -432,20 +447,15 @@ function formatarUrlDrive(url) {
     if (!url) return '';
     let id = '';
     
-    // Padrão 1: .../d/ID_DO_ARQUIVO/...
-    if (url.indexOf('/d/') !== -1) {
-        id = url.split('/d/')[1].split('/')[0];
-    } 
-    // Padrão 2: ...id=ID_DO_ARQUIVO...
-    else if (url.indexOf('id=') !== -1) {
-        id = url.split('id=')[1].split('&')[0];
+    const parts = url.split(/\/d\/|id=/);
+    if (parts.length > 1) {
+        id = parts[1].split(/\/|&/)[0];
     }
 
     if (id) {
-        // Link direto para embed
-        return `https://drive.google.com/uc?export=view&id=${id}`;
+        return `https://lh3.googleusercontent.com/d/${id}`;
     }
-    return url; // Retorna original se não achar ID
+    return url; 
 }
 
 function voltarHome() { 
