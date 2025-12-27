@@ -391,7 +391,7 @@ input[type="file"] {
     transform: scale(0.95); 
 }
 
-/* --- Modal Overlay de Consulta --- */
+/* --- Modal Overlay de Consulta e Carteirinha --- */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -448,7 +448,7 @@ footer {
     margin-top: 2rem;
 }
 
-/* --- Loader Overlay (Carregamento) --- */
+/* --- Loader Overlay (Carregamento) com Logo Pulsante --- */
 #loader-overlay {
     position: fixed;
     top: 0;
@@ -465,16 +465,12 @@ footer {
 }
 
 .loader-logo {
-    width: 80px;
-    height: auto;
-    margin-bottom: 15px;
-    animation: pulse-logo 1.5s infinite ease-in-out;
+    width: 80px; height: auto; margin-bottom: 15px; animation: pulse-logo 1.5s infinite ease-in-out;
 }
-
-@keyframes pulse-logo {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.1); opacity: 0.8; }
-    100% { transform: scale(1); opacity: 1; }
+@keyframes pulse-logo { 
+    0% { transform: scale(1); opacity: 1; } 
+    50% { transform: scale(1.1); opacity: 0.8; } 
+    100% { transform: scale(1); opacity: 1; } 
 }
 
 #loader-text {
@@ -484,6 +480,11 @@ footer {
 }
 
 /* --- Animações --- */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 @keyframes pulse {
     0% { opacity: 0.6; }
     50% { opacity: 1; }
@@ -508,6 +509,118 @@ footer {
 /* Utilitários */
 .hidden {
     display: none !important;
+}
+
+/* --- CARTEIRINHA DIGITAL (Design) --- */
+.carteirinha-container {
+    width: 100%;
+    max-width: 350px;
+    perspective: 1000px;
+}
+
+.carteirinha-card {
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    color: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    position: relative;
+    overflow: hidden;
+    font-family: 'Arial', sans-serif; /* Fonte legível para dados */
+}
+
+/* Marca d'água de fundo */
+.carteirinha-card::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.cart-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    padding-bottom: 10px;
+}
+
+.cart-logo {
+    width: 45px;
+    height: 45px;
+    object-fit: contain;
+    background: white;
+    border-radius: 50%;
+    padding: 2px;
+}
+
+.cart-header h3 { margin: 0; font-size: 14px; font-weight: 800; letter-spacing: 1px; }
+.cart-header small { font-size: 10px; opacity: 0.9; text-transform: uppercase; }
+
+.cart-body {
+    display: flex;
+    gap: 15px;
+}
+
+.cart-photo {
+    width: 85px;
+    height: 110px;
+    background: #e2e8f0;
+    border-radius: 8px;
+    border: 2px solid white;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.cart-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cart-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.cart-info h2 {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+.cart-info p {
+    margin: 0;
+    font-size: 11px;
+    opacity: 0.9;
+    line-height: 1.4;
+}
+
+.cart-meta {
+    margin-top: 10px;
+    font-size: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: rgba(0,0,0,0.2);
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.cart-footer {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 8px;
+    opacity: 0.7;
+    letter-spacing: 1px;
+    text-transform: uppercase;
 }
 
 /* Ajustes para Mobile Pequeno */
