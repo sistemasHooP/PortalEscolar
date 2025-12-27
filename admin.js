@@ -1,14 +1,19 @@
 const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
 
+// --- CONFIGURAÇÃO DA LOGO ---
+// Substitua o link abaixo pelo link "Raw" da sua imagem no GitHub.
+// Exemplo: https://raw.githubusercontent.com/SEU_USUARIO/SEU_REPO/main/logo.png
+const URL_LOGO = 'https://raw.githubusercontent.com/github/explore/main/topics/bus/bus.png'; // Logo de exemplo (ônibus)
+
 const CAMPOS_PADRAO = [
-    { key: 'NomeCompleto', label: 'Nome Completo' }, { key: 'DataNascimento', label: 'Data de Nascimento' },
+    { key: 'NomeCompleto', label: 'Nome Completo' }, { key: 'DataNascimento', label: 'Nascimento' },
     { key: 'Telefone', label: 'Celular' }, { key: 'Endereco', label: 'Endereço' },
     { key: 'NomeInstituicao', label: 'Instituição' }, { key: 'NomeCurso', label: 'Curso' },
     { key: 'PeriodoCurso', label: 'Período' }, { key: 'Matricula', label: 'Matrícula' }
 ];
 
 let mapaEventos = {}; 
-let cacheEventos = {}; // Novo: Guarda o objeto completo do evento (config)
+let cacheEventos = {}; 
 let chartEventosInstance = null; let chartStatusInstance = null;
 let todasInscricoes = [];     
 let inscricoesFiltradas = []; 
@@ -22,13 +27,13 @@ function showLoading(msg = 'Processando...') {
     Swal.fire({
         html: `
             <div style="display:flex; flex-direction:column; align-items:center; gap:15px; padding:20px;">
-                <div class="spinner" style="border-color:#e2e8f0; border-top-color:#2563eb; width:50px; height:50px; border-width:4px;"></div>
-                <h3 style="font-family:'Poppins'; font-size:1.1rem; color:#1e293b; margin:0;">${msg}</h3>
-                <p style="font-family:'Poppins'; font-size:0.85rem; color:#64748b; margin:0;">Aguarde um momento...</p>
+                <div class="spinner" style="border-color:#e2e8f0; border-top-color:#2563eb; width:50px; height:50px; border-width:4px; border-radius:50%; border-style:solid; animation:spin 1s linear infinite;"></div>
+                <h3 style="font-family:sans-serif; font-size:1.1rem; color:#1e293b; margin:0;">${msg}</h3>
+                <p style="font-family:sans-serif; font-size:0.85rem; color:#64748b; margin:0;">Aguarde um momento...</p>
+                <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
             </div>
         `,
-        showConfirmButton: false, allowOutsideClick: false, width: '300px',
-        customClass: { popup: 'swal-loading-popup' }
+        showConfirmButton: false, allowOutsideClick: false, width: '300px'
     });
 }
 
@@ -57,6 +62,7 @@ function realizarLogin(e) {
             document.getElementById('admin-panel').classList.remove('hidden');
             sessionStorage.setItem('admin_token', pass);
             carregarDashboard();
+            aplicarEstilosVisuais(); // Aplica correções de layout ao logar
         } else { Swal.fire({icon: 'error', title: 'Erro', text: 'Senha incorreta'}); }
     }).catch(() => Swal.fire('Erro', 'Sem conexão', 'error'));
 }
@@ -68,10 +74,42 @@ function switchTab(tabId) {
     document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
     document.getElementById(tabId).classList.remove('hidden');
     event.currentTarget.classList.add('active');
+    
+    // Forçar atualização do CSS ao trocar de aba para garantir largura total
+    aplicarEstilosVisuais();
+
     if(tabId === 'tab-dashboard') carregarDashboard();
     if(tabId === 'tab-eventos') carregarEventosAdmin();
     if(tabId === 'tab-inscricoes') carregarInscricoes();
     if(tabId === 'tab-config') carregarInstituicoes();
+}
+
+// --- LAYOUT HELPER (Melhora visual no PC) ---
+function aplicarEstilosVisuais() {
+    // Tenta injetar CSS para expandir o container principal se ele estiver limitado
+    const styleId = 'admin-layout-fix';
+    if (!document.getElementById(styleId)) {
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.innerHTML = `
+            /* Expande o container principal para telas grandes */
+            .container, .main-content { max-width: 98% !important; width: 98% !important; margin: 0 auto; }
+            
+            /* Melhora a tabela de inscrições para ocupar espaço */
+            table { width: 100%; border-collapse: collapse; }
+            th, td { padding: 12px 15px; text-align: left; }
+            
+            /* Cabeçalho das abas */
+            .nav-tabs { justify-content: flex-start; gap: 10px; border-bottom: 2px solid #e2e8f0; margin-bottom: 20px; }
+            .nav-btn { flex: initial; padding: 10px 25px; border-radius: 8px 8px 0 0; }
+            .nav-btn.active { border-bottom: 3px solid #2563eb; color: #2563eb; background: #eff6ff; }
+            
+            /* Área de filtros */
+            .filters-bar { display: flex; flex-wrap: wrap; gap: 15px; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+            .search-box { flex: 1; min-width: 250px; }
+        `;
+        document.head.appendChild(style);
+    }
 }
 
 // --- DASHBOARD ---
@@ -82,11 +120,11 @@ function carregarDashboard() {
         fetch(`${URL_API}?action=getInscricoesAdmin&token=${token}`).then(r => r.json())
     ]).then(([jsonEventos, jsonInscricoes]) => {
         mapaEventos = {}; 
-        cacheEventos = {}; // Limpa cache
+        cacheEventos = {}; 
         
         if(jsonEventos.data) jsonEventos.data.forEach(ev => {
             mapaEventos[ev.id] = ev.titulo;
-            cacheEventos[ev.id] = ev; // Guarda objeto completo para ler config no relatório
+            cacheEventos[ev.id] = ev; 
         });
         
         dashboardData = jsonInscricoes.data || [];
@@ -158,7 +196,7 @@ function atualizarSelectsRelatorio(eventos, inscricoes) {
     Array.from(instituicoes).sort().forEach(inst => { if(inst) selInst.innerHTML += `<option value="${inst}">${inst}</option>`; });
 }
 
-// --- RELATÓRIOS GENERATIVOS / ADAPTÁVEIS ---
+// --- RELATÓRIO PROFISSIONAL ---
 function gerarRelatorioTransporte() {
     const eventoId = document.getElementById('relatorio-evento').value;
     const instFiltro = document.getElementById('relatorio-inst').value;
@@ -173,49 +211,45 @@ function gerarRelatorioTransporte() {
 
     if(alunos.length === 0) return Swal.fire({icon: 'info', title: 'Vazio', text: 'Nenhum aluno APROVADO encontrado.'});
 
-    showLoading('Adaptando Relatório...');
+    showLoading('Gerando Layout do Relatório...');
 
     // 1. Definição Dinâmica de Colunas
     let colunas = [];
-    
     if (eventoId && cacheEventos[eventoId]) {
-        // Se um evento específico foi selecionado, usa a configuração dele
-        let config = {};
-        try { config = JSON.parse(cacheEventos[eventoId].config); } catch(e) {}
+        let config = {}; try { config = JSON.parse(cacheEventos[eventoId].config); } catch(e) {}
         
-        // Coluna Nome sempre primeiro
-        colunas.push({ key: 'NomeCompleto', label: 'Nome do Aluno' });
+        colunas.push({ key: 'NomeCompleto', label: 'Nome do Aluno', width: '25%' });
         
-        // Adiciona campos de texto padrão selecionados no evento (exceto Nome que já foi)
         if (config.camposTexto) {
             config.camposTexto.forEach(campo => {
                 if (campo !== 'NomeCompleto') {
                     const def = CAMPOS_PADRAO.find(c => c.key === campo);
-                    colunas.push({ key: campo, label: def ? def.label : campo });
+                    // Lógica simples para largura das colunas
+                    let width = '10%';
+                    if(campo === 'Endereco') width = '20%';
+                    if(campo === 'NomeInstituicao' || campo === 'NomeCurso') width = '15%';
+                    
+                    colunas.push({ key: campo, label: def ? def.label : campo, width: width });
                 }
             });
         }
-        
-        // Adiciona campos personalizados (ex: Camisa)
         if (config.camposPersonalizados) {
             config.camposPersonalizados.forEach(campo => {
-                colunas.push({ key: campo, label: campo });
+                colunas.push({ key: campo, label: campo, width: '10%' });
             });
         }
     } else {
-        // Se "Todos os Eventos", usa o layout padrão de transporte
         colunas = [
-            { key: 'NomeCompleto', label: 'Nome do Aluno' },
-            { key: 'NomeInstituicao', label: 'Instituição' },
-            { key: 'Endereco', label: 'Endereço' },
-            { key: 'Telefone', label: 'Contato' }
+            { key: 'NomeCompleto', label: 'Nome do Aluno', width: '30%' },
+            { key: 'NomeInstituicao', label: 'Instituição', width: '20%' },
+            { key: 'NomeCurso', label: 'Curso', width: '15%' },
+            { key: 'Endereco', label: 'Endereço', width: '25%' },
+            { key: 'Telefone', label: 'Contato', width: '10%' }
         ];
     }
-    
-    // Sempre adiciona assinatura no final
-    colunas.push({ key: 'Assinatura', label: 'Assinatura', empty: true });
+    colunas.push({ key: 'Assinatura', label: 'Assinatura', width: '15%', empty: true });
 
-    // 2. Agrupamento (Se tiver campo Instituição, agrupa. Se não, lista geral)
+    // 2. Agrupamento
     const temInstituicao = colunas.some(c => c.key === 'NomeInstituicao');
     const grupos = {};
     
@@ -223,8 +257,6 @@ function gerarRelatorioTransporte() {
         let d = JSON.parse(aluno.dadosJson);
         const inst = temInstituicao ? (d.NomeInstituicao || 'Não Informada') : 'Lista de Inscritos';
         if(!grupos[inst]) grupos[inst] = [];
-        
-        // Prepara dados da linha
         let linha = {};
         colunas.forEach(col => {
             if(col.empty) linha[col.key] = '';
@@ -233,41 +265,80 @@ function gerarRelatorioTransporte() {
         grupos[inst].push(linha);
     });
 
-    // 3. Gerar HTML
+    // 3. Gerar HTML com Design Aprimorado
+    const dataHoje = new Date().toLocaleDateString('pt-BR');
+    
     let htmlContent = `
-        <div class="print-header">
-            <h1 style="margin:0; font-size:22px; color:#1e293b;">Relatório de Inscritos</h1>
-            <p style="margin:5px 0; color:#64748b;">${tituloEvento}</p>
-            <div style="margin-top:5px; font-size:12px;">Total: ${alunos.length} aprovados</div>
-        </div>
+        <style>
+            @media print {
+                @page { size: A4 landscape; margin: 10mm; } /* Força Paisagem */
+                body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                .no-print { display: none !important; }
+            }
+            .report-container { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; width: 100%; max-width: 100%; }
+            
+            /* Cabeçalho */
+            .report-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #2563eb; padding-bottom: 15px; margin-bottom: 20px; }
+            .header-left { display: flex; align-items: center; gap: 20px; }
+            .report-logo { height: 60px; width: auto; max-width: 150px; object-fit: contain; }
+            .header-titles h1 { margin: 0; font-size: 24px; color: #1e293b; text-transform: uppercase; }
+            .header-titles p { margin: 5px 0 0 0; font-size: 14px; color: #64748b; }
+            .header-right { text-align: right; font-size: 12px; color: #94a3b8; }
+
+            /* Tabela */
+            .report-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 30px; }
+            .report-table th { background-color: #f1f5f9; color: #334155; font-weight: bold; text-transform: uppercase; padding: 10px 8px; border: 1px solid #cbd5e1; text-align: left; }
+            .report-table td { padding: 8px; border: 1px solid #e2e8f0; vertical-align: middle; }
+            .report-table tr:nth-child(even) { background-color: #f8fafc; } /* Efeito Zebrado */
+            .group-header { background-color: #e2e8f0 !important; font-size: 13px; font-weight: bold; color: #0f172a; text-align: left; padding: 10px !important; border: 1px solid #cbd5e1; }
+            
+            /* Rodapé */
+            .report-footer { margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+            .sign-box { text-align: center; width: 40%; }
+            .sign-line { border-top: 1px solid #333; margin-bottom: 5px; padding-top: 5px; font-weight: bold; font-size: 12px; }
+        </style>
+        
+        <div class="report-container">
+            <div class="report-header">
+                <div class="header-left">
+                    <img src="${URL_LOGO}" alt="Logo" class="report-logo" onerror="this.style.display='none'">
+                    <div class="header-titles">
+                        <h1>Relatório de Inscritos</h1>
+                        <p>${tituloEvento}</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    Emitido em: ${dataHoje}<br>
+                    Total Aprovados: ${alunos.length}
+                </div>
+            </div>
     `;
 
-    // Monta Cabeçalho da Tabela (TH)
-    let headerHTML = `<th style="border:1px solid #000; padding:5px; width:30px; background:#f1f5f9;">#</th>`;
+    // Monta Cabeçalho da Tabela
+    let thead = `<tr><th style="width:30px; text-align:center;">#</th>`;
     colunas.forEach(col => {
-        const width = col.key === 'Assinatura' ? 'width:120px;' : '';
-        headerHTML += `<th style="border:1px solid #000; padding:5px; background:#f1f5f9; ${width}">${col.label}</th>`;
+        thead += `<th style="width:${col.width || 'auto'}">${col.label}</th>`;
     });
+    thead += `</tr>`;
 
-    // Monta Grupos e Linhas
+    // Monta Grupos
     Object.keys(grupos).sort().forEach(grupoNome => {
         const lista = grupos[grupoNome];
-        // Ordena por nome
         lista.sort((a,b) => (a['NomeCompleto']||'').localeCompare(b['NomeCompleto']||''));
 
-        // Se tem instituição, mostra cabeçalho do grupo
-        if(temInstituicao) {
-            htmlContent += `<h3 style="background:#e2e8f0; padding:8px; margin:20px 0 0 0; border:1px solid #000; border-bottom:none; font-size:14px;">${grupoNome} <span style="float:right; font-weight:normal;">(${lista.length})</span></h3>`;
+        htmlContent += `<table class="report-table">`;
+        
+        // Título do Grupo dentro da tabela (se houver divisão)
+        if(temInstituicao && Object.keys(grupos).length > 1) {
+            htmlContent += `<thead><tr><td colspan="${colunas.length + 1}" class="group-header">${grupoNome} (${lista.length} alunos)</td></tr>${thead}</thead><tbody>`;
         } else {
-            htmlContent += `<div style="margin-top:20px;"></div>`;
+            htmlContent += `<thead>${thead}</thead><tbody>`;
         }
 
-        htmlContent += `<table class="print-table" style="width:100%; border-collapse:collapse; font-size:11px;"><thead><tr>${headerHTML}</tr></thead><tbody>`;
-
         lista.forEach((linha, idx) => {
-            htmlContent += `<tr><td style="border:1px solid #000; padding:5px; text-align:center;">${idx+1}</td>`;
+            htmlContent += `<tr><td style="text-align:center;">${idx+1}</td>`;
             colunas.forEach(col => {
-                htmlContent += `<td style="border:1px solid #000; padding:5px;">${linha[col.key]}</td>`;
+                htmlContent += `<td>${linha[col.key]}</td>`;
             });
             htmlContent += `</tr>`;
         });
@@ -276,15 +347,22 @@ function gerarRelatorioTransporte() {
     });
 
     htmlContent += `
-        <div style="margin-top:40px; display:flex; justify-content:space-between; page-break-inside:avoid;">
-            <div style="text-align:center; width:40%;"><div style="border-top:1px solid #000; padding-top:5px;">Responsável</div></div>
-            <div style="text-align:center; width:40%;"><div style="border-top:1px solid #000; padding-top:5px;">Data: ___/___/____</div></div>
+            <div class="report-footer">
+                <div class="sign-box">
+                    <div class="sign-line">Responsável pelo Transporte</div>
+                    <div style="font-size:10px; color:#666;">Assinatura / Carimbo</div>
+                </div>
+                <div class="sign-box">
+                    <div class="sign-line">Setor Administrativo</div>
+                    <div style="font-size:10px; color:#666;">Data: ____/____/_______</div>
+                </div>
+            </div>
         </div>
     `;
 
     document.getElementById('area-impressao').innerHTML = htmlContent;
     Swal.close();
-    setTimeout(() => window.print(), 500);
+    setTimeout(() => window.print(), 800);
 }
 
 // --- EVENTOS E MODAL ---
@@ -297,7 +375,7 @@ function carregarEventosAdmin() {
         
         json.data.forEach(ev => {
             mapaEventos[ev.id] = ev.titulo;
-            cacheEventos[ev.id] = ev; // Atualiza cache aqui também
+            cacheEventos[ev.id] = ev; 
         });
         
         json.data.sort((a,b) => b.id - a.id).forEach(ev => {
