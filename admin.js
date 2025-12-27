@@ -1,8 +1,7 @@
 const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
 
 // --- CONFIGURAÇÃO DA LOGO ---
-// ALTERAÇÃO: Agora usamos './logo.png'.
-// Isso diz ao sistema: "Busque a imagem logo.png que está nesta mesma pasta".
+// O sistema buscará o arquivo 'logo.png' na mesma pasta onde este site está rodando.
 const URL_LOGO = './logo.png'; 
 
 const CAMPOS_PADRAO = [
@@ -196,7 +195,7 @@ function atualizarSelectsRelatorio(eventos, inscricoes) {
     Array.from(instituicoes).sort().forEach(inst => { if(inst) selInst.innerHTML += `<option value="${inst}">${inst}</option>`; });
 }
 
-// --- RELATÓRIO PROFISSIONAL (AJUSTE TELA CHEIA) ---
+// --- RELATÓRIO PROFISSIONAL (CORREÇÃO DE LARGURA) ---
 function gerarRelatorioTransporte() {
     const eventoId = document.getElementById('relatorio-evento').value;
     const instFiltro = document.getElementById('relatorio-inst').value;
@@ -266,53 +265,63 @@ function gerarRelatorioTransporte() {
     // 3. Gerar HTML com Correção de Layout e Logo
     const dataHoje = new Date().toLocaleDateString('pt-BR');
     
-    // NOTA: O CSS abaixo (@media print) esconde tudo da página original e
-    // posiciona o relatório de forma absoluta ocupando 100% da largura.
+    // NOTA: Ajuste Agressivo de Largura para Impressão
     let htmlContent = `
         <style>
             @media print {
-                @page { size: A4 landscape; margin: 5mm; } /* Margem reduzida para 5mm */
-                body * { visibility: hidden; } /* Esconde o painel administrativo */
+                @page { 
+                    size: A4 landscape; 
+                    margin: 5mm; /* Margem mínima */
+                }
+                body, html {
+                    margin: 0; padding: 0;
+                    width: 100%; height: 100%;
+                }
+                body * { visibility: hidden; } /* Esconde site */
                 
-                #area-impressao, #area-impressao * { visibility: visible; } /* Mostra o relatório */
+                #area-impressao, #area-impressao * { 
+                    visibility: visible; 
+                }
+                
                 #area-impressao {
                     position: absolute;
                     left: 0;
                     top: 0;
-                    width: 100%;
-                    margin: 0;
-                    padding: 0;
+                    width: 100% !important;
+                    min-width: 100vw !important; /* Força largura total da folha */
+                    margin: 0 !important;
+                    padding: 0 !important;
                     background: white;
                 }
             }
             .report-container { 
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-                color: #333; 
-                width: 100%; 
-                margin: 0;
-                padding: 10px;
+                color: #000; 
+                width: 100% !important; 
+                max-width: none !important;
                 box-sizing: border-box;
+                padding: 5px;
             }
             
             /* Cabeçalho */
-            .report-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #2563eb; padding-bottom: 15px; margin-bottom: 10px; }
+            .report-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
             .header-left { display: flex; align-items: center; gap: 20px; }
-            .report-logo { height: 60px; width: auto; max-width: 150px; object-fit: contain; display: block; }
-            .header-titles h1 { margin: 0; font-size: 22px; color: #1e293b; text-transform: uppercase; }
-            .header-titles p { margin: 2px 0 0 0; font-size: 13px; color: #64748b; }
-            .header-right { text-align: right; font-size: 11px; color: #94a3b8; }
+            .report-logo { height: 70px; width: auto; object-fit: contain; display: block; }
+            .header-titles h1 { margin: 0; font-size: 20px; color: #000; text-transform: uppercase; }
+            .header-titles p { margin: 2px 0 0 0; font-size: 12px; color: #444; }
+            .header-right { text-align: right; font-size: 11px; color: #444; }
 
-            /* Tabela */
-            .report-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 20px; }
-            .report-table th { background-color: #f1f5f9; color: #334155; font-weight: bold; text-transform: uppercase; padding: 6px 4px; border: 1px solid #cbd5e1; text-align: left; }
-            .report-table td { padding: 4px; border: 1px solid #e2e8f0; vertical-align: middle; }
-            .report-table tr:nth-child(even) { background-color: #f8fafc; }
-            .group-header { background-color: #e2e8f0 !important; font-size: 12px; font-weight: bold; color: #0f172a; text-align: left; padding: 6px !important; border: 1px solid #cbd5e1; }
+            /* Tabela Ajustada */
+            .report-table { width: 100% !important; border-collapse: collapse; font-size: 11px; margin-bottom: 20px; }
+            .report-table th { background-color: #e2e8f0; color: #000; font-weight: bold; text-transform: uppercase; padding: 8px 5px; border: 1px solid #000; text-align: left; }
+            .report-table td { padding: 6px 5px; border: 1px solid #000; vertical-align: middle; color: #000; }
+            .report-table tr:nth-child(even) { background-color: #f1f5f9; }
+            .group-header { background-color: #cbd5e1 !important; font-size: 12px; font-weight: bold; color: #000; text-align: left; padding: 8px !important; border: 1px solid #000; }
             
             /* Rodapé */
             .report-footer { margin-top: 30px; display: flex; justify-content: space-around; page-break-inside: avoid; }
             .sign-box { text-align: center; width: 35%; }
-            .sign-line { border-top: 1px solid #333; margin-bottom: 5px; padding-top: 5px; font-weight: bold; font-size: 11px; }
+            .sign-line { border-top: 1px solid #000; margin-bottom: 5px; padding-top: 5px; font-weight: bold; font-size: 11px; }
         </style>
         
         <div class="report-container">
@@ -331,7 +340,7 @@ function gerarRelatorioTransporte() {
             </div>
     `;
 
-    let thead = `<tr><th style="width:25px; text-align:center;">#</th>`;
+    let thead = `<tr><th style="width:30px; text-align:center;">#</th>`;
     colunas.forEach(col => { thead += `<th style="width:${col.width || 'auto'}">${col.label}</th>`; });
     thead += `</tr>`;
 
@@ -356,11 +365,11 @@ function gerarRelatorioTransporte() {
             <div class="report-footer">
                 <div class="sign-box">
                     <div class="sign-line">Responsável pelo Transporte</div>
-                    <div style="font-size:10px; color:#666;">Assinatura / Carimbo</div>
+                    <div style="font-size:10px; color:#000;">Assinatura / Carimbo</div>
                 </div>
                 <div class="sign-box">
                     <div class="sign-line">Setor Administrativo</div>
-                    <div style="font-size:10px; color:#666;">Data: ____/____/_______</div>
+                    <div style="font-size:10px; color:#000;">Data: ____/____/_______</div>
                 </div>
             </div>
         </div>
