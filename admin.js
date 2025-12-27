@@ -1,9 +1,9 @@
 const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
 
 // --- CONFIGURAÇÃO DA LOGO ---
-// ATENÇÃO: Substitua 'SEU_USUARIO' e 'SEU_REPO' pelos nomes reais do seu GitHub.
-// O link deve ficar parecido com: https://raw.githubusercontent.com/joao/transporte/main/logo.png
-const URL_LOGO = 'https://raw.githubusercontent.com/SEU_USUARIO/SEU_REPO/main/logo.png'; 
+// ALTERAÇÃO: Agora usamos './logo.png'.
+// Isso diz ao sistema: "Busque a imagem logo.png que está nesta mesma pasta".
+const URL_LOGO = './logo.png'; 
 
 const CAMPOS_PADRAO = [
     { key: 'NomeCompleto', label: 'Nome Completo' }, { key: 'DataNascimento', label: 'Nascimento' },
