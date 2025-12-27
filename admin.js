@@ -237,7 +237,7 @@ function toggleStatusEvento(id, status) {
     .then(() => { Swal.close(); carregarEventosAdmin(); });
 }
 
-// MODAL NOVO EVENTO (COM AVISO CPF/EMAIL E CAMPO DE OBSERVAÇÃO)
+// MODAL NOVO EVENTO (VALIDAÇÃO DE DATAS INCLUÍDA)
 function modalNovoEvento() {
     let htmlCampos = '<div class="checkbox-grid">';
     CAMPOS_PADRAO.forEach(c => htmlCampos += `<label class="checkbox-card"><input type="checkbox" id="check_${c.key}" value="${c.key}" checked> ${c.label}</label>`);
@@ -250,27 +250,27 @@ function modalNovoEvento() {
                 <input id="swal-titulo" class="swal-input" placeholder="Título do Evento">
                 <input id="swal-desc" class="swal-input" placeholder="Descrição Curta">
                 <div class="modal-row">
-                    <div><label class="swal-label">Início</label><input type="date" id="swal-inicio" class="swal-input"></div>
-                    <div><label class="swal-label">Fim</label><input type="date" id="swal-fim" class="swal-input"></div>
+                    <div><label class="swal-label">Início *</label><input type="date" id="swal-inicio" class="swal-input"></div>
+                    <div><label class="swal-label">Fim *</label><input type="date" id="swal-fim" class="swal-input"></div>
                 </div>
                 
                 <div class="modal-full" style="background:#f8fafc; padding:15px; border:1px solid #e2e8f0; border-radius:8px;">
                     <div style="background:#eff6ff; color:#1e40af; padding:8px; border-radius:6px; font-size:0.85rem; margin-bottom:10px; border:1px solid #dbeafe; display:flex; align-items:center; gap:8px;">
                         <i class="fa-solid fa-circle-info"></i>
-                        <strong>CPF e E-mail</strong> são obrigatórios e já estarão no formulário.
+                        <strong>CPF e E-mail</strong> são obrigatórios e automáticos.
                     </div>
                     
-                    <label class="swal-label" style="color:var(--primary);">Outros Campos Obrigatórios:</label>
+                    <label class="swal-label" style="color:var(--primary);">Configuração do Formulário:</label>
                     ${htmlCampos}
                     <hr style="margin:10px 0; border:0; border-top:1px dashed #ccc;">
                     
-                    <label class="swal-label">Campos Extras Personalizados</label>
+                    <label class="swal-label">Campos Extras</label>
                     <div id="container-extras" style="display:flex; flex-direction:column; gap:5px; margin-bottom:10px;"></div>
                     <button type="button" class="action-btn btn-view" style="width:100%;" id="btn-add-extra">+ Adicionar Pergunta</button>
                     
                     <div class="modal-full" style="margin-top:15px;">
-                        <label class="swal-label">Instruções / Observações para o Aluno (Exibido no formulário)</label>
-                        <textarea id="txt_obs_admin" class="swal-input" style="height:80px;" placeholder="Ex: Trazer comprovante de residência original no dia da entrega."></textarea>
+                        <label class="swal-label">Instruções / Observações (Somente Leitura)</label>
+                        <textarea id="txt_obs_admin" class="swal-input" style="height:80px;" placeholder="Ex: Trazer comprovante original..."></textarea>
                     </div>
                 </div>
 
@@ -287,11 +287,21 @@ function modalNovoEvento() {
         didOpen: () => {
             document.getElementById('btn-add-extra').addEventListener('click', () => {
                 const div = document.createElement('div');
-                div.innerHTML = `<div style="display:flex; gap:5px;"><input type="text" class="swal-input extra-field" placeholder="Nome do campo (ex: Tamanho da Camisa)" style="margin-bottom:5px; flex:1;"><button type="button" class="action-btn btn-delete" onclick="this.parentElement.parentElement.remove()">X</button></div>`;
+                div.innerHTML = `<div style="display:flex; gap:5px;"><input type="text" class="swal-input extra-field" placeholder="Nome do campo..." style="margin-bottom:5px; flex:1;"><button type="button" class="action-btn btn-delete" onclick="this.parentElement.parentElement.remove()">X</button></div>`;
                 document.getElementById('container-extras').appendChild(div);
             });
         },
         preConfirm: () => {
+            const titulo = document.getElementById('swal-titulo').value;
+            const inicio = document.getElementById('swal-inicio').value;
+            const fim = document.getElementById('swal-fim').value;
+
+            // VALIDAÇÃO DE OBRIGATORIEDADE
+            if(!titulo || !inicio || !fim) {
+                Swal.showValidationMessage('Preencha Título, Data Início e Data Fim.');
+                return false;
+            }
+
             const sels = []; 
             CAMPOS_PADRAO.forEach(c => { if(document.getElementById(`check_${c.key}`).checked) sels.push(c.key); });
             
@@ -299,8 +309,8 @@ function modalNovoEvento() {
             document.querySelectorAll('.extra-field').forEach(inp => { if(inp.value.trim()) extras.push(inp.value.trim()); });
 
             return {
-                titulo: document.getElementById('swal-titulo').value, descricao: document.getElementById('swal-desc').value,
-                inicio: document.getElementById('swal-inicio').value, fim: document.getElementById('swal-fim').value,
+                titulo: titulo, descricao: document.getElementById('swal-desc').value,
+                inicio: inicio, fim: fim,
                 config: { 
                     camposTexto: sels, 
                     camposPersonalizados: extras,
@@ -322,7 +332,7 @@ function modalNovoEvento() {
 // --- INSCRIÇÕES ---
 function carregarInscricoes() {
     const tbody = document.getElementById('lista-inscricoes-admin');
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Carregando...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Carregando...</td></tr>';
     
     fetch(`${URL_API}?action=getInscricoesAdmin&token=${sessionStorage.getItem('admin_token')}`).then(r => r.json()).then(json => {
         todasInscricoes = (json.data || []).sort((a,b) => new Date(b.data) - new Date(a.data));
@@ -353,25 +363,19 @@ function resetEFiltrar() {
 function renderizarProximaPagina() {
     const tbody = document.getElementById('lista-inscricoes-admin');
     const lote = inscricoesFiltradas.slice((paginaAtual - 1) * ITENS_POR_PAGINA, paginaAtual * ITENS_POR_PAGINA);
-    if(paginaAtual === 1 && lote.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Nenhuma inscrição encontrada.</td></tr>'; document.getElementById('btn-load-more').style.display = 'none'; return; }
+    if(paginaAtual === 1 && lote.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Vazio.</td></tr>'; document.getElementById('btn-load-more').style.display = 'none'; return; }
     
     lote.forEach(ins => {
         let d = {}; try { d = JSON.parse(ins.dadosJson); } catch(e){}
         const checked = selecionados.has(ins.chave) ? 'checked' : '';
+        let btnFicha = ins.link_ficha ? `<a href="${ins.link_ficha}" target="_blank" class="action-btn btn-view" style="background:#059669;"><i class="fa-solid fa-file-pdf"></i></a>` : `<button class="action-btn" style="background:#6366f1;" onclick="gerarFicha('${ins.chave}')"><i class="fa-solid fa-print"></i></button>`;
         
-        let btnFicha = '';
-        if(ins.link_ficha && ins.link_ficha.length > 5) {
-            btnFicha = `<a href="${ins.link_ficha}" target="_blank" class="action-btn btn-view" style="background:#059669;" title="Baixar PDF"><i class="fa-solid fa-file-pdf"></i></a>`;
-        } else {
-            btnFicha = `<button class="action-btn" style="background:#6366f1;" onclick="gerarFicha('${ins.chave}')" title="Gerar Ficha"><i class="fa-solid fa-print"></i></button>`;
-        }
-
         tbody.innerHTML += `<tr>
             <td><input type="checkbox" class="bulk-check" value="${ins.chave}" ${checked} onclick="toggleCheck('${ins.chave}')"></td>
             <td>${safeDate(ins.data)}</td><td><small>${mapaEventos[ins.eventoId]||ins.eventoId}</small></td>
             <td><strong>${d.NomeCompleto||'Aluno'}</strong><br><small style="color:#64748b;">${ins.chave}</small></td>
             <td><span class="badge badge-${ins.status.replace(/\s/g, '')}">${ins.status}</span></td>
-            <td><div style="display:flex; gap:5px; justify-content:flex-end;"><button class="action-btn btn-edit" onclick="mudarStatus('${ins.chave}')"><i class="fa-solid fa-list-check"></i></button>${btnFicha}${ins.doc ? `<a href="${ins.doc}" target="_blank" class="action-btn btn-view" title="Ver Anexo"><i class="fa-solid fa-paperclip"></i></a>` : ''}</div></td>
+            <td><div style="display:flex; gap:5px; justify-content:flex-end;"><button class="action-btn btn-edit" onclick="mudarStatus('${ins.chave}')"><i class="fa-solid fa-list-check"></i></button>${btnFicha}${ins.doc ? `<a href="${ins.doc}" target="_blank" class="action-btn btn-view"><i class="fa-solid fa-paperclip"></i></a>` : ''}</div></td>
         </tr>`;
     });
     paginaAtual++;
