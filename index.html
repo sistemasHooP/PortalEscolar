@@ -144,6 +144,46 @@
         </div>
     </div>
 
+    <!-- MODAL DA CARTEIRINHA (NOVO) -->
+    <div id="modal-carteirinha" class="modal-overlay hidden" style="z-index: 3000;">
+        <div class="modal-content fade-in" style="background:transparent; box-shadow:none; padding:0; display:flex; justify-content:center; align-items:center;">
+            <div class="carteirinha-container">
+                <!-- Frente -->
+                <div class="carteirinha-card">
+                    <div class="cart-header">
+                        <img src="logo.png" alt="Logo" class="cart-logo">
+                        <div>
+                            <h3>TRANSPORTE ESCOLAR</h3>
+                            <small>Secretaria de Educação</small>
+                        </div>
+                    </div>
+                    <div class="cart-body">
+                        <div class="cart-photo">
+                            <img id="cart-img" src="" alt="Foto Aluno">
+                        </div>
+                        <div class="cart-info">
+                            <h2 id="cart-nome">Nome do Aluno</h2>
+                            <p id="cart-inst">Instituição de Ensino</p>
+                            <p id="cart-curso">Curso / Série</p>
+                            <div class="cart-meta">
+                                <span>Mat: <b id="cart-mat">0000</b></span>
+                                <span>Validade: <b id="cart-validade">01/01/2026</b></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cart-footer">
+                        <div id="cart-qrcode"></div> <!-- Área para QR Code futuro -->
+                        <span>Uso Pessoal e Intransferível</span>
+                    </div>
+                </div>
+                
+                <button class="btn-primary" style="margin-top:20px; background:white; color:#2563eb;" onclick="document.getElementById('modal-carteirinha').classList.add('hidden')">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Rodapé -->
     <footer>
         <p>&copy; 2025 Secretaria de Educação - Sistema Seguro & Responsivo</p>
