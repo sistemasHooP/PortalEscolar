@@ -8,10 +8,11 @@ const CAMPOS_PADRAO = [
 ];
 
 let mapaEventos = {}; 
+let cacheEventos = {}; // Novo: Guarda o objeto completo do evento (config)
 let chartEventosInstance = null; let chartStatusInstance = null;
 let todasInscricoes = [];     
 let inscricoesFiltradas = []; 
-let dashboardData = []; // Cache específico para o dashboard
+let dashboardData = []; 
 let paginaAtual = 1;
 const ITENS_POR_PAGINA = 50;
 let selecionados = new Set(); 
@@ -73,23 +74,24 @@ function switchTab(tabId) {
     if(tabId === 'tab-config') carregarInstituicoes();
 }
 
-// --- DASHBOARD MELHORADO ---
+// --- DASHBOARD ---
 function carregarDashboard() {
     const token = sessionStorage.getItem('admin_token');
-    
     Promise.all([
         fetch(`${URL_API}?action=getTodosEventos`).then(r => r.json()),
         fetch(`${URL_API}?action=getInscricoesAdmin&token=${token}`).then(r => r.json())
     ]).then(([jsonEventos, jsonInscricoes]) => {
         mapaEventos = {}; 
-        if(jsonEventos.data) jsonEventos.data.forEach(ev => mapaEventos[ev.id] = ev.titulo);
+        cacheEventos = {}; // Limpa cache
+        
+        if(jsonEventos.data) jsonEventos.data.forEach(ev => {
+            mapaEventos[ev.id] = ev.titulo;
+            cacheEventos[ev.id] = ev; // Guarda objeto completo para ler config no relatório
+        });
         
         dashboardData = jsonInscricoes.data || [];
-        
-        // Popula Selects
         atualizarSelectsRelatorio(jsonEventos.data || [], dashboardData);
         
-        // Exibe estatísticas globais inicialmente
         atualizarEstatisticasDashboard(dashboardData, "Visão Geral (Todos os Eventos)");
 
         const contagemEventos = {}, contagemStatus = {};
@@ -100,7 +102,6 @@ function carregarDashboard() {
         });
         renderizarGraficos(contagemEventos, contagemStatus);
         
-        // Adiciona Listener para atualizar o Dashboard ao mudar o filtro de relatório
         const selEvento = document.getElementById('relatorio-evento');
         selEvento.onchange = () => {
             const eventoId = selEvento.value;
@@ -115,15 +116,10 @@ function carregarDashboard() {
 }
 
 function atualizarEstatisticasDashboard(dados, titulo) {
-    const total = dados.length;
-    const aprovados = dados.filter(i => i.status.includes('Aprovada') || i.status.includes('Emitida')).length;
-    const pendentes = dados.filter(i => i.status === 'Pendente').length;
+    document.getElementById('stat-total').innerText = dados.length;
+    document.getElementById('stat-aprovados').innerText = dados.filter(i => i.status.includes('Aprovada') || i.status.includes('Emitida')).length;
+    document.getElementById('stat-pendentes').innerText = dados.filter(i => i.status === 'Pendente').length;
     
-    document.getElementById('stat-total').innerText = total;
-    document.getElementById('stat-aprovados').innerText = aprovados;
-    document.getElementById('stat-pendentes').innerText = pendentes;
-    
-    // Atualiza título da seção se existir elemento, ou cria um banner simples
     let banner = document.getElementById('dashboard-banner');
     if(!banner) {
         banner = document.createElement('div');
@@ -132,15 +128,7 @@ function atualizarEstatisticasDashboard(dados, titulo) {
         const container = document.querySelector('.stats-grid');
         container.parentNode.insertBefore(banner, container);
     }
-    banner.innerHTML = `
-        <div>
-            <small style="text-transform:uppercase; opacity:0.8; font-size:0.75rem;">Painel de Controle</small>
-            <h3 style="margin:0; font-size:1.2rem;">${titulo}</h3>
-        </div>
-        <div style="font-size:1.5rem; background:rgba(255,255,255,0.1); width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:50%;">
-            <i class="fa-solid fa-chart-simple"></i>
-        </div>
-    `;
+    banner.innerHTML = `<div><small style="text-transform:uppercase; opacity:0.8; font-size:0.75rem;">Painel de Controle</small><h3 style="margin:0; font-size:1.2rem;">${titulo}</h3></div><div style="font-size:1.5rem; background:rgba(255,255,255,0.1); width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:50%;"><i class="fa-solid fa-chart-simple"></i></div>`;
 }
 
 function renderizarGraficos(dadosEventos, dadosStatus) {
@@ -158,29 +146,24 @@ function renderizarGraficos(dadosEventos, dadosStatus) {
 
 function atualizarSelectsRelatorio(eventos, inscricoes) {
     const selEvento = document.getElementById('relatorio-evento');
-    // Salva seleção atual
     const atual = selEvento.value;
-    
     selEvento.innerHTML = '<option value="">Todos os Eventos</option>';
     eventos.forEach(ev => selEvento.innerHTML += `<option value="${ev.id}">${ev.titulo}</option>`);
-    
     if(atual) selEvento.value = atual;
     
     let instituicoes = new Set();
     inscricoes.forEach(ins => { try { instituicoes.add(JSON.parse(ins.dadosJson).NomeInstituicao); } catch(e){} });
     const selInst = document.getElementById('relatorio-inst');
-    selInst.innerHTML = '<option value="">Todas as Instituições (Relatório Geral)</option>';
-    // Ordena alfabeticamente
+    selInst.innerHTML = '<option value="">Todas as Instituições</option>';
     Array.from(instituicoes).sort().forEach(inst => { if(inst) selInst.innerHTML += `<option value="${inst}">${inst}</option>`; });
 }
 
-// --- RELATÓRIOS PRO (Agrupados por Instituição) ---
+// --- RELATÓRIOS GENERATIVOS / ADAPTÁVEIS ---
 function gerarRelatorioTransporte() {
     const eventoId = document.getElementById('relatorio-evento').value;
     const instFiltro = document.getElementById('relatorio-inst').value;
-    const tituloEvento = eventoId ? mapaEventos[eventoId] : "Todos os Eventos";
+    const tituloEvento = eventoId ? mapaEventos[eventoId] : "Relatório Geral";
 
-    // Filtra apenas APROVADOS e EMITIDOS
     const alunos = dashboardData.filter(i => {
         let d = {}; try{d=JSON.parse(i.dadosJson)}catch(e){}
         return (eventoId === "" || String(i.eventoId) === String(eventoId)) &&
@@ -188,81 +171,115 @@ function gerarRelatorioTransporte() {
                (i.status === 'Aprovada' || i.status === 'Ficha Emitida');
     });
 
-    if(alunos.length === 0) return Swal.fire({icon: 'info', title: 'Vazio', text: 'Nenhum aluno APROVADO encontrado para gerar relatório.'});
+    if(alunos.length === 0) return Swal.fire({icon: 'info', title: 'Vazio', text: 'Nenhum aluno APROVADO encontrado.'});
 
-    showLoading('Formatando Relatório...');
+    showLoading('Adaptando Relatório...');
 
-    // Agrupar alunos por Instituição
+    // 1. Definição Dinâmica de Colunas
+    let colunas = [];
+    
+    if (eventoId && cacheEventos[eventoId]) {
+        // Se um evento específico foi selecionado, usa a configuração dele
+        let config = {};
+        try { config = JSON.parse(cacheEventos[eventoId].config); } catch(e) {}
+        
+        // Coluna Nome sempre primeiro
+        colunas.push({ key: 'NomeCompleto', label: 'Nome do Aluno' });
+        
+        // Adiciona campos de texto padrão selecionados no evento (exceto Nome que já foi)
+        if (config.camposTexto) {
+            config.camposTexto.forEach(campo => {
+                if (campo !== 'NomeCompleto') {
+                    const def = CAMPOS_PADRAO.find(c => c.key === campo);
+                    colunas.push({ key: campo, label: def ? def.label : campo });
+                }
+            });
+        }
+        
+        // Adiciona campos personalizados (ex: Camisa)
+        if (config.camposPersonalizados) {
+            config.camposPersonalizados.forEach(campo => {
+                colunas.push({ key: campo, label: campo });
+            });
+        }
+    } else {
+        // Se "Todos os Eventos", usa o layout padrão de transporte
+        colunas = [
+            { key: 'NomeCompleto', label: 'Nome do Aluno' },
+            { key: 'NomeInstituicao', label: 'Instituição' },
+            { key: 'Endereco', label: 'Endereço' },
+            { key: 'Telefone', label: 'Contato' }
+        ];
+    }
+    
+    // Sempre adiciona assinatura no final
+    colunas.push({ key: 'Assinatura', label: 'Assinatura', empty: true });
+
+    // 2. Agrupamento (Se tiver campo Instituição, agrupa. Se não, lista geral)
+    const temInstituicao = colunas.some(c => c.key === 'NomeInstituicao');
     const grupos = {};
+    
     alunos.forEach(aluno => {
         let d = JSON.parse(aluno.dadosJson);
-        const inst = d.NomeInstituicao || 'Não Informada';
+        const inst = temInstituicao ? (d.NomeInstituicao || 'Não Informada') : 'Lista de Inscritos';
         if(!grupos[inst]) grupos[inst] = [];
-        grupos[inst].push({
-            nome: d.NomeCompleto,
-            end: d.Endereco,
-            curso: d.NomeCurso || '-',
-            periodo: d.PeriodoCurso || '-',
-            tel: d.Telefone || '-'
+        
+        // Prepara dados da linha
+        let linha = {};
+        colunas.forEach(col => {
+            if(col.empty) linha[col.key] = '';
+            else linha[col.key] = d[col.key] || '-';
         });
+        grupos[inst].push(linha);
     });
 
-    // Gera HTML do Relatório
+    // 3. Gerar HTML
     let htmlContent = `
         <div class="print-header">
-            <h1 style="margin:0; font-size:24px; color:#1e293b;">Relatório de Transporte Escolar</h1>
+            <h1 style="margin:0; font-size:22px; color:#1e293b;">Relatório de Inscritos</h1>
             <p style="margin:5px 0; color:#64748b;">${tituloEvento}</p>
-            <div style="margin-top:10px; font-size:14px;"><strong>Total de Alunos:</strong> ${alunos.length}</div>
+            <div style="margin-top:5px; font-size:12px;">Total: ${alunos.length} aprovados</div>
         </div>
     `;
 
-    // Ordena chaves (instituições) alfabeticamente
-    Object.keys(grupos).sort().forEach(inst => {
-        const lista = grupos[inst];
-        // Ordena alunos por nome
-        lista.sort((a,b) => a.nome.localeCompare(b.nome));
+    // Monta Cabeçalho da Tabela (TH)
+    let headerHTML = `<th style="border:1px solid #000; padding:5px; width:30px; background:#f1f5f9;">#</th>`;
+    colunas.forEach(col => {
+        const width = col.key === 'Assinatura' ? 'width:120px;' : '';
+        headerHTML += `<th style="border:1px solid #000; padding:5px; background:#f1f5f9; ${width}">${col.label}</th>`;
+    });
 
-        htmlContent += `
-            <div class="print-group" style="margin-top:30px; page-break-inside:avoid;">
-                <h3 style="background:#f1f5f9; padding:10px; margin:0; border:1px solid #000; border-bottom:none; font-size:16px;">${inst} <span style="font-weight:normal; font-size:14px; float:right;">(${lista.length} alunos)</span></h3>
-                <table class="print-table" style="width:100%; border-collapse:collapse; font-size:12px;">
-                    <thead>
-                        <tr style="background:#fff;">
-                            <th style="border:1px solid #000; padding:5px; width:30px;">#</th>
-                            <th style="border:1px solid #000; padding:5px;">Nome do Aluno</th>
-                            <th style="border:1px solid #000; padding:5px;">Curso / Período</th>
-                            <th style="border:1px solid #000; padding:5px;">Endereço</th>
-                            <th style="border:1px solid #000; padding:5px; width:100px;">Assinatura</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
+    // Monta Grupos e Linhas
+    Object.keys(grupos).sort().forEach(grupoNome => {
+        const lista = grupos[grupoNome];
+        // Ordena por nome
+        lista.sort((a,b) => (a['NomeCompleto']||'').localeCompare(b['NomeCompleto']||''));
 
-        lista.forEach((aluno, idx) => {
-            htmlContent += `
-                <tr>
-                    <td style="border:1px solid #000; padding:5px; text-align:center;">${idx+1}</td>
-                    <td style="border:1px solid #000; padding:5px;"><b>${aluno.nome}</b><br><span style="font-size:10px; color:#555;">Tel: ${aluno.tel}</span></td>
-                    <td style="border:1px solid #000; padding:5px;">${aluno.curso}<br>${aluno.periodo}</td>
-                    <td style="border:1px solid #000; padding:5px;">${aluno.end}</td>
-                    <td style="border:1px solid #000; padding:5px;"></td>
-                </tr>
-            `;
+        // Se tem instituição, mostra cabeçalho do grupo
+        if(temInstituicao) {
+            htmlContent += `<h3 style="background:#e2e8f0; padding:8px; margin:20px 0 0 0; border:1px solid #000; border-bottom:none; font-size:14px;">${grupoNome} <span style="float:right; font-weight:normal;">(${lista.length})</span></h3>`;
+        } else {
+            htmlContent += `<div style="margin-top:20px;"></div>`;
+        }
+
+        htmlContent += `<table class="print-table" style="width:100%; border-collapse:collapse; font-size:11px;"><thead><tr>${headerHTML}</tr></thead><tbody>`;
+
+        lista.forEach((linha, idx) => {
+            htmlContent += `<tr><td style="border:1px solid #000; padding:5px; text-align:center;">${idx+1}</td>`;
+            colunas.forEach(col => {
+                htmlContent += `<td style="border:1px solid #000; padding:5px;">${linha[col.key]}</td>`;
+            });
+            htmlContent += `</tr>`;
         });
 
-        htmlContent += `</tbody></table></div>`;
+        htmlContent += `</tbody></table>`;
     });
 
     htmlContent += `
-        <div style="margin-top:50px; display:flex; justify-content:space-between; page-break-inside:avoid;">
-            <div style="text-align:center; width:40%;">
-                <div style="border-top:1px solid #000; padding-top:5px;">Secretaria de Educação</div>
-            </div>
-            <div style="text-align:center; width:40%;">
-                <div style="border-top:1px solid #000; padding-top:5px;">Motorista Responsável</div>
-            </div>
+        <div style="margin-top:40px; display:flex; justify-content:space-between; page-break-inside:avoid;">
+            <div style="text-align:center; width:40%;"><div style="border-top:1px solid #000; padding-top:5px;">Responsável</div></div>
+            <div style="text-align:center; width:40%;"><div style="border-top:1px solid #000; padding-top:5px;">Data: ___/___/____</div></div>
         </div>
-        <div style="text-align:center; font-size:10px; margin-top:20px; color:#999;">Gerado em ${new Date().toLocaleString()}</div>
     `;
 
     document.getElementById('area-impressao').innerHTML = htmlContent;
@@ -277,12 +294,17 @@ function carregarEventosAdmin() {
         tbody.innerHTML = '';
         mapaEventos = {};
         if(!json.data || json.data.length === 0) { tbody.innerHTML = '<tr><td colspan="4">Vazio</td></tr>'; return; }
-        json.data.forEach(ev => mapaEventos[ev.id] = ev.titulo);
+        
+        json.data.forEach(ev => {
+            mapaEventos[ev.id] = ev.titulo;
+            cacheEventos[ev.id] = ev; // Atualiza cache aqui também
+        });
+        
         json.data.sort((a,b) => b.id - a.id).forEach(ev => {
             let btnAction = ev.status === 'Ativo' ? 
                 `<button class="action-btn" style="background:#eab308; color:black;" onclick="toggleStatusEvento('${ev.id}','Inativo')" title="Pausar"><i class="fa-solid fa-pause"></i></button>` : 
                 `<button class="action-btn" style="background:#22c55e; color:#fff;" onclick="toggleStatusEvento('${ev.id}','Ativo')" title="Ativar"><i class="fa-solid fa-play"></i></button>`;
-            tbody.innerHTML += `<tr><td>#${ev.id}</td><td><strong>${ev.titulo}</strong><br><small>${safeDate(ev.inicio)} até ${safeDate(ev.fim)}</small></td><td><span class="badge badge-${ev.status}">${ev.status}</span></td><td style="text-align:right;">${btnAction}<button class="action-btn btn-edit" onclick='abrirEdicaoEvento(${JSON.stringify(ev)})'><i class="fa-solid fa-pen"></i></button></td></tr>`;
+            tbody.innerHTML += `<tr><td>#${ev.id}</td><td><strong>${ev.titulo}</strong><br><small>${safeDate(ev.inicio)} - ${safeDate(ev.fim)}</small></td><td><span class="badge badge-${ev.status}">${ev.status}</span></td><td style="text-align:right;">${btnAction}<button class="action-btn btn-edit" onclick='abrirEdicaoEvento(${JSON.stringify(ev)})'><i class="fa-solid fa-pen"></i></button></td></tr>`;
         });
     });
 }
@@ -291,26 +313,11 @@ function abrirEdicaoEvento(evento) {
     let config = {}; try { config = JSON.parse(evento.config); } catch(e){}
     Swal.fire({
         title: 'Editar Evento',
-        html: `
-            <div class="modal-form-grid">
-                <div class="modal-full">
-                    <label class="swal-label">Prorrogar Data Fim</label>
-                    <input type="date" id="edit_fim" class="swal-input" value="${evento.fim ? evento.fim.split('T')[0] : ''}">
-                </div>
-                <div class="modal-full">
-                    <label class="swal-label">Mensagem de Alerta (Aviso no topo do form)</label>
-                    <textarea id="edit_msg" class="swal-input" style="height:80px;">${config.mensagemAlerta || ''}</textarea>
-                </div>
-            </div>
-        `,
-        width: '500px',
-        showCancelButton: true, confirmButtonText: 'Salvar Alterações',
+        html: `<div class="modal-form-grid"><div class="modal-full"><label class="swal-label">Prorrogar Data Fim</label><input type="date" id="edit_fim" class="swal-input" value="${evento.fim ? evento.fim.split('T')[0] : ''}"></div><div class="modal-full"><label class="swal-label">Mensagem de Alerta</label><textarea id="edit_msg" class="swal-input" style="height:80px;">${config.mensagemAlerta || ''}</textarea></div></div>`,
+        width: '500px', showCancelButton: true, confirmButtonText: 'Salvar', confirmButtonColor: '#2563eb',
         preConfirm: () => { return { fim: document.getElementById('edit_fim').value, msg: document.getElementById('edit_msg').value }; }
     }).then((res) => {
-        if(res.isConfirmed) {
-            fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'editarEvento', senha: sessionStorage.getItem('admin_token'), id: evento.id, ...res.value }) })
-            .then(() => { Swal.fire({icon: 'success', title: 'Salvo!'}); carregarEventosAdmin(); });
-        }
+        if(res.isConfirmed) fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'editarEvento', senha: sessionStorage.getItem('admin_token'), id: evento.id, ...res.value }) }).then(() => { Swal.fire({icon: 'success', title: 'Salvo!'}); carregarEventosAdmin(); });
     });
 }
 
@@ -320,7 +327,6 @@ function toggleStatusEvento(id, status) {
     .then(() => { Swal.close(); carregarEventosAdmin(); });
 }
 
-// MODAL NOVO EVENTO
 function modalNovoEvento() {
     let htmlCampos = '<div class="checkbox-grid">';
     CAMPOS_PADRAO.forEach(c => htmlCampos += `<label class="checkbox-card"><input type="checkbox" id="check_${c.key}" value="${c.key}" checked> ${c.label}</label>`);
@@ -353,7 +359,7 @@ function modalNovoEvento() {
                     
                     <div class="modal-full" style="margin-top:15px;">
                         <label class="swal-label">Instruções / Observações (Somente Leitura)</label>
-                        <textarea id="txt_obs_admin" class="swal-input" style="height:80px;" placeholder="Ex: Trazer comprovante de residência original no dia da entrega."></textarea>
+                        <textarea id="txt_obs_admin" class="swal-input" style="height:80px;" placeholder="Ex: Trazer comprovante original..."></textarea>
                     </div>
                 </div>
 
@@ -468,14 +474,7 @@ function renderizarProximaPagina() {
             <td>${safeDate(ins.data)}</td><td><small>${mapaEventos[ins.eventoId]||ins.eventoId}</small></td>
             <td><strong>${d.NomeCompleto||'Aluno'}</strong><br><small style="color:#64748b;">${ins.chave}</small></td>
             <td><span class="badge badge-${ins.status.replace(/\s/g, '')}">${ins.status}</span></td>
-            <td>
-                <div style="display:flex; gap:5px; justify-content:flex-end;">
-                    <button class="action-btn" style="background:#f59e0b;" onclick="abrirEdicaoInscricao('${ins.chave}')" title="Editar Dados"><i class="fa-solid fa-pen"></i></button>
-                    <button class="action-btn btn-edit" onclick="mudarStatus('${ins.chave}')" title="Alterar Status"><i class="fa-solid fa-list-check"></i></button>
-                    ${btnFicha}
-                    ${ins.doc ? `<a href="${ins.doc}" target="_blank" class="action-btn btn-view" title="Ver Anexo"><i class="fa-solid fa-paperclip"></i></a>` : ''}
-                </div>
-            </td>
+            <td><div style="display:flex; gap:5px; justify-content:flex-end;"><button class="action-btn" style="background:#f59e0b;" onclick="abrirEdicaoInscricao('${ins.chave}')" title="Editar Dados"><i class="fa-solid fa-pen"></i></button><button class="action-btn btn-edit" onclick="mudarStatus('${ins.chave}')" title="Alterar Status"><i class="fa-solid fa-list-check"></i></button>${btnFicha}${ins.doc ? `<a href="${ins.doc}" target="_blank" class="action-btn btn-view" title="Ver Anexo"><i class="fa-solid fa-paperclip"></i></a>` : ''}</div></td>
         </tr>`;
     });
     paginaAtual++;
