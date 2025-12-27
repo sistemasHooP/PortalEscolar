@@ -11,6 +11,7 @@ let mapaEventos = {};
 let chartEventosInstance = null; let chartStatusInstance = null;
 let todasInscricoes = [];     
 let inscricoesFiltradas = []; 
+let dashboardData = []; // Cache específico para o dashboard
 let paginaAtual = 1;
 const ITENS_POR_PAGINA = 50;
 let selecionados = new Set(); 
@@ -22,6 +23,7 @@ function showLoading(msg = 'Processando...') {
             <div style="display:flex; flex-direction:column; align-items:center; gap:15px; padding:20px;">
                 <div class="spinner" style="border-color:#e2e8f0; border-top-color:#2563eb; width:50px; height:50px; border-width:4px;"></div>
                 <h3 style="font-family:'Poppins'; font-size:1.1rem; color:#1e293b; margin:0;">${msg}</h3>
+                <p style="font-family:'Poppins'; font-size:0.85rem; color:#64748b; margin:0;">Aguarde um momento...</p>
             </div>
         `,
         showConfirmButton: false, allowOutsideClick: false, width: '300px',
@@ -71,30 +73,74 @@ function switchTab(tabId) {
     if(tabId === 'tab-config') carregarInstituicoes();
 }
 
-// --- DASHBOARD ---
+// --- DASHBOARD MELHORADO ---
 function carregarDashboard() {
     const token = sessionStorage.getItem('admin_token');
+    
     Promise.all([
         fetch(`${URL_API}?action=getTodosEventos`).then(r => r.json()),
         fetch(`${URL_API}?action=getInscricoesAdmin&token=${token}`).then(r => r.json())
     ]).then(([jsonEventos, jsonInscricoes]) => {
         mapaEventos = {}; 
         if(jsonEventos.data) jsonEventos.data.forEach(ev => mapaEventos[ev.id] = ev.titulo);
-        const inscricoes = jsonInscricoes.data || [];
-        atualizarSelectsRelatorio(jsonEventos.data || [], inscricoes);
         
-        document.getElementById('stat-total').innerText = inscricoes.length;
-        document.getElementById('stat-aprovados').innerText = inscricoes.filter(i => i.status.includes('Aprovada') || i.status.includes('Emitida')).length;
-        document.getElementById('stat-pendentes').innerText = inscricoes.filter(i => i.status === 'Pendente').length;
+        dashboardData = jsonInscricoes.data || [];
+        
+        // Popula Selects
+        atualizarSelectsRelatorio(jsonEventos.data || [], dashboardData);
+        
+        // Exibe estatísticas globais inicialmente
+        atualizarEstatisticasDashboard(dashboardData, "Visão Geral (Todos os Eventos)");
 
         const contagemEventos = {}, contagemStatus = {};
-        inscricoes.forEach(i => {
+        dashboardData.forEach(i => {
             const nome = mapaEventos[i.eventoId] || 'Outro';
             contagemEventos[nome] = (contagemEventos[nome] || 0) + 1;
             contagemStatus[i.status] = (contagemStatus[i.status] || 0) + 1;
         });
         renderizarGraficos(contagemEventos, contagemStatus);
+        
+        // Adiciona Listener para atualizar o Dashboard ao mudar o filtro de relatório
+        const selEvento = document.getElementById('relatorio-evento');
+        selEvento.onchange = () => {
+            const eventoId = selEvento.value;
+            if (eventoId) {
+                const dadosFiltrados = dashboardData.filter(i => String(i.eventoId) === String(eventoId));
+                atualizarEstatisticasDashboard(dadosFiltrados, mapaEventos[eventoId]);
+            } else {
+                atualizarEstatisticasDashboard(dashboardData, "Visão Geral (Todos os Eventos)");
+            }
+        };
     });
+}
+
+function atualizarEstatisticasDashboard(dados, titulo) {
+    const total = dados.length;
+    const aprovados = dados.filter(i => i.status.includes('Aprovada') || i.status.includes('Emitida')).length;
+    const pendentes = dados.filter(i => i.status === 'Pendente').length;
+    
+    document.getElementById('stat-total').innerText = total;
+    document.getElementById('stat-aprovados').innerText = aprovados;
+    document.getElementById('stat-pendentes').innerText = pendentes;
+    
+    // Atualiza título da seção se existir elemento, ou cria um banner simples
+    let banner = document.getElementById('dashboard-banner');
+    if(!banner) {
+        banner = document.createElement('div');
+        banner.id = 'dashboard-banner';
+        banner.style.cssText = "background:linear-gradient(to right, #1e293b, #334155); color:white; padding:15px; border-radius:12px; margin-bottom:20px; box-shadow:0 4px 6px rgba(0,0,0,0.1); display:flex; align-items:center; justify-content:space-between;";
+        const container = document.querySelector('.stats-grid');
+        container.parentNode.insertBefore(banner, container);
+    }
+    banner.innerHTML = `
+        <div>
+            <small style="text-transform:uppercase; opacity:0.8; font-size:0.75rem;">Painel de Controle</small>
+            <h3 style="margin:0; font-size:1.2rem;">${titulo}</h3>
+        </div>
+        <div style="font-size:1.5rem; background:rgba(255,255,255,0.1); width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:50%;">
+            <i class="fa-solid fa-chart-simple"></i>
+        </div>
+    `;
 }
 
 function renderizarGraficos(dadosEventos, dadosStatus) {
@@ -112,41 +158,119 @@ function renderizarGraficos(dadosEventos, dadosStatus) {
 
 function atualizarSelectsRelatorio(eventos, inscricoes) {
     const selEvento = document.getElementById('relatorio-evento');
-    selEvento.innerHTML = '<option value="">Selecione...</option>';
+    // Salva seleção atual
+    const atual = selEvento.value;
+    
+    selEvento.innerHTML = '<option value="">Todos os Eventos</option>';
     eventos.forEach(ev => selEvento.innerHTML += `<option value="${ev.id}">${ev.titulo}</option>`);
+    
+    if(atual) selEvento.value = atual;
+    
     let instituicoes = new Set();
     inscricoes.forEach(ins => { try { instituicoes.add(JSON.parse(ins.dadosJson).NomeInstituicao); } catch(e){} });
     const selInst = document.getElementById('relatorio-inst');
-    selInst.innerHTML = '<option value="">Todas</option>';
-    instituicoes.forEach(inst => { if(inst) selInst.innerHTML += `<option value="${inst}">${inst}</option>`; });
+    selInst.innerHTML = '<option value="">Todas as Instituições (Relatório Geral)</option>';
+    // Ordena alfabeticamente
+    Array.from(instituicoes).sort().forEach(inst => { if(inst) selInst.innerHTML += `<option value="${inst}">${inst}</option>`; });
 }
 
+// --- RELATÓRIOS PRO (Agrupados por Instituição) ---
 function gerarRelatorioTransporte() {
     const eventoId = document.getElementById('relatorio-evento').value;
     const instFiltro = document.getElementById('relatorio-inst').value;
-    if(!eventoId) return Swal.fire({icon: 'warning', title: 'Atenção', text: 'Selecione um evento.'});
-    showLoading('Gerando Relatório...');
-    fetch(`${URL_API}?action=getInscricoesAdmin&token=${sessionStorage.getItem('admin_token')}`).then(r => r.json()).then(json => {
-        Swal.close();
-        const alunos = (json.data || []).filter(i => {
-            let d = {}; try{d=JSON.parse(i.dadosJson)}catch(e){}
-            return String(i.eventoId) === String(eventoId) && (instFiltro === "" || d.NomeInstituicao === instFiltro) && (i.status === 'Aprovada' || i.status === 'Ficha Emitida');
-        });
-        if(alunos.length === 0) return Swal.fire({icon: 'info', title: 'Vazio', text: 'Nenhum aluno APROVADO.'});
-        let linhas = '';
-        alunos.forEach((aluno, idx) => {
-            let d = JSON.parse(aluno.dadosJson);
-            linhas += `<tr><td>${idx+1}</td><td>${d.NomeCompleto}</td><td>${d.NomeInstituicao}</td><td>${d.Endereco}</td></tr>`;
-        });
-        document.getElementById('area-impressao').innerHTML = `
-            <div class="print-header"><h2>Rota Transporte</h2><p>Evento: ${mapaEventos[eventoId]}</p><p>Inst: ${instFiltro||'Todas'}</p></div>
-            <table class="print-table"><thead><tr><th>#</th><th>Nome</th><th>Instituição</th><th>Endereço</th></tr></thead><tbody>${linhas}</tbody></table>
-            <div style="margin-top:40px; border-top:1px solid #000; padding-top:10px;">Motorista: _______________________ Data: __/__/____</div>
-        `;
-        setTimeout(() => window.print(), 500);
+    const tituloEvento = eventoId ? mapaEventos[eventoId] : "Todos os Eventos";
+
+    // Filtra apenas APROVADOS e EMITIDOS
+    const alunos = dashboardData.filter(i => {
+        let d = {}; try{d=JSON.parse(i.dadosJson)}catch(e){}
+        return (eventoId === "" || String(i.eventoId) === String(eventoId)) &&
+               (instFiltro === "" || d.NomeInstituicao === instFiltro) &&
+               (i.status === 'Aprovada' || i.status === 'Ficha Emitida');
     });
+
+    if(alunos.length === 0) return Swal.fire({icon: 'info', title: 'Vazio', text: 'Nenhum aluno APROVADO encontrado para gerar relatório.'});
+
+    showLoading('Formatando Relatório...');
+
+    // Agrupar alunos por Instituição
+    const grupos = {};
+    alunos.forEach(aluno => {
+        let d = JSON.parse(aluno.dadosJson);
+        const inst = d.NomeInstituicao || 'Não Informada';
+        if(!grupos[inst]) grupos[inst] = [];
+        grupos[inst].push({
+            nome: d.NomeCompleto,
+            end: d.Endereco,
+            curso: d.NomeCurso || '-',
+            periodo: d.PeriodoCurso || '-',
+            tel: d.Telefone || '-'
+        });
+    });
+
+    // Gera HTML do Relatório
+    let htmlContent = `
+        <div class="print-header">
+            <h1 style="margin:0; font-size:24px; color:#1e293b;">Relatório de Transporte Escolar</h1>
+            <p style="margin:5px 0; color:#64748b;">${tituloEvento}</p>
+            <div style="margin-top:10px; font-size:14px;"><strong>Total de Alunos:</strong> ${alunos.length}</div>
+        </div>
+    `;
+
+    // Ordena chaves (instituições) alfabeticamente
+    Object.keys(grupos).sort().forEach(inst => {
+        const lista = grupos[inst];
+        // Ordena alunos por nome
+        lista.sort((a,b) => a.nome.localeCompare(b.nome));
+
+        htmlContent += `
+            <div class="print-group" style="margin-top:30px; page-break-inside:avoid;">
+                <h3 style="background:#f1f5f9; padding:10px; margin:0; border:1px solid #000; border-bottom:none; font-size:16px;">${inst} <span style="font-weight:normal; font-size:14px; float:right;">(${lista.length} alunos)</span></h3>
+                <table class="print-table" style="width:100%; border-collapse:collapse; font-size:12px;">
+                    <thead>
+                        <tr style="background:#fff;">
+                            <th style="border:1px solid #000; padding:5px; width:30px;">#</th>
+                            <th style="border:1px solid #000; padding:5px;">Nome do Aluno</th>
+                            <th style="border:1px solid #000; padding:5px;">Curso / Período</th>
+                            <th style="border:1px solid #000; padding:5px;">Endereço</th>
+                            <th style="border:1px solid #000; padding:5px; width:100px;">Assinatura</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        lista.forEach((aluno, idx) => {
+            htmlContent += `
+                <tr>
+                    <td style="border:1px solid #000; padding:5px; text-align:center;">${idx+1}</td>
+                    <td style="border:1px solid #000; padding:5px;"><b>${aluno.nome}</b><br><span style="font-size:10px; color:#555;">Tel: ${aluno.tel}</span></td>
+                    <td style="border:1px solid #000; padding:5px;">${aluno.curso}<br>${aluno.periodo}</td>
+                    <td style="border:1px solid #000; padding:5px;">${aluno.end}</td>
+                    <td style="border:1px solid #000; padding:5px;"></td>
+                </tr>
+            `;
+        });
+
+        htmlContent += `</tbody></table></div>`;
+    });
+
+    htmlContent += `
+        <div style="margin-top:50px; display:flex; justify-content:space-between; page-break-inside:avoid;">
+            <div style="text-align:center; width:40%;">
+                <div style="border-top:1px solid #000; padding-top:5px;">Secretaria de Educação</div>
+            </div>
+            <div style="text-align:center; width:40%;">
+                <div style="border-top:1px solid #000; padding-top:5px;">Motorista Responsável</div>
+            </div>
+        </div>
+        <div style="text-align:center; font-size:10px; margin-top:20px; color:#999;">Gerado em ${new Date().toLocaleString()}</div>
+    `;
+
+    document.getElementById('area-impressao').innerHTML = htmlContent;
+    Swal.close();
+    setTimeout(() => window.print(), 500);
 }
 
+// --- EVENTOS E MODAL ---
 function carregarEventosAdmin() {
     fetch(`${URL_API}?action=getTodosEventos`).then(res => res.json()).then(json => {
         const tbody = document.getElementById('lista-eventos-admin'); 
@@ -158,7 +282,7 @@ function carregarEventosAdmin() {
             let btnAction = ev.status === 'Ativo' ? 
                 `<button class="action-btn" style="background:#eab308; color:black;" onclick="toggleStatusEvento('${ev.id}','Inativo')" title="Pausar"><i class="fa-solid fa-pause"></i></button>` : 
                 `<button class="action-btn" style="background:#22c55e; color:#fff;" onclick="toggleStatusEvento('${ev.id}','Ativo')" title="Ativar"><i class="fa-solid fa-play"></i></button>`;
-            tbody.innerHTML += `<tr><td>#${ev.id}</td><td><strong>${ev.titulo}</strong><br><small>${safeDate(ev.inicio)} - ${safeDate(ev.fim)}</small></td><td><span class="badge badge-${ev.status}">${ev.status}</span></td><td style="text-align:right;">${btnAction}<button class="action-btn btn-edit" onclick='abrirEdicaoEvento(${JSON.stringify(ev)})'><i class="fa-solid fa-pen"></i></button></td></tr>`;
+            tbody.innerHTML += `<tr><td>#${ev.id}</td><td><strong>${ev.titulo}</strong><br><small>${safeDate(ev.inicio)} até ${safeDate(ev.fim)}</small></td><td><span class="badge badge-${ev.status}">${ev.status}</span></td><td style="text-align:right;">${btnAction}<button class="action-btn btn-edit" onclick='abrirEdicaoEvento(${JSON.stringify(ev)})'><i class="fa-solid fa-pen"></i></button></td></tr>`;
         });
     });
 }
@@ -167,12 +291,26 @@ function abrirEdicaoEvento(evento) {
     let config = {}; try { config = JSON.parse(evento.config); } catch(e){}
     Swal.fire({
         title: 'Editar Evento',
-        html: `<label class="swal-label">Prorrogar Data Fim</label><input type="date" id="edit_fim" class="swal-input" value="${evento.fim ? evento.fim.split('T')[0] : ''}">
-               <label class="swal-label">Mensagem de Alerta</label><textarea id="edit_msg" class="swal-input">${config.mensagemAlerta || ''}</textarea>`,
-        showCancelButton: true, confirmButtonText: 'Salvar',
+        html: `
+            <div class="modal-form-grid">
+                <div class="modal-full">
+                    <label class="swal-label">Prorrogar Data Fim</label>
+                    <input type="date" id="edit_fim" class="swal-input" value="${evento.fim ? evento.fim.split('T')[0] : ''}">
+                </div>
+                <div class="modal-full">
+                    <label class="swal-label">Mensagem de Alerta (Aviso no topo do form)</label>
+                    <textarea id="edit_msg" class="swal-input" style="height:80px;">${config.mensagemAlerta || ''}</textarea>
+                </div>
+            </div>
+        `,
+        width: '500px',
+        showCancelButton: true, confirmButtonText: 'Salvar Alterações',
         preConfirm: () => { return { fim: document.getElementById('edit_fim').value, msg: document.getElementById('edit_msg').value }; }
     }).then((res) => {
-        if(res.isConfirmed) fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'editarEvento', senha: sessionStorage.getItem('admin_token'), id: evento.id, ...res.value }) }).then(() => { Swal.fire('Salvo!', '', 'success'); carregarEventosAdmin(); });
+        if(res.isConfirmed) {
+            fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'editarEvento', senha: sessionStorage.getItem('admin_token'), id: evento.id, ...res.value }) })
+            .then(() => { Swal.fire({icon: 'success', title: 'Salvo!'}); carregarEventosAdmin(); });
+        }
     });
 }
 
@@ -182,6 +320,7 @@ function toggleStatusEvento(id, status) {
     .then(() => { Swal.close(); carregarEventosAdmin(); });
 }
 
+// MODAL NOVO EVENTO
 function modalNovoEvento() {
     let htmlCampos = '<div class="checkbox-grid">';
     CAMPOS_PADRAO.forEach(c => htmlCampos += `<label class="checkbox-card"><input type="checkbox" id="check_${c.key}" value="${c.key}" checked> ${c.label}</label>`);
@@ -214,7 +353,7 @@ function modalNovoEvento() {
                     
                     <div class="modal-full" style="margin-top:15px;">
                         <label class="swal-label">Instruções / Observações (Somente Leitura)</label>
-                        <textarea id="txt_obs_admin" class="swal-input" style="height:80px;" placeholder="Ex: Trazer comprovante original..."></textarea>
+                        <textarea id="txt_obs_admin" class="swal-input" style="height:80px;" placeholder="Ex: Trazer comprovante de residência original no dia da entrega."></textarea>
                     </div>
                 </div>
 
@@ -277,7 +416,6 @@ function carregarInscricoes() {
     const tbody = document.getElementById('lista-inscricoes-admin');
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Carregando...</td></tr>';
     
-    // ATUALIZAÇÃO: Popula o filtro de status para garantir todas as opções
     const selStatus = document.getElementById('filtro-status');
     if(selStatus) {
         selStatus.innerHTML = `
@@ -344,74 +482,33 @@ function renderizarProximaPagina() {
     document.getElementById('btn-load-more').style.display = (paginaAtual * ITENS_POR_PAGINA < inscricoesFiltradas.length + ITENS_POR_PAGINA) ? 'block' : 'none';
 }
 
-// --- NOVO: FUNÇÃO PARA EDITAR DADOS DO ALUNO ---
 function abrirEdicaoInscricao(chave) {
     const inscricao = todasInscricoes.find(i => i.chave === chave);
     if (!inscricao) return;
-
     let dados = {};
     try { dados = JSON.parse(inscricao.dadosJson); } catch(e) {}
-
-    // Gera o HTML do formulário dinamicamente
     let formHtml = '<div style="display:flex; flex-direction:column; gap:10px; text-align:left; max-height:400px; overflow-y:auto; padding:5px;">';
-    
-    // Lista de campos técnicos para ignorar
     const ignorar = ['linkFoto', 'linkDoc'];
-
     for (const [key, val] of Object.entries(dados)) {
         if (!ignorar.includes(key)) {
-            // Tenta encontrar um label amigável, senão usa a chave
             const labelAmigavel = CAMPOS_PADRAO.find(c => c.key === key)?.label || key;
-            formHtml += `
-                <div>
-                    <label style="font-size:0.85rem; font-weight:600; color:#64748b;">${labelAmigavel}</label>
-                    <input type="text" id="edit_aluno_${key}" value="${val}" class="swal-input" style="padding:8px;">
-                </div>
-            `;
+            formHtml += `<div><label style="font-size:0.85rem; font-weight:600; color:#64748b;">${labelAmigavel}</label><input type="text" id="edit_aluno_${key}" value="${val}" class="swal-input" style="padding:8px;"></div>`;
         }
     }
     formHtml += '</div>';
-
     Swal.fire({
-        title: 'Editar Dados do Aluno',
-        html: formHtml,
-        width: '600px',
-        showCancelButton: true,
-        confirmButtonText: 'Salvar Alterações',
-        confirmButtonColor: '#2563eb',
+        title: 'Editar Dados do Aluno', html: formHtml, width: '600px', showCancelButton: true, confirmButtonText: 'Salvar', confirmButtonColor: '#2563eb',
         preConfirm: () => {
             const novosDados = {};
-            for (const key of Object.keys(dados)) {
-                if (!ignorar.includes(key)) {
-                    const el = document.getElementById(`edit_aluno_${key}`);
-                    if (el) novosDados[key] = el.value;
-                }
-            }
+            for (const key of Object.keys(dados)) { if (!ignorar.includes(key)) { const el = document.getElementById(`edit_aluno_${key}`); if (el) novosDados[key] = el.value; } }
             return novosDados;
         }
     }).then((result) => {
         if (result.isConfirmed) {
             showLoading('Salvando...');
-            fetch(URL_API, {
-                method: 'POST',
-                body: JSON.stringify({
-                    action: 'editarInscricao',
-                    senha: sessionStorage.getItem('admin_token'),
-                    chave: chave,
-                    novosDados: result.value
-                })
-            })
-            .then(res => res.json())
-            .then(json => {
-                if(json.status === 'success') {
-                    Swal.fire({icon: 'success', title: 'Dados Atualizados!'});
-                    // Atualiza localmente
-                    let jsonNovo = { ...dados, ...result.value };
-                    inscricao.dadosJson = JSON.stringify(jsonNovo);
-                    resetEFiltrar();
-                } else {
-                    Swal.fire('Erro', json.message, 'error');
-                }
+            fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'editarInscricao', senha: sessionStorage.getItem('admin_token'), chave: chave, novosDados: result.value }) }).then(res => res.json()).then(json => {
+                if(json.status === 'success') { Swal.fire({icon: 'success', title: 'Dados Atualizados!'}); let jsonNovo = { ...dados, ...result.value }; inscricao.dadosJson = JSON.stringify(jsonNovo); resetEFiltrar(); } 
+                else { Swal.fire('Erro', json.message, 'error'); }
             });
         }
     });
@@ -448,17 +545,7 @@ function gerarFicha(chave) {
 function mudarStatus(chave) {
     Swal.fire({
         title: 'Atualizar Status',
-        html: `
-            <div style="display:flex; flex-direction:column; gap:10px; padding:10px; text-align:left;">
-                <label style="font-weight:600; color:#64748b; font-size:0.9rem;">Novo Status:</label>
-                <select id="novo_status" class="swal2-select" style="display:flex; width:100%; margin:0; border:1px solid #cbd5e1; border-radius:8px; padding:10px;">
-                    <option value="Pendente">Pendente (Em análise)</option>
-                    <option value="Aprovada">Aprovada (Ok)</option>
-                    <option value="Rejeitada">Rejeitada (Negado)</option>
-                    <option value="Ficha Emitida">Ficha Emitida (Finalizado)</option>
-                </select>
-            </div>
-        `,
+        html: `<div style="display:flex; flex-direction:column; gap:10px; padding:10px; text-align:left;"><label style="font-weight:600; color:#64748b; font-size:0.9rem;">Novo Status:</label><select id="novo_status" class="swal2-select" style="display:flex; width:100%; margin:0; border:1px solid #cbd5e1; border-radius:8px; padding:10px;"><option value="Pendente">Pendente (Em análise)</option><option value="Aprovada">Aprovada (Ok)</option><option value="Rejeitada">Rejeitada (Negado)</option><option value="Ficha Emitida">Ficha Emitida (Finalizado)</option></select></div>`,
         showCancelButton: true, confirmButtonText: 'Salvar', confirmButtonColor: '#2563eb',
         preConfirm: () => { return document.getElementById('novo_status').value; }
     }).then((res) => {
