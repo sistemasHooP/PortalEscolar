@@ -203,7 +203,7 @@ async function abrirInscricao(evento) {
         `;
     }
     
-    // Campos Obrigatórios
+    // Campos Obrigatórios Fixos
     area.innerHTML += `
         <div>
             <label>CPF <span style="color:red">*</span></label>
@@ -214,7 +214,7 @@ async function abrirInscricao(evento) {
             <input type="email" name="Email" placeholder="seu@email.com" required>
         </div>`;
 
-    // Carregar instituições
+    // Carregar instituições se necessário
     if(config.camposTexto && config.camposTexto.includes('NomeInstituicao') && listaInstituicoesCache.length === 0) {
         try { 
             toggleLoader(true,"Carregando..."); 
@@ -224,7 +224,7 @@ async function abrirInscricao(evento) {
         } catch(e){} finally { toggleLoader(false); }
     }
 
-    // Campos Dinâmicos
+    // Campos Padrão Dinâmicos
     if(config.camposTexto) {
         config.camposTexto.forEach(key => {
             if(CAMPO_DEFS[key]) {
@@ -253,6 +253,7 @@ async function abrirInscricao(evento) {
         });
     }
 
+    // Campos Personalizados Extras
     if(config.camposPersonalizados && config.camposPersonalizados.length > 0) {
         area.innerHTML += `<div style="grid-column:1/-1; margin-top:15px; border-top:1px dashed #ccc; padding-top:10px;"><h4>Perguntas Adicionais</h4></div>`;
         config.camposPersonalizados.forEach(p => {
@@ -367,7 +368,7 @@ async function enviarInscricao(e) {
     }
 }
 
-// --- LÓGICA DE CONSULTA ATUALIZADA (SEM DOWNLOAD DE FICHA) ---
+// --- LÓGICA DE CONSULTA E CARTEIRINHA ---
 function consultarChave() {
     const c = document.getElementById('busca-chave').value.trim();
     if(!c) return showError('Atenção', 'Digite a chave.');
@@ -382,7 +383,7 @@ function consultarChave() {
                 const aprovado = situacao.includes('Aprovada') || situacao.includes('Emitida');
                 let cor = aprovado ? '#10b981' : '#f59e0b';
                 
-                // Botão da Ficha removido conforme solicitação
+                // Botão da Ficha removido para o aluno
                 let btnFicha = ''; 
                 
                 // Botão da Carteirinha (Se aprovado e o evento permitir)
@@ -412,14 +413,14 @@ function abrirCarteirinha(aluno) {
     document.getElementById('cart-mat').innerText = aluno.matricula || '-';
     document.getElementById('cart-validade').innerText = aluno.validade;
     
-    // Tratamento de Imagem (Suporte a Base64 e Link Drive)
+    // Tratamento de Imagem (Suporte a Base64 e Link Formatado)
     const img = document.getElementById('cart-img');
     img.src = 'https://via.placeholder.com/150?text=Carregando...'; // Reset visual
     
     if (aluno.foto) {
-        // Verifica se é Base64 (data:image) OU URL comum (http)
+        // Se for Base64 (data:image) ou URL comum
         if (aluno.foto.startsWith('data:image') || aluno.foto.startsWith('http')) {
-            // Se for link do Drive, tenta formatar para LH3 (para garantir exibição se não for base64)
+            // Se for link do Drive e não Base64, formata para lh3
             if (aluno.foto.includes('drive.google.com') && !aluno.foto.startsWith('data:image')) {
                  img.src = formatarUrlDrive(aluno.foto);
             } else {
@@ -442,7 +443,7 @@ function abrirCarteirinha(aluno) {
     fecharModalConsulta();
 }
 
-// --- FUNÇÃO HELPER PARA CONVERTER LINK DRIVE (LEGADO) ---
+// --- FUNÇÃO HELPER PARA CONVERTER LINK DRIVE ---
 function formatarUrlDrive(url) {
     if (!url) return '';
     let id = '';
