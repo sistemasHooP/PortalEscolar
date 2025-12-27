@@ -304,21 +304,31 @@ body {
 }
 .hidden-bar { display: none !important; }
 
-/* --- ÁREA DE IMPRESSÃO / RELATÓRIO --- */
-#area-impressao { display: none; }
+/* --- ÁREA DE IMPRESSÃO / RELATÓRIO (CAMADA DEDICADA) --- */
+
+/* O #print-layer é criado dinamicamente pelo JS diretamente no BODY */
+#print-layer { 
+    display: none; 
+}
 
 @media print {
-    /* Esconde tudo, exceto a área de impressão */
-    body > *:not(#area-impressao) { display: none !important; }
+    /* 1. Esconde tudo o que NÃO é o print-layer (inclusive o painel admin) */
+    body > *:not(#print-layer) { 
+        display: none !important; 
+    }
     
-    #area-impressao { 
+    /* 2. Torna visível e formata a camada de impressão */
+    #print-layer { 
         display: block !important; 
         position: absolute; 
         top: 0; 
         left: 0; 
         width: 100%; 
-        padding: 0;
+        min-height: 100vh;
         background: white;
+        z-index: 9999;
+        padding: 0;
+        margin: 0;
     }
 
     @page { 
