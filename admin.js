@@ -1,7 +1,6 @@
 const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
 
 // --- CONFIGURAÇÃO DA LOGO ---
-// O sistema buscará o arquivo 'logo.png' na mesma pasta onde este site está rodando.
 const URL_LOGO = './logo.png'; 
 
 const CAMPOS_PADRAO = [
@@ -61,7 +60,7 @@ function realizarLogin(e) {
             document.getElementById('admin-panel').classList.remove('hidden');
             sessionStorage.setItem('admin_token', pass);
             carregarDashboard();
-            aplicarEstilosVisuais(); // Aplica correções de layout ao logar
+            aplicarEstilosVisuais();
         } else { Swal.fire({icon: 'error', title: 'Erro', text: 'Senha incorreta'}); }
     }).catch(() => Swal.fire('Erro', 'Sem conexão', 'error'));
 }
@@ -73,37 +72,26 @@ function switchTab(tabId) {
     document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
     document.getElementById(tabId).classList.remove('hidden');
     event.currentTarget.classList.add('active');
-    
-    // Forçar atualização do CSS ao trocar de aba para garantir largura total
     aplicarEstilosVisuais();
-
     if(tabId === 'tab-dashboard') carregarDashboard();
     if(tabId === 'tab-eventos') carregarEventosAdmin();
     if(tabId === 'tab-inscricoes') carregarInscricoes();
     if(tabId === 'tab-config') carregarInstituicoes();
 }
 
-// --- LAYOUT HELPER (Melhora visual no PC) ---
+// --- LAYOUT HELPER ---
 function aplicarEstilosVisuais() {
-    // Tenta injetar CSS para expandir o container principal se ele estiver limitado
     const styleId = 'admin-layout-fix';
     if (!document.getElementById(styleId)) {
         const style = document.createElement('style');
         style.id = styleId;
         style.innerHTML = `
-            /* Expande o container principal para telas grandes */
             .container, .main-content { max-width: 98% !important; width: 98% !important; margin: 0 auto; }
-            
-            /* Melhora a tabela de inscrições para ocupar espaço */
             table { width: 100%; border-collapse: collapse; }
             th, td { padding: 12px 15px; text-align: left; }
-            
-            /* Cabeçalho das abas */
             .nav-tabs { justify-content: flex-start; gap: 10px; border-bottom: 2px solid #e2e8f0; margin-bottom: 20px; }
             .nav-btn { flex: initial; padding: 10px 25px; border-radius: 8px 8px 0 0; }
             .nav-btn.active { border-bottom: 3px solid #2563eb; color: #2563eb; background: #eff6ff; }
-            
-            /* Área de filtros */
             .filters-bar { display: flex; flex-wrap: wrap; gap: 15px; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
             .search-box { flex: 1; min-width: 250px; }
         `;
@@ -120,15 +108,12 @@ function carregarDashboard() {
     ]).then(([jsonEventos, jsonInscricoes]) => {
         mapaEventos = {}; 
         cacheEventos = {}; 
-        
         if(jsonEventos.data) jsonEventos.data.forEach(ev => {
             mapaEventos[ev.id] = ev.titulo;
             cacheEventos[ev.id] = ev; 
         });
-        
         dashboardData = jsonInscricoes.data || [];
         atualizarSelectsRelatorio(jsonEventos.data || [], dashboardData);
-        
         atualizarEstatisticasDashboard(dashboardData, "Visão Geral (Todos os Eventos)");
 
         const contagemEventos = {}, contagemStatus = {};
@@ -156,7 +141,6 @@ function atualizarEstatisticasDashboard(dados, titulo) {
     document.getElementById('stat-total').innerText = dados.length;
     document.getElementById('stat-aprovados').innerText = dados.filter(i => i.status.includes('Aprovada') || i.status.includes('Emitida')).length;
     document.getElementById('stat-pendentes').innerText = dados.filter(i => i.status === 'Pendente').length;
-    
     let banner = document.getElementById('dashboard-banner');
     if(!banner) {
         banner = document.createElement('div');
@@ -195,7 +179,7 @@ function atualizarSelectsRelatorio(eventos, inscricoes) {
     Array.from(instituicoes).sort().forEach(inst => { if(inst) selInst.innerHTML += `<option value="${inst}">${inst}</option>`; });
 }
 
-// --- RELATÓRIO PROFISSIONAL (CORREÇÃO DE LARGURA) ---
+// --- RELATÓRIO PROFISSIONAL (CORRIGIDO PARA CABER NA PÁGINA) ---
 function gerarRelatorioTransporte() {
     const eventoId = document.getElementById('relatorio-evento').value;
     const instFiltro = document.getElementById('relatorio-inst').value;
@@ -212,44 +196,42 @@ function gerarRelatorioTransporte() {
 
     showLoading('Gerando Layout do Relatório...');
 
-    // 1. Definição Dinâmica de Colunas
+    // 1. Definição de Colunas (Sem larguras fixas exageradas)
     let colunas = [];
     if (eventoId && cacheEventos[eventoId]) {
         let config = {}; try { config = JSON.parse(cacheEventos[eventoId].config); } catch(e) {}
         
-        colunas.push({ key: 'NomeCompleto', label: 'Nome do Aluno', width: '25%' });
+        // Coluna principal (Nome)
+        colunas.push({ key: 'NomeCompleto', label: 'Nome do Aluno' });
         
         if (config.camposTexto) {
             config.camposTexto.forEach(campo => {
                 if (campo !== 'NomeCompleto') {
                     const def = CAMPOS_PADRAO.find(c => c.key === campo);
-                    let width = '10%';
-                    if(campo === 'Endereco') width = '20%';
-                    if(campo === 'NomeInstituicao' || campo === 'NomeCurso') width = '15%';
-                    colunas.push({ key: campo, label: def ? def.label : campo, width: width });
+                    colunas.push({ key: campo, label: def ? def.label : campo });
                 }
             });
         }
         if (config.camposPersonalizados) {
             config.camposPersonalizados.forEach(campo => {
-                colunas.push({ key: campo, label: campo, width: '10%' });
+                colunas.push({ key: campo, label: campo });
             });
         }
     } else {
         colunas = [
-            { key: 'NomeCompleto', label: 'Nome do Aluno', width: '30%' },
-            { key: 'NomeInstituicao', label: 'Instituição', width: '20%' },
-            { key: 'NomeCurso', label: 'Curso', width: '15%' },
-            { key: 'Endereco', label: 'Endereço', width: '25%' },
-            { key: 'Telefone', label: 'Contato', width: '10%' }
+            { key: 'NomeCompleto', label: 'Nome do Aluno' },
+            { key: 'NomeInstituicao', label: 'Instituição' },
+            { key: 'NomeCurso', label: 'Curso' },
+            { key: 'Endereco', label: 'Endereço' },
+            { key: 'Telefone', label: 'Contato' }
         ];
     }
-    colunas.push({ key: 'Assinatura', label: 'Assinatura', width: '15%', empty: true });
+    // Assinatura sempre no final
+    colunas.push({ key: 'Assinatura', label: 'Assinatura', empty: true });
 
     // 2. Agrupamento
     const temInstituicao = colunas.some(c => c.key === 'NomeInstituicao');
     const grupos = {};
-    
     alunos.forEach(aluno => {
         let d = JSON.parse(aluno.dadosJson);
         const inst = temInstituicao ? (d.NomeInstituicao || 'Não Informada') : 'Lista de Inscritos';
@@ -262,65 +244,101 @@ function gerarRelatorioTransporte() {
         grupos[inst].push(linha);
     });
 
-    // 3. Gerar HTML com Correção de Layout e Logo
+    // 3. HTML & CSS Otimizado para Impressão A4
     const dataHoje = new Date().toLocaleDateString('pt-BR');
     
-    // NOTA: Ajuste Agressivo de Largura para Impressão
     let htmlContent = `
         <style>
             @media print {
                 @page { 
                     size: A4 landscape; 
-                    margin: 5mm; /* Margem mínima */
+                    margin: 10mm; /* Margem segura padrão A4 */
                 }
-                body, html {
-                    margin: 0; padding: 0;
-                    width: 100%; height: 100%;
+                body {
+                    margin: 0; 
+                    padding: 0;
+                    background: white;
+                    -webkit-print-color-adjust: exact;
                 }
-                body * { visibility: hidden; } /* Esconde site */
-                
-                #area-impressao, #area-impressao * { 
-                    visibility: visible; 
-                }
+                /* Esconde tudo que não é o relatório */
+                body > *:not(#area-impressao) { display: none !important; }
                 
                 #area-impressao {
-                    position: absolute;
-                    left: 0;
-                    top: 0;
+                    display: block !important;
+                    position: relative !important;
                     width: 100% !important;
-                    min-width: 100vw !important; /* Força largura total da folha */
                     margin: 0 !important;
-                    padding: 0 !important;
-                    background: white;
+                    left: 0 !important;
+                    top: 0 !important;
                 }
             }
+            
+            /* Estilos do Relatório */
             .report-container { 
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                font-family: 'Arial', sans-serif; 
                 color: #000; 
-                width: 100% !important; 
-                max-width: none !important;
-                box-sizing: border-box;
-                padding: 5px;
+                width: 100%;
             }
             
-            /* Cabeçalho */
-            .report-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
-            .header-left { display: flex; align-items: center; gap: 20px; }
-            .report-logo { height: 70px; width: auto; object-fit: contain; display: block; }
-            .header-titles h1 { margin: 0; font-size: 20px; color: #000; text-transform: uppercase; }
-            .header-titles p { margin: 2px 0 0 0; font-size: 12px; color: #444; }
-            .header-right { text-align: right; font-size: 11px; color: #444; }
+            .report-header { 
+                display: flex; 
+                align-items: center; 
+                justify-content: space-between; 
+                border-bottom: 2px solid #000; 
+                padding-bottom: 10px; 
+                margin-bottom: 15px; 
+            }
+            .header-left { display: flex; align-items: center; gap: 15px; }
+            .report-logo { height: 60px; max-width: 200px; object-fit: contain; }
+            .header-titles h1 { margin: 0; font-size: 18px; text-transform: uppercase; font-weight: 800; }
+            .header-titles p { margin: 2px 0 0 0; font-size: 12px; }
+            .header-right { text-align: right; font-size: 11px; }
 
-            /* Tabela Ajustada */
-            .report-table { width: 100% !important; border-collapse: collapse; font-size: 11px; margin-bottom: 20px; }
-            .report-table th { background-color: #e2e8f0; color: #000; font-weight: bold; text-transform: uppercase; padding: 8px 5px; border: 1px solid #000; text-align: left; }
-            .report-table td { padding: 6px 5px; border: 1px solid #000; vertical-align: middle; color: #000; }
-            .report-table tr:nth-child(even) { background-color: #f1f5f9; }
-            .group-header { background-color: #cbd5e1 !important; font-size: 12px; font-weight: bold; color: #000; text-align: left; padding: 8px !important; border: 1px solid #000; }
+            /* Tabela Ajustável */
+            .report-table { 
+                width: 100%; 
+                border-collapse: collapse; 
+                font-size: 10px; /* Fonte reduzida para caber mais colunas */
+                margin-bottom: 20px;
+                table-layout: auto; /* Deixa o navegador calcular a melhor largura */
+            }
             
+            .report-table th, .report-table td { 
+                border: 1px solid #000; 
+                padding: 6px 4px; 
+                text-align: left;
+                vertical-align: middle;
+                word-wrap: break-word; /* Quebra palavras longas se necessário */
+            }
+            
+            .report-table th { 
+                background-color: #e5e7eb; 
+                font-weight: bold; 
+                text-transform: uppercase; 
+                font-size: 9px;
+            }
+            
+            .report-table tr:nth-child(even) { background-color: #f9fafb; }
+            .group-header { 
+                background-color: #d1d5db !important; 
+                font-size: 11px; 
+                font-weight: bold; 
+                padding: 8px !important; 
+            }
+            
+            /* Colunas Específicas (Ajuste fino) */
+            .col-assinatura { width: 15%; }
+            .col-index { width: 30px; text-align: center !important; }
+
             /* Rodapé */
-            .report-footer { margin-top: 30px; display: flex; justify-content: space-around; page-break-inside: avoid; }
-            .sign-box { text-align: center; width: 35%; }
+            .report-footer { 
+                margin-top: 30px; 
+                display: flex; 
+                justify-content: space-between; 
+                page-break-inside: avoid; 
+                padding: 0 50px;
+            }
+            .sign-box { text-align: center; width: 40%; }
             .sign-line { border-top: 1px solid #000; margin-bottom: 5px; padding-top: 5px; font-weight: bold; font-size: 11px; }
         </style>
         
@@ -340,22 +358,32 @@ function gerarRelatorioTransporte() {
             </div>
     `;
 
-    let thead = `<tr><th style="width:30px; text-align:center;">#</th>`;
-    colunas.forEach(col => { thead += `<th style="width:${col.width || 'auto'}">${col.label}</th>`; });
+    // Cabeçalho da Tabela
+    let thead = `<tr><th class="col-index">#</th>`;
+    colunas.forEach(col => {
+        // Se for assinatura, adiciona classe especial
+        const classe = col.key === 'Assinatura' ? 'class="col-assinatura"' : '';
+        thead += `<th ${classe}>${col.label}</th>`;
+    });
     thead += `</tr>`;
 
+    // Corpo da Tabela
     Object.keys(grupos).sort().forEach(grupoNome => {
         const lista = grupos[grupoNome];
         lista.sort((a,b) => (a['NomeCompleto']||'').localeCompare(b['NomeCompleto']||''));
+        
         htmlContent += `<table class="report-table">`;
         if(temInstituicao && Object.keys(grupos).length > 1) {
             htmlContent += `<thead><tr><td colspan="${colunas.length + 1}" class="group-header">${grupoNome} (${lista.length} alunos)</td></tr>${thead}</thead><tbody>`;
         } else {
             htmlContent += `<thead>${thead}</thead><tbody>`;
         }
+
         lista.forEach((linha, idx) => {
-            htmlContent += `<tr><td style="text-align:center;">${idx+1}</td>`;
-            colunas.forEach(col => { htmlContent += `<td>${linha[col.key]}</td>`; });
+            htmlContent += `<tr><td class="col-index">${idx+1}</td>`;
+            colunas.forEach(col => {
+                htmlContent += `<td>${linha[col.key]}</td>`;
+            });
             htmlContent += `</tr>`;
         });
         htmlContent += `</tbody></table>`;
@@ -365,11 +393,11 @@ function gerarRelatorioTransporte() {
             <div class="report-footer">
                 <div class="sign-box">
                     <div class="sign-line">Responsável pelo Transporte</div>
-                    <div style="font-size:10px; color:#000;">Assinatura / Carimbo</div>
+                    <div style="font-size:10px;">Assinatura / Carimbo</div>
                 </div>
                 <div class="sign-box">
                     <div class="sign-line">Setor Administrativo</div>
-                    <div style="font-size:10px; color:#000;">Data: ____/____/_______</div>
+                    <div style="font-size:10px;">Data: ____/____/_______</div>
                 </div>
             </div>
         </div>
@@ -379,8 +407,7 @@ function gerarRelatorioTransporte() {
     area.innerHTML = htmlContent;
     Swal.close();
     
-    // Pequeno delay para garantir que a imagem (logo) carregue antes de imprimir
-    setTimeout(() => window.print(), 1000);
+    setTimeout(() => window.print(), 800);
 }
 
 // --- EVENTOS E MODAL ---
