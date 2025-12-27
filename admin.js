@@ -1,8 +1,8 @@
 const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
 
 // --- CONFIGURAÇÃO DA LOGO ---
-// Se não tiver logo, pode deixar vazio ou colocar uma URL válida
-const URL_LOGO = 'https://cdn-icons-png.flaticon.com/512/3203/3203242.png'; 
+// Certifique-se que o arquivo logo.png está na mesma pasta do admin.html no GitHub
+const URL_LOGO = './logo.png'; 
 
 const CAMPOS_PADRAO = [
     { key: 'NomeCompleto', label: 'Nome Completo' }, { key: 'CPF', label: 'CPF' },
@@ -181,77 +181,117 @@ function atualizarSelectsRelatorio(eventos, inscricoes) {
     Array.from(instituicoes).sort().forEach(inst => { if(inst) selInst.innerHTML += `<option value="${inst}">${inst}</option>`; });
 }
 
-// --- RELATÓRIO DINÂMICO (CORRIGIDO: CAMADA DE IMPRESSÃO INDEPENDENTE) ---
+// =========================================================
+// --- NOVO GERADOR DE RELATÓRIO DINÂMICO & SELECIONÁVEL ---
+// =========================================================
+
+// Passo 1: Seleção de Colunas
 function gerarRelatorioTransporte() {
     const eventoId = document.getElementById('relatorio-evento').value;
     const instFiltro = document.getElementById('relatorio-inst').value;
-    const tituloEvento = eventoId ? mapaEventos[eventoId] : "Relatório Geral";
-
-    // Filtra apenas aprovados ou fichas emitidas
-    const alunos = dashboardData.filter(i => {
-        let d = {}; try{d=JSON.parse(i.dadosJson)}catch(e){}
+    
+    // Filtrar dados
+    const alunosFiltrados = dashboardData.filter(i => {
+        let d = {}; try { d = JSON.parse(i.dadosJson); } catch (e) {}
         return (eventoId === "" || String(i.eventoId) === String(eventoId)) &&
                (instFiltro === "" || d.NomeInstituicao === instFiltro) &&
                (i.status === 'Aprovada' || i.status === 'Ficha Emitida');
     });
 
-    if(alunos.length === 0) return Swal.fire({icon: 'info', title: 'Vazio', text: 'Nenhum aluno APROVADO encontrado para gerar lista de transporte.'});
-
-    showLoading('Gerando Relatório...');
-
-    // 1. Definição Dinâmica de Colunas
-    let colunas = [];
-    if (eventoId && cacheEventos[eventoId]) {
-        let config = {}; 
-        try { config = typeof cacheEventos[eventoId].config === 'string' ? JSON.parse(cacheEventos[eventoId].config) : cacheEventos[eventoId].config; } catch(e) {}
-        
-        colunas.push({ key: 'NomeCompleto', label: 'Nome do Aluno' });
-        
-        if (config.camposTexto && Array.isArray(config.camposTexto)) {
-            config.camposTexto.forEach(campo => {
-                if (campo !== 'NomeCompleto') {
-                    const def = CAMPOS_PADRAO.find(c => c.key === campo);
-                    colunas.push({ key: campo, label: def ? def.label : campo });
-                }
-            });
-        }
-        if (config.camposPersonalizados && Array.isArray(config.camposPersonalizados)) {
-            config.camposPersonalizados.forEach(campo => {
-                colunas.push({ key: campo, label: campo });
-            });
-        }
-    } else {
-        colunas = [
-            { key: 'NomeCompleto', label: 'Nome do Aluno' },
-            { key: 'NomeInstituicao', label: 'Instituição' },
-            { key: 'NomeCurso', label: 'Curso' },
-            { key: 'Telefone', label: 'Contato' }
-        ];
+    if (alunosFiltrados.length === 0) {
+        return Swal.fire({ icon: 'info', title: 'Atenção', text: 'Nenhum aluno APROVADO encontrado com esses filtros.' });
     }
-    colunas.push({ key: 'Assinatura', label: 'Assinatura', empty: true });
 
-    // 2. Agrupamento
-    const temInstituicao = colunas.some(c => c.key === 'NomeInstituicao');
-    const grupos = {};
-    alunos.forEach(aluno => {
-        let d = {}; try { d = JSON.parse(aluno.dadosJson); } catch(e) { d = {}; }
-        const inst = temInstituicao ? (d.NomeInstituicao || 'Outros') : 'Lista de Inscritos';
-        if(!grupos[inst]) grupos[inst] = [];
-        let linha = {};
-        colunas.forEach(col => {
-            if(col.key === 'Assinatura') linha[col.key] = '';
-            else linha[col.key] = d[col.key] !== undefined ? d[col.key] : '-';
-        });
-        grupos[inst].push(linha);
+    // Coletar todas as chaves possíveis dos formulários desses alunos
+    const todasChaves = new Set();
+    // Chaves que sempre queremos sugerir primeiro
+    const chavesPrioritarias = ['NomeCompleto', 'NomeInstituicao', 'NomeCurso', 'PeriodoCurso', 'Telefone'];
+    // Chaves para ignorar
+    const ignorar = ['linkFoto', 'linkDoc', 'Assinatura'];
+
+    alunosFiltrados.forEach(aluno => {
+        try {
+            const dados = JSON.parse(aluno.dadosJson);
+            Object.keys(dados).forEach(k => {
+                if (!ignorar.includes(k)) todasChaves.add(k);
+            });
+        } catch (e) {}
     });
 
-    // 3. Montagem do HTML
+    // Ordenar chaves: Prioritárias primeiro, depois o resto alfabeticamente
+    const listaChaves = Array.from(todasChaves).sort((a, b) => {
+        const idxA = chavesPrioritarias.indexOf(a);
+        const idxB = chavesPrioritarias.indexOf(b);
+        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+        if (idxA !== -1) return -1;
+        if (idxB !== -1) return 1;
+        return a.localeCompare(b);
+    });
+
+    // Criar HTML do Modal de Seleção
+    let htmlChecks = `<div class="checkbox-grid" style="max-height:300px; overflow-y:auto; padding:5px;">`;
+    listaChaves.forEach(chave => {
+        const label = CAMPOS_PADRAO.find(c => c.key === chave)?.label || chave;
+        const checked = chavesPrioritarias.includes(chave) ? 'checked' : '';
+        htmlChecks += `
+            <label class="checkbox-card" style="font-size:0.85rem;">
+                <input type="checkbox" class="col-check" value="${chave}" ${checked}> ${label}
+            </label>`;
+    });
+    htmlChecks += `</div>`;
+
+    Swal.fire({
+        title: 'Personalizar Relatório',
+        html: `
+            <p style="font-size:0.9rem; color:#64748b; margin-bottom:15px;">Selecione as colunas que deseja exibir:</p>
+            ${htmlChecks}
+        `,
+        width: '600px',
+        showCancelButton: true,
+        confirmButtonText: 'Gerar PDF',
+        confirmButtonColor: '#2563eb',
+        preConfirm: () => {
+            const selecionados = [];
+            document.querySelectorAll('.col-check:checked').forEach(c => selecionados.push(c.value));
+            if (selecionados.length === 0) {
+                Swal.showValidationMessage('Selecione pelo menos uma coluna.');
+            }
+            return selecionados;
+        }
+    }).then((res) => {
+        if (res.isConfirmed) {
+            construirRelatorioFinal(alunosFiltrados, res.value, eventoId);
+        }
+    });
+}
+
+// Passo 2: Construção e Impressão
+function construirRelatorioFinal(alunos, colunasKeys, eventoId) {
+    showLoading('Gerando Layout...');
+
+    const tituloEvento = eventoId ? (mapaEventos[eventoId] || 'Evento') : "Relatório Geral";
     const dataHoje = new Date().toLocaleDateString('pt-BR');
+
+    // 1. Agrupar por Instituição
+    const grupos = {};
+    alunos.forEach(aluno => {
+        let d = {}; try { d = JSON.parse(aluno.dadosJson); } catch(e){}
+        // Normaliza o nome da instituição ou usa 'Sem Instituição'
+        const inst = d.NomeInstituicao ? d.NomeInstituicao.trim() : 'Outros / Sem Instituição';
+        
+        if (!grupos[inst]) grupos[inst] = [];
+        grupos[inst].push(d);
+    });
+
+    // 2. Montar HTML
+    // Adiciona Assinatura no final se não foi selecionada (opcional, mas bom pra listas de presença)
+    if (!colunasKeys.includes('Assinatura')) colunasKeys.push('Assinatura');
+
     let htmlContent = `
         <div class="report-container">
             <div class="report-header">
                 <div class="header-left">
-                    <img src="${URL_LOGO}" alt="Logo" class="report-logo" onerror="this.style.display='none'">
+                    <img src="${URL_LOGO}" alt="Logo" class="report-logo" onerror="this.style.opacity='0'">
                     <div class="header-titles">
                         <h1>Relatório de Transporte</h1>
                         <p>${tituloEvento}</p>
@@ -259,50 +299,66 @@ function gerarRelatorioTransporte() {
                 </div>
                 <div class="header-right">
                     Emitido em: ${dataHoje}<br>
-                    Total Listado: ${alunos.length}
+                    Total de Alunos: ${alunos.length}
                 </div>
             </div>
     `;
 
-    // Cabeçalho da Tabela
+    // Cabeçalho da Tabela (Baseado na Seleção)
     let thead = `<tr><th class="col-index">#</th>`;
-    colunas.forEach(col => {
-        const classe = col.key === 'Assinatura' ? 'class="col-assinatura"' : '';
-        thead += `<th ${classe}>${col.label}</th>`;
+    colunasKeys.forEach(k => {
+        const label = k === 'Assinatura' ? 'Assinatura' : (CAMPOS_PADRAO.find(c => c.key === k)?.label || k);
+        const widthStyle = k === 'Assinatura' ? 'width: 25%;' : '';
+        thead += `<th style="${widthStyle}">${label}</th>`;
     });
     thead += `</tr>`;
 
-    // Corpo da Tabela
-    Object.keys(grupos).sort().forEach(grupoNome => {
-        const lista = grupos[grupoNome];
-        lista.sort((a,b) => (a['NomeCompleto']||'').localeCompare(b['NomeCompleto']||''));
-        
-        htmlContent += `<table class="report-table">`;
-        if(temInstituicao && Object.keys(grupos).length > 1) {
-            htmlContent += `<thead><tr><td colspan="${colunas.length + 1}" class="group-header">${grupoNome} (${lista.length})</td></tr>${thead}</thead><tbody>`;
-        } else {
-            htmlContent += `<thead>${thead}</thead><tbody>`;
-        }
-        lista.forEach((linha, idx) => {
-            htmlContent += `<tr><td class="col-index">${idx+1}</td>`;
-            colunas.forEach(col => {
-                htmlContent += `<td>${linha[col.key]}</td>`;
+    // Iterar Grupos (Instituições)
+    const nomesInstituicoes = Object.keys(grupos).sort(); // Ordem alfabética das escolas
+
+    nomesInstituicoes.forEach(instNome => {
+        const listaAlunos = grupos[instNome];
+        // Ordenar alunos por nome dentro da escola
+        listaAlunos.sort((a,b) => (a['NomeCompleto']||'').localeCompare(b['NomeCompleto']||''));
+
+        // Cria uma tabela separada para cada instituição
+        htmlContent += `
+            <div style="margin-top: 20px; margin-bottom: 5px; font-weight: bold; background: #e5e7eb; padding: 5px 10px; border: 1px solid #000; border-bottom: none; font-size: 11px;">
+                INSTITUIÇÃO: ${instNome.toUpperCase()} (${listaAlunos.length} ALUNOS)
+            </div>
+            <table class="report-table" style="margin-top:0;">
+                <thead>${thead}</thead>
+                <tbody>
+        `;
+
+        listaAlunos.forEach((dados, idx) => {
+            htmlContent += `<tr><td class="col-index">${idx + 1}</td>`;
+            colunasKeys.forEach(key => {
+                if (key === 'Assinatura') {
+                    htmlContent += `<td></td>`;
+                } else {
+                    htmlContent += `<td>${dados[key] !== undefined ? dados[key] : '-'}</td>`;
+                }
             });
             htmlContent += `</tr>`;
         });
+
         htmlContent += `</tbody></table>`;
     });
 
     htmlContent += `
             <div class="report-footer">
-                <div class="sign-box"><div class="sign-line">Responsável pelo Transporte</div></div>
-                <div class="sign-box"><div class="sign-line">Secretaria de Educação</div></div>
+                <div class="sign-box">
+                    <div class="sign-line">Responsável pelo Transporte</div>
+                </div>
+                <div class="sign-box">
+                    <div class="sign-line">Secretaria de Educação</div>
+                </div>
             </div>
         </div>
     `;
 
-    // 4. INJEÇÃO NA CAMADA DE IMPRESSÃO (NOVO MÉTODO)
-    // Verifica se a div de impressão já existe no BODY, se não, cria.
+    // 3. Injeção e Impressão
     let printLayer = document.getElementById('print-layer');
     if (!printLayer) {
         printLayer = document.createElement('div');
@@ -310,12 +366,10 @@ function gerarRelatorioTransporte() {
         document.body.appendChild(printLayer);
     }
     
-    // Injeta o conteúdo
     printLayer.innerHTML = htmlContent;
-    
     Swal.close();
     
-    // Dispara a impressão
+    // Pequeno delay para garantir renderização da imagem local (se houver cache)
     setTimeout(() => window.print(), 500);
 }
 
