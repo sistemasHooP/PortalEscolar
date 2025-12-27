@@ -190,9 +190,10 @@ function carregarEventosAdmin() {
         json.data.forEach(ev => mapaEventos[ev.id] = ev.titulo);
         
         json.data.sort((a,b) => b.id - a.id).forEach(ev => {
+            // CORREÇÃO: Cores fortes e contraste alto
             let btnAction = ev.status === 'Ativo' ? 
-                `<button class="action-btn btn-status-toggle active" onclick="toggleStatusEvento('${ev.id}','Inativo')" title="Desativar"><i class="fa-solid fa-pause"></i></button>` : 
-                `<button class="action-btn btn-status-toggle inactive" onclick="toggleStatusEvento('${ev.id}','Ativo')" title="Ativar"><i class="fa-solid fa-play"></i></button>`;
+                `<button class="action-btn" style="background:#eab308; color:#000;" onclick="toggleStatusEvento('${ev.id}','Inativo')" title="Pausar Evento"><i class="fa-solid fa-pause"></i></button>` : 
+                `<button class="action-btn" style="background:#22c55e; color:#fff;" onclick="toggleStatusEvento('${ev.id}','Ativo')" title="Ativar Evento"><i class="fa-solid fa-play"></i></button>`;
             
             tbody.innerHTML += `<tr>
                 <td>#${ev.id}</td>
@@ -345,6 +346,16 @@ function renderizarProximaPagina() {
     lote.forEach(ins => {
         let d = {}; try { d = JSON.parse(ins.dadosJson); } catch(e){}
         const checked = selecionados.has(ins.chave) ? 'checked' : '';
+        
+        // BOTÃO GERAR FICHA REINSERIDO E CORES VISÍVEIS
+        let btnFicha = '';
+        if(ins.link_ficha && ins.link_ficha.length > 5) {
+            btnFicha = `<a href="${ins.link_ficha}" target="_blank" class="action-btn btn-view" style="background:#059669;" title="Baixar PDF"><i class="fa-solid fa-file-pdf"></i></a>`;
+        } else {
+            // Botão para gerar a ficha se não existir
+            btnFicha = `<button class="action-btn" style="background:#6366f1;" onclick="gerarFicha('${ins.chave}')" title="Gerar Ficha"><i class="fa-solid fa-print"></i></button>`;
+        }
+
         tbody.innerHTML += `<tr>
             <td><input type="checkbox" class="bulk-check" value="${ins.chave}" ${checked} onclick="toggleCheck('${ins.chave}')"></td>
             <td>${safeDate(ins.data)}</td>
@@ -352,9 +363,11 @@ function renderizarProximaPagina() {
             <td><strong>${d.NomeCompleto||'Aluno'}</strong><br><small style="color:#64748b;">${ins.chave}</small></td>
             <td><span class="badge badge-${ins.status.replace(/\s/g, '')}">${ins.status}</span></td>
             <td>
-                <button class="action-btn btn-edit" onclick="mudarStatus('${ins.chave}')"><i class="fa-solid fa-list-check"></i></button>
-                ${ins.link_ficha ? `<a href="${ins.link_ficha}" target="_blank" class="action-btn btn-view"><i class="fa-solid fa-file-pdf"></i></a>` : ''}
-                ${ins.doc ? `<a href="${ins.doc}" target="_blank" class="action-btn btn-view" title="Ver Doc"><i class="fa-solid fa-paperclip"></i></a>` : ''}
+                <div style="display:flex; gap:5px; justify-content:flex-end;">
+                    <button class="action-btn btn-edit" onclick="mudarStatus('${ins.chave}')" title="Alterar Status"><i class="fa-solid fa-list-check"></i></button>
+                    ${btnFicha}
+                    ${ins.doc ? `<a href="${ins.doc}" target="_blank" class="action-btn btn-view" title="Ver Anexo"><i class="fa-solid fa-paperclip"></i></a>` : ''}
+                </div>
             </td>
         </tr>`;
     });
@@ -405,6 +418,46 @@ function acaoEmMassa(status) {
     });
 }
 
+// FUNÇÃO GERAR FICHA (RESTAURADA)
+function gerarFicha(chave) {
+    Swal.fire({
+        title: 'Gerar Ficha?',
+        text: "O status será alterado para 'Ficha Emitida'.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sim, Gerar',
+        confirmButtonColor: '#4f46e5'
+    }).then((result) => {
+        if(result.isConfirmed) {
+            showLoading('Gerando documento...');
+            fetch(URL_API, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'gerarFichaPDF',
+                    senha: sessionStorage.getItem('admin_token'),
+                    chave: chave
+                })
+            })
+            .then(res => res.json())
+            .then(json => {
+                Swal.close();
+                if(json.status === 'success') {
+                    Swal.fire('Sucesso', 'Ficha gerada!', 'success');
+                    // Atualiza localmente
+                    const item = todasInscricoes.find(i => i.chave === chave);
+                    if(item) {
+                        item.status = 'Ficha Emitida';
+                        item.link_ficha = json.link; // Se a API retornar link
+                    }
+                    resetEFiltrar();
+                } else {
+                    Swal.fire('Erro', json.message, 'error');
+                }
+            });
+        }
+    });
+}
+
 function carregarInstituicoes() {
     fetch(`${URL_API}?action=getInstituicoes`).then(r => r.json()).then(json => {
         const div = document.getElementById('lista-instituicoes'); div.innerHTML = '';
@@ -425,13 +478,36 @@ function removerInst(nome) {
     fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'removerInstituicao', nome, senha: sessionStorage.getItem('admin_token') }) }).then(() => carregarInstituicoes());
 }
 
+// POPUP DE STATUS (MELHORADO E ALINHADO)
 function mudarStatus(chave) {
-    Swal.fire({ title: 'Mudar Status', input: 'select', inputOptions: { 'Pendente': 'Pendente', 'Aprovada': 'Aprovada', 'Rejeitada': 'Rejeitada' }, showCancelButton: true })
-    .then((res) => {
-        if(res.isConfirmed) fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'atualizarStatus', senha: sessionStorage.getItem('admin_token'), chave, novoStatus: res.value }) }).then(() => {
-            const item = todasInscricoes.find(i => i.chave === chave);
-            if(item) item.status = res.value; 
-            resetEFiltrar();
-        });
+    Swal.fire({
+        title: 'Atualizar Status',
+        html: `
+            <div style="display:flex; flex-direction:column; gap:10px; padding:10px; text-align:left;">
+                <label style="font-weight:600; color:#64748b; font-size:0.9rem;">Novo Status:</label>
+                <select id="novo_status" class="swal2-select" style="display:flex; width:100%; margin:0; border:1px solid #cbd5e1; border-radius:8px; padding:10px;">
+                    <option value="Pendente">Pendente (Em análise)</option>
+                    <option value="Aprovada">Aprovada (Ok)</option>
+                    <option value="Rejeitada">Rejeitada (Negado)</option>
+                    <option value="Ficha Emitida">Ficha Emitida (Finalizado)</option>
+                </select>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Salvar',
+        confirmButtonColor: '#2563eb',
+        preConfirm: () => {
+            return document.getElementById('novo_status').value;
+        }
+    }).then((res) => {
+        if(res.isConfirmed) {
+            showLoading('Atualizando...');
+            fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'atualizarStatus', senha: sessionStorage.getItem('admin_token'), chave, novoStatus: res.value }) }).then(() => {
+                const item = todasInscricoes.find(i => i.chave === chave);
+                if(item) item.status = res.value; 
+                resetEFiltrar();
+                Swal.fire({icon: 'success', title: 'Status Atualizado!', timer: 1500, showConfirmButton: false});
+            });
+        }
     });
 }
