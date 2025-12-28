@@ -3,13 +3,17 @@ const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo
 // Definição dos campos padrão
 const CAMPO_DEFS = {
     'NomeCompleto': { label: 'Nome Completo', type: 'text', placeholder: 'Digite seu nome completo' },
+    'CPF': { label: 'CPF', type: 'text', placeholder: '000.000.000-00', mask: 'cpf' },
     'DataNascimento': { label: 'Data de Nascimento', type: 'date', placeholder: '' },
     'Telefone': { label: 'Celular (WhatsApp)', type: 'tel', placeholder: '(00) 00000-0000', mask: 'tel' },
     'Endereco': { label: 'Endereço Residencial', type: 'text', placeholder: 'Rua, Número, Complemento, Bairro' },
+    'Cidade': { label: 'Cidade', type: 'text', placeholder: 'Digite sua cidade' },
+    'Estado': { label: 'Estado (UF)', type: 'select', options: ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'] },
     'NomeInstituicao': { label: 'Instituição de Ensino', type: 'select' }, 
     'NomeCurso': { label: 'Curso', type: 'text', placeholder: 'Ex: Engenharia Civil' },
     'PeriodoCurso': { label: 'Período/Semestre', type: 'text', placeholder: 'Ex: 3º Período' },
-    'Matricula': { label: 'Nº Matrícula', type: 'text', placeholder: '' }
+    'Matricula': { label: 'Nº Matrícula', type: 'text', placeholder: '' },
+    'Email': { label: 'E-mail', type: 'email', placeholder: 'seu@email.com' }
 };
 
 let listaInstituicoesCache = [];
@@ -68,35 +72,25 @@ function validarCPF(cpf) {
     cpf = cpf.replace(/[^\d]+/g, '');
     if (cpf == '') return false;
     if (cpf.length != 11 || cpf == "00000000000" || cpf == "11111111111") return false;
-    
     let add = 0; 
     for (let i = 0; i < 9; i++) add += parseInt(cpf.charAt(i)) * (10 - i);
     let rev = 11 - (add % 11); 
     if (rev == 10 || rev == 11) rev = 0; 
     if (rev != parseInt(cpf.charAt(9))) return false;
-    
     add = 0; 
     for (let i = 0; i < 10; i++) add += parseInt(cpf.charAt(i)) * (11 - i);
     rev = 11 - (add % 11); 
     if (rev == 10 || rev == 11) rev = 0; 
     if (rev != parseInt(cpf.charAt(10))) return false;
-    
     return true;
 }
 
 function aplicarMascaraCPF(v) { 
-    return v.replace(/\D/g, '')
-            .replace(/(\d{3})(\d)/, '$1.$2')
-            .replace(/(\d{3})(\d)/, '$1.$2')
-            .replace(/(\d{3})(\d{1,2})/, '$1-$2')
-            .replace(/(-\d{2})\d+?$/, '$1'); 
+    return v.replace(/\D/g, '').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})/, '$1-$2').replace(/(-\d{2})\d+?$/, '$1'); 
 }
 
 function aplicarMascaraTelefone(v) { 
-    return v.replace(/\D/g, '')
-            .replace(/(\d{2})(\d)/, '($1) $2')
-            .replace(/(\d{5})(\d)/, '$1-$2')
-            .replace(/(-\d{4})\d+?$/, '$1'); 
+    return v.replace(/\D/g, '').replace(/(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2').replace(/(-\d{4})\d+?$/, '$1'); 
 }
 
 function ativarMascaras() {
@@ -193,7 +187,7 @@ async function abrirInscricao(evento) {
             </div>`;
     }
     
-    // Observações Gerais
+    // Observações
     if(config.observacoesTexto) {
         area.innerHTML += `
             <div style="background:#f0f9ff; color:#0369a1; padding:15px; border-radius:8px; border-left:4px solid #3b82f6; margin-bottom:20px; font-size:0.95rem;">
@@ -203,65 +197,58 @@ async function abrirInscricao(evento) {
         `;
     }
     
-    // Campos Obrigatórios Fixos
+    // Campos Fixos (CPF, Email)
     area.innerHTML += `
-        <div>
-            <label>CPF <span style="color:red">*</span></label>
-            <input type="text" name="CPF" placeholder="000.000.000-00" required>
-        </div>
-        <div>
-            <label>E-mail <span style="color:red">*</span></label>
-            <input type="email" name="Email" placeholder="seu@email.com" required>
-        </div>`;
+        <div><label>CPF <span style="color:red">*</span></label><input type="text" name="CPF" placeholder="000.000.000-00" required></div>
+        <div><label>E-mail <span style="color:red">*</span></label><input type="email" name="Email" placeholder="seu@email.com" required></div>`;
 
     // Carregar instituições se necessário
     if(config.camposTexto && config.camposTexto.includes('NomeInstituicao') && listaInstituicoesCache.length === 0) {
-        try { 
-            toggleLoader(true,"Carregando..."); 
-            const r = await fetch(`${URL_API}?action=getInstituicoes`); 
-            const j = await r.json(); 
-            if(j.data) listaInstituicoesCache = j.data; 
-        } catch(e){} finally { toggleLoader(false); }
+        try { toggleLoader(true,"Carregando..."); const r = await fetch(`${URL_API}?action=getInstituicoes`); const j = await r.json(); if(j.data) listaInstituicoesCache = j.data; } catch(e){} finally { toggleLoader(false); }
     }
 
-    // Campos Padrão Dinâmicos
+    // Gerar Campos Dinâmicos
     if(config.camposTexto) {
         config.camposTexto.forEach(key => {
             if(CAMPO_DEFS[key]) {
                 const def = CAMPO_DEFS[key];
                 const labelHTML = `<label>${def.label} <span style="color:red">*</span></label>`;
                 
+                // LÓGICA DE INSTITUIÇÃO
                 if (key === 'NomeInstituicao' && listaInstituicoesCache.length > 0) {
                     let opt = '<option value="">Selecione...</option>'; 
                     listaInstituicoesCache.forEach(i => opt += `<option value="${i}">${i}</option>`); 
                     opt += `<option value="Outra">Outra</option>`;
-                    
-                    area.innerHTML += `
-                        <div>
-                            ${labelHTML}
-                            <select name="${key}" required onchange="verificarOutraInst(this)">${opt}</select>
-                            <input type="text" id="input_outra_inst" placeholder="Digite o nome" style="display:none; margin-top:5px;">
-                        </div>`;
-                } else {
-                    area.innerHTML += `
-                        <div>
-                            ${labelHTML}
-                            <input type="${def.type}" name="${key}" placeholder="${def.placeholder||''}" required>
-                        </div>`;
+                    area.innerHTML += `<div>${labelHTML}<select name="${key}" required onchange="verificarOutraInst(this)">${opt}</select><input type="text" id="input_outra_inst" placeholder="Digite o nome" style="display:none; margin-top:5px;"></div>`;
+                }
+                // LÓGICA DE CIDADE (Lista Restrita ou Texto)
+                else if (key === 'Cidade') {
+                    if (config.cidadesPermitidas && config.cidadesPermitidas.length > 0) {
+                        let optCidade = '<option value="">Selecione sua cidade...</option>';
+                        config.cidadesPermitidas.forEach(c => optCidade += `<option value="${c}">${c}</option>`);
+                        area.innerHTML += `<div>${labelHTML}<select name="${key}" required>${optCidade}</select></div>`;
+                    } else {
+                        area.innerHTML += `<div>${labelHTML}<input type="text" name="${key}" placeholder="${def.placeholder}" required></div>`;
+                    }
+                }
+                // LÓGICA DE ESTADO (Lista fixa)
+                else if (key === 'Estado' && def.options) {
+                    let optUF = `<option value="">UF</option>`;
+                    def.options.forEach(uf => optUF += `<option value="${uf}">${uf}</option>`);
+                    area.innerHTML += `<div>${labelHTML}<select name="${key}" required>${optUF}</select></div>`;
+                }
+                // OUTROS CAMPOS
+                else {
+                    area.innerHTML += `<div>${labelHTML}<input type="${def.type}" name="${key}" placeholder="${def.placeholder||''}" required></div>`;
                 }
             }
         });
     }
 
-    // Campos Personalizados Extras
     if(config.camposPersonalizados && config.camposPersonalizados.length > 0) {
         area.innerHTML += `<div style="grid-column:1/-1; margin-top:15px; border-top:1px dashed #ccc; padding-top:10px;"><h4>Perguntas Adicionais</h4></div>`;
         config.camposPersonalizados.forEach(p => {
-            area.innerHTML += `
-                <div>
-                    <label>${p} <span style="color:red">*</span></label>
-                    <input type="text" name="${p}" required placeholder="Responda aqui">
-                </div>`;
+            area.innerHTML += `<div><label>${p} <span style="color:red">*</span></label><input type="text" name="${p}" required placeholder="Responda aqui"></div>`;
         });
     }
 
@@ -272,27 +259,15 @@ async function abrirInscricao(evento) {
     df.classList.add('hidden'); document.getElementById('file-foto').required = false;
     dd.classList.add('hidden'); document.getElementById('file-doc').required = false;
     
-    if(config.arquivos?.foto) { 
-        df.classList.remove('hidden'); 
-        document.getElementById('file-foto').required = true; 
-    }
-    if(config.arquivos?.doc) { 
-        dd.classList.remove('hidden'); 
-        document.getElementById('file-doc').required = true; 
-    }
+    if(config.arquivos?.foto) { df.classList.remove('hidden'); document.getElementById('file-foto').required = true; }
+    if(config.arquivos?.doc) { dd.classList.remove('hidden'); document.getElementById('file-doc').required = true; }
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 window.verificarOutraInst = function(s) { 
     const i = document.getElementById('input_outra_inst'); 
-    if(s.value==='Outra'){ 
-        i.style.display='block'; 
-        i.required=true; 
-    } else { 
-        i.style.display='none'; 
-        i.required=false; 
-    } 
+    if(s.value==='Outra'){ i.style.display='block'; i.required=true; } else { i.style.display='none'; i.required=false; } 
 }
 
 async function enviarInscricao(e) {
@@ -300,75 +275,44 @@ async function enviarInscricao(e) {
     const iCPF = document.querySelector('input[name="CPF"]');
     if(!validarCPF(iCPF.value)) return showError('CPF Inválido', 'CPF inválido.');
     
-    const r = await Swal.fire({ 
-        title: 'Enviar?', 
-        icon: 'warning', 
-        showCancelButton: true, 
-        confirmButtonText: 'Sim' 
-    });
+    const r = await Swal.fire({ title: 'Enviar?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Sim' });
     if(!r.isConfirmed) return;
 
     toggleLoader(true, "Enviando...");
     
     const inputs = document.querySelectorAll('#campos-dinamicos input, #campos-dinamicos select, #campos-dinamicos textarea');
     let dados = {};
-    
     inputs.forEach(i => { 
-        if(i.id !== 'input_outra_inst' || i.style.display !== 'none') {
-            dados[i.name] = i.value; 
-        }
+        if(i.id !== 'input_outra_inst' || i.style.display !== 'none') { dados[i.name] = i.value; }
     });
-    
-    if(dados['NomeInstituicao'] === 'Outra') {
-        dados['NomeInstituicao'] = document.getElementById('input_outra_inst').value;
-    }
+    if(dados['NomeInstituicao'] === 'Outra') { dados['NomeInstituicao'] = document.getElementById('input_outra_inst').value; }
 
     const config = JSON.parse(document.getElementById('form-inscricao').dataset.config);
     const arqs = {};
     
     try {
-        if(config.arquivos?.foto) {
-            arqs.foto = { 
-                data: await comprimirImagem(document.getElementById('file-foto').files[0]), 
-                mime: 'image/jpeg' 
-            };
-        }
-        if(config.arquivos?.doc) { 
-            const f = document.getElementById('file-doc').files[0]; 
-            arqs.doc = { 
-                data: await toBase64(f), 
-                mime: f.type 
-            }; 
-        }
+        if(config.arquivos?.foto) { arqs.foto = { data: await comprimirImagem(document.getElementById('file-foto').files[0]), mime: 'image/jpeg' }; }
+        if(config.arquivos?.doc) { const f = document.getElementById('file-doc').files[0]; arqs.doc = { data: await toBase64(f), mime: f.type }; }
         
         fetch(URL_API, { 
             method: 'POST', 
-            body: JSON.stringify({ 
-                action: 'novaInscricao', 
-                eventoId: document.getElementById('form-inscricao').dataset.idEvento, 
-                campos: dados, 
-                arquivos: arqs 
-            }) 
+            body: JSON.stringify({ action: 'novaInscricao', eventoId: document.getElementById('form-inscricao').dataset.idEvento, campos: dados, arquivos: arqs }) 
         })
         .then(res => res.json())
         .then(j => {
             toggleLoader(false);
             if(j.status === 'success') {
-                showSuccess('Sucesso!', `Chave: <strong>${j.chave}</strong>`, () => { 
-                    document.getElementById('form-inscricao').reset(); 
-                    voltarHome(); 
-                });
+                showSuccess('Sucesso!', `Chave: <strong>${j.chave}</strong>`, () => { document.getElementById('form-inscricao').reset(); voltarHome(); });
             } else {
                 showError('Erro', j.message);
             }
         });
     } catch(err) { 
-        toggleLoader(false); 
-        showError('Erro', 'Falha no envio.'); 
+        toggleLoader(false); showError('Erro', 'Falha no envio.'); 
     }
 }
 
-// --- LÓGICA DE CONSULTA E CARTEIRINHA ---
+// --- CONSULTA E CARTEIRINHA ---
 function consultarChave() {
     const c = document.getElementById('busca-chave').value.trim();
     if(!c) return showError('Atenção', 'Digite a chave.');
@@ -383,10 +327,7 @@ function consultarChave() {
                 const aprovado = situacao.includes('Aprovada') || situacao.includes('Emitida');
                 let cor = aprovado ? '#10b981' : '#f59e0b';
                 
-                // Botão da Ficha removido para o aluno
                 let btnFicha = ''; 
-                
-                // Botão da Carteirinha (Se aprovado e o evento permitir)
                 let btnCarteirinha = '';
                 if (aprovado && j.data.emiteCarteirinha) {
                     btnCarteirinha = `<button class="btn-primary" style="margin-top:10px;" onclick='abrirCarteirinha(${JSON.stringify(j.data.aluno)})'><i class="fa-solid fa-id-card"></i> Carteirinha Digital</button>`;
@@ -406,21 +347,17 @@ function consultarChave() {
 }
 
 function abrirCarteirinha(aluno) {
-    // Preenche os dados
     document.getElementById('cart-nome').innerText = aluno.nome || 'Aluno';
     document.getElementById('cart-inst').innerText = aluno.instituicao || 'Instituição';
     document.getElementById('cart-curso').innerText = aluno.curso || '';
     document.getElementById('cart-mat').innerText = aluno.matricula || '-';
     document.getElementById('cart-validade').innerText = aluno.validade;
     
-    // Tratamento de Imagem (Suporte a Base64 e Link Formatado)
     const img = document.getElementById('cart-img');
-    img.src = 'https://via.placeholder.com/150?text=Carregando...'; // Reset visual
+    img.src = 'https://via.placeholder.com/150?text=Carregando...'; 
     
     if (aluno.foto) {
-        // Se for Base64 (data:image) ou URL comum
         if (aluno.foto.startsWith('data:image') || aluno.foto.startsWith('http')) {
-            // Se for link do Drive e não Base64, formata para lh3
             if (aluno.foto.includes('drive.google.com') && !aluno.foto.startsWith('data:image')) {
                  img.src = formatarUrlDrive(aluno.foto);
             } else {
@@ -429,33 +366,21 @@ function abrirCarteirinha(aluno) {
         } else {
             img.src = 'https://via.placeholder.com/150?text=FOTO';
         }
-        
-        img.onerror = function() {
-            this.src = 'https://via.placeholder.com/150?text=FOTO';
-        };
+        img.onerror = function() { this.src = 'https://via.placeholder.com/150?text=FOTO'; };
     } else {
         img.src = 'https://via.placeholder.com/150?text=FOTO';
     }
 
-    // Abre Modal
     document.getElementById('modal-carteirinha').classList.remove('hidden');
-    // Fecha modal de consulta para limpar a tela
     fecharModalConsulta();
 }
 
-// --- FUNÇÃO HELPER PARA CONVERTER LINK DRIVE ---
 function formatarUrlDrive(url) {
     if (!url) return '';
     let id = '';
-    
     const parts = url.split(/\/d\/|id=/);
-    if (parts.length > 1) {
-        id = parts[1].split(/\/|&/)[0];
-    }
-
-    if (id) {
-        return `https://lh3.googleusercontent.com/d/${id}`;
-    }
+    if (parts.length > 1) id = parts[1].split(/\/|&/)[0];
+    if (id) return `https://lh3.googleusercontent.com/d/${id}`;
     return url; 
 }
 
