@@ -6,7 +6,10 @@ const URL_LOGO = './logo.png';
 const CAMPOS_PADRAO = [
     { key: 'NomeCompleto', label: 'Nome Completo' }, { key: 'CPF', label: 'CPF' },
     { key: 'DataNascimento', label: 'Nascimento' }, { key: 'Telefone', label: 'Celular' }, 
-    { key: 'Endereco', label: 'Endereço' }, { key: 'NomeInstituicao', label: 'Instituição' }, 
+    { key: 'Endereco', label: 'Endereço' },
+    // Novos campos adicionados ao padrão para seleção no relatório
+    { key: 'Cidade', label: 'Cidade' }, { key: 'Estado', label: 'UF' },
+    { key: 'NomeInstituicao', label: 'Instituição' }, 
     { key: 'NomeCurso', label: 'Curso' }, { key: 'PeriodoCurso', label: 'Período' }, 
     { key: 'Matricula', label: 'Matrícula' }, { key: 'Email', label: 'E-mail' }
 ];
@@ -230,7 +233,7 @@ function gerarRelatorioTransporte() {
     }
 
     const todasChaves = new Set();
-    const chavesPrioritarias = ['NomeCompleto', 'NomeInstituicao', 'NomeCurso', 'PeriodoCurso', 'Telefone'];
+    const chavesPrioritarias = ['NomeCompleto', 'NomeInstituicao', 'NomeCurso', 'PeriodoCurso', 'Telefone', 'Cidade', 'Estado'];
     const ignorar = ['linkFoto', 'linkDoc', 'Assinatura'];
 
     alunosFiltrados.forEach(aluno => {
@@ -410,6 +413,7 @@ function abrirEdicaoEvento(evento) {
     
     const checkFicha = config.exigeFicha ? 'checked' : '';
     const checkCart = config.emiteCarteirinha ? 'checked' : '';
+    const cidades = config.cidadesPermitidas ? config.cidadesPermitidas.join(', ') : '';
 
     Swal.fire({
         title: 'Editar Evento',
@@ -418,6 +422,10 @@ function abrirEdicaoEvento(evento) {
                 <div class="modal-full">
                     <label class="swal-label">Prorrogar Data Fim</label>
                     <input type="date" id="edit_fim" class="swal-input" value="${evento.fim ? evento.fim.split('T')[0] : ''}">
+                </div>
+                <div class="modal-full">
+                    <label class="swal-label">Restrição de Cidades (Opcional)</label>
+                    <input type="text" id="edit_cidades" class="swal-input" placeholder="Ex: Natal, Parnamirim" value="${cidades}">
                 </div>
                 <div class="modal-full">
                     <label class="swal-label">Mensagem de Alerta</label>
@@ -435,13 +443,17 @@ function abrirEdicaoEvento(evento) {
                     </label>
                 </div>
             </div>`,
-        width: '500px', showCancelButton: true, confirmButtonText: 'Salvar', confirmButtonColor: '#2563eb',
+        width: '600px', showCancelButton: true, confirmButtonText: 'Salvar', confirmButtonColor: '#2563eb',
         preConfirm: () => { 
+            const cidadesTexto = document.getElementById('edit_cidades').value;
+            const cidadesArr = cidadesTexto ? cidadesTexto.split(',').map(s => s.trim()).filter(s => s) : [];
+
             return { 
                 fim: document.getElementById('edit_fim').value, 
                 msg: document.getElementById('edit_msg').value,
                 exigeFicha: document.getElementById('edit_req_ficha').checked,
-                emiteCarteirinha: document.getElementById('edit_emitir_carteirinha').checked
+                emiteCarteirinha: document.getElementById('edit_emitir_carteirinha').checked,
+                cidadesPermitidas: cidadesArr
             }; 
         }
     }).then((res) => {
@@ -471,7 +483,11 @@ function toggleStatusEvento(id, status) {
 
 function modalNovoEvento() {
     let htmlCampos = '<div class="checkbox-grid">';
-    CAMPOS_PADRAO.forEach(c => htmlCampos += `<label class="checkbox-card"><input type="checkbox" id="check_${c.key}" value="${c.key}" checked> ${c.label}</label>`);
+    CAMPOS_PADRAO.forEach(c => {
+        if(c.key !== 'Cidade' && c.key !== 'Estado') { // Cidade e Estado já são tratados à parte
+             htmlCampos += `<label class="checkbox-card"><input type="checkbox" id="check_${c.key}" value="${c.key}" checked> ${c.label}</label>`;
+        }
+    });
     htmlCampos += '</div>';
 
     Swal.fire({
@@ -488,13 +504,19 @@ function modalNovoEvento() {
                 <div class="modal-full" style="background:#f8fafc; padding:15px; border:1px solid #e2e8f0; border-radius:8px;">
                     <div style="background:#eff6ff; color:#1e40af; padding:8px; border-radius:6px; font-size:0.85rem; margin-bottom:10px; border:1px solid #dbeafe; display:flex; align-items:center; gap:8px;">
                         <i class="fa-solid fa-circle-info"></i>
-                        <strong>CPF e E-mail</strong> são obrigatórios e automáticos.
+                        <strong>CPF, E-mail, Cidade e Estado</strong> são automáticos.
                     </div>
                     
                     <label class="swal-label" style="color:var(--primary);">Configuração do Formulário:</label>
                     ${htmlCampos}
                     <hr style="margin:10px 0; border:0; border-top:1px dashed #ccc;">
                     
+                    <label class="swal-label">Restrição de Cidades (Opcional)</label>
+                    <input type="text" id="swal-cidades" class="swal-input" placeholder="Ex: Natal, Parnamirim (Deixe vazio para liberar todas)">
+                    <small style="color:#64748b;">Se preenchido, o aluno só poderá escolher uma dessas cidades.</small>
+
+                    <hr style="margin:10px 0; border:0; border-top:1px dashed #ccc;">
+
                     <label class="swal-label">Campos Extras</label>
                     <div id="container-extras" style="display:flex; flex-direction:column; gap:5px; margin-bottom:10px;"></div>
                     <button type="button" class="action-btn btn-view" style="width:100%;" id="btn-add-extra">+ Adicionar Pergunta</button>
@@ -551,11 +573,17 @@ function modalNovoEvento() {
                 return false;
             }
 
-            const sels = []; 
-            CAMPOS_PADRAO.forEach(c => { if(document.getElementById(`check_${c.key}`).checked) sels.push(c.key); });
+            const sels = ['Cidade', 'Estado']; // Sempre inclui Cidade e Estado
+            CAMPOS_PADRAO.forEach(c => { 
+                const el = document.getElementById(`check_${c.key}`);
+                if(el && el.checked) sels.push(c.key); 
+            });
             
             const extras = [];
             document.querySelectorAll('.extra-field').forEach(inp => { if(inp.value.trim()) extras.push(inp.value.trim()); });
+            
+            const cidadesTexto = document.getElementById('swal-cidades').value;
+            const cidadesArr = cidadesTexto ? cidadesTexto.split(',').map(s => s.trim()).filter(s => s) : [];
 
             return {
                 titulo: titulo, descricao: document.getElementById('swal-desc').value,
@@ -566,7 +594,8 @@ function modalNovoEvento() {
                     observacoesTexto: document.getElementById('txt_obs_admin').value,
                     arquivos: { foto: document.getElementById('req_foto').checked, doc: document.getElementById('req_doc').checked },
                     exigeFicha: document.getElementById('req_ficha').checked,
-                    emiteCarteirinha: document.getElementById('emitir_carteirinha').checked
+                    emiteCarteirinha: document.getElementById('emitir_carteirinha').checked,
+                    cidadesPermitidas: cidadesArr // NOVA CONFIG
                 }, 
                 status: 'Ativo'
             }
@@ -580,7 +609,7 @@ function modalNovoEvento() {
     });
 }
 
-// --- INSCRIÇÕES ---
+// --- INSCRIÇÕES (MODIFICADO: Carrega eventos para ter config) ---
 function carregarInscricoes() {
     const tbody = document.getElementById('lista-inscricoes-admin');
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Carregando...</td></tr>';
