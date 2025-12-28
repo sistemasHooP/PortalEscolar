@@ -580,7 +580,7 @@ function modalNovoEvento() {
     });
 }
 
-// --- INSCRIÇÕES (MODIFICADO: Carrega eventos para ter config) ---
+// --- INSCRIÇÕES ---
 function carregarInscricoes() {
     const tbody = document.getElementById('lista-inscricoes-admin');
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Carregando...</td></tr>';
@@ -638,6 +638,7 @@ function resetEFiltrar() {
     renderizarProximaPagina();
 }
 
+// --- RENDERIZAÇÃO DA TABELA CORRIGIDA ---
 function renderizarProximaPagina() {
     const tbody = document.getElementById('lista-inscricoes-admin');
     const lote = inscricoesFiltradas.slice((paginaAtual - 1) * ITENS_POR_PAGINA, paginaAtual * ITENS_POR_PAGINA);
@@ -647,7 +648,17 @@ function renderizarProximaPagina() {
         let d = {}; try { d = JSON.parse(ins.dadosJson); } catch(e){}
         const checked = selecionados.has(ins.chave) ? 'checked' : '';
         let btnFicha = ins.link_ficha ? `<a href="${ins.link_ficha}" target="_blank" class="action-btn btn-view" style="background:#059669;" title="Baixar PDF"><i class="fa-solid fa-file-pdf"></i></a>` : `<button class="action-btn" style="background:#6366f1;" onclick="gerarFicha('${ins.chave}')" title="Gerar Ficha"><i class="fa-solid fa-print"></i></button>`;
-        let btnCartAdm = `<button class="action-btn" style="background:#3b82f6;" onclick="imprimirCarteirinhaAdmin('${ins.chave}')" title="Carteirinha"><i class="fa-solid fa-id-card"></i></button>`;
+        
+        // --- CORREÇÃO: Exibe botão de Carteirinha APENAS se o evento permitir ---
+        let btnCartAdm = '';
+        const evento = cacheEventos[ins.eventoId];
+        if (evento) {
+            let config = {};
+            try { config = JSON.parse(evento.config); } catch(e) {}
+            if (config.emiteCarteirinha) {
+                btnCartAdm = `<button class="action-btn" style="background:#3b82f6;" onclick="imprimirCarteirinhaAdmin('${ins.chave}')" title="Carteirinha"><i class="fa-solid fa-id-card"></i></button>`;
+            }
+        }
         
         tbody.innerHTML += `<tr>
             <td><input type="checkbox" class="bulk-check" value="${ins.chave}" ${checked} onclick="toggleCheck('${ins.chave}')"></td>
@@ -754,6 +765,7 @@ function abrirEdicaoInscricao(chave) {
             }).then(res => res.json()).then(json => {
                 if(json.status === 'success') { 
                     Swal.fire({icon: 'success', title: 'Dados Atualizados!'}); 
+                    // Atualiza cache local para refletir na tela sem recarregar tudo
                     let jsonNovo = { ...dados, ...result.value.novosDados }; 
                     inscricao.dadosJson = JSON.stringify(jsonNovo); 
                     resetEFiltrar(); 
@@ -823,6 +835,8 @@ const toBase64 = f => new Promise((r, j) => {
 // --- IMPRESSÃO CARTEIRINHA ADM ---
 function imprimirCarteirinhaAdmin(chave) {
     showLoading('Gerando Carteirinha...');
+    
+    // Busca dados ATUALIZADOS do servidor (para pegar a foto em Base64)
     fetch(`${URL_API}?action=consultarInscricao&chave=${chave}`)
     .then(r => r.json())
     .then(j => {
@@ -831,12 +845,13 @@ function imprimirCarteirinhaAdmin(chave) {
         
         const aluno = j.data.aluno;
         
-        // Tratamento de Imagem
+        // Tratamento da Foto
         let imgSrc = 'https://via.placeholder.com/150?text=FOTO';
         if (aluno.foto) {
-             if (aluno.foto.startsWith('data:image') || aluno.foto.startsWith('http')) {
+            if (aluno.foto.startsWith('data:image') || aluno.foto.startsWith('http')) {
                 // Se for URL do Drive, tenta formatar para visualização direta
                 if (aluno.foto.includes('drive.google.com') && !aluno.foto.startsWith('data:image')) {
+                     // Função auxiliar local para formatar
                      let id = '';
                      const parts = aluno.foto.split(/\/d\/|id=/);
                      if (parts.length > 1) id = parts[1].split(/\/|&/)[0];
@@ -884,6 +899,7 @@ function imprimirCarteirinhaAdmin(chave) {
             printLayer.id = 'print-layer';
             document.body.appendChild(printLayer);
         }
+        
         printLayer.innerHTML = htmlCarteirinha;
         setTimeout(() => window.print(), 500);
     });
