@@ -589,7 +589,8 @@ function abrirEdicaoInscricao(chave) {
     const pedeDoc = configEvento.arquivos && configEvento.arquivos.doc;
     if (pedeFoto || pedeDoc) { formHtml += `<hr style="margin:15px 0; border:0; border-top:1px solid #eee;"><h4 style="margin:0 0 10px 0; color:#1e40af; font-size:0.9rem;">Substituir Arquivos</h4><div style="background:#f8fafc; padding:10px; border-radius:8px;">`; if (pedeFoto) { formHtml += `<label style="font-size:0.85rem; font-weight:600; display:block;">Nova Foto 3x4:</label><input type="file" id="edit_upload_foto" accept="image/*" class="swal-input" style="font-size:0.8rem;">`; } if (pedeDoc) { formHtml += `<label style="font-size:0.85rem; font-weight:600; display:block; margin-top:10px;">Nova Declaração (PDF):</label><input type="file" id="edit_upload_doc" accept="application/pdf" class="swal-input" style="font-size:0.8rem;">`; } formHtml += `</div>`; } formHtml += '</div>';
     Swal.fire({
-        title: 'Editar Dados do Aluno', html: formHtml, width: '600px', showCancelButton: true, confirmButtonText: 'Salvar', confirmButtonColor: '#2563eb',
+        title: 'Editar Dados do Aluno', html: formHtml, width: '800px', // Aumentado para 800px
+        showCancelButton: true, confirmButtonText: 'Salvar', confirmButtonColor: '#2563eb',
         preConfirm: async () => {
             const novosDados = {}; for (const key of Object.keys(dados)) { if (!ignorar.includes(key)) { const el = document.getElementById(`edit_aluno_${key}`); if (el) novosDados[key] = el.value; } }
             const arqs = {}; if (pedeFoto) { const fileFoto = document.getElementById('edit_upload_foto').files[0]; if(fileFoto) arqs.foto = { data: await toBase64(fileFoto), mime: 'image/jpeg' }; } if (pedeDoc) { const fileDoc = document.getElementById('edit_upload_doc').files[0]; if(fileDoc) arqs.doc = { data: await toBase64(fileDoc), mime: 'application/pdf' }; }
@@ -624,16 +625,18 @@ function gerarFicha(chave) {
 
     // 2. Prepara Imagem
     let imgTag = '<div style="width:100px; height:130px; background:#f1f5f9; border:1px solid #cbd5e1; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:10px; text-transform:uppercase; text-align:center;">Sem<br>Foto</div>';
+    let imgSrc = "";
+    
     if (dados.linkFoto) {
         // Tenta usar link direto
-        let src = dados.linkFoto;
-        if (src.includes('drive.google.com') && !src.startsWith('data:')) {
+        imgSrc = dados.linkFoto;
+        if (imgSrc.includes('drive.google.com') && !imgSrc.startsWith('data:')) {
              let id = '';
-             const parts = src.split(/\/d\/|id=/);
+             const parts = imgSrc.split(/\/d\/|id=/);
              if (parts.length > 1) id = parts[1].split(/\/|&/)[0];
-             if(id) src = `https://lh3.googleusercontent.com/d/${id}`;
+             if(id) imgSrc = `https://lh3.googleusercontent.com/d/${id}`;
         }
-        imgTag = `<img src="${src}" style="width:100px; height:130px; object-fit:cover; border:1px solid #333; display:block;">`;
+        imgTag = `<img src="${imgSrc}" style="width:100px; height:130px; object-fit:cover; border:1px solid #333; display:block;">`;
     }
 
     // 3. Monta HTML da Ficha
@@ -695,7 +698,21 @@ function gerarFicha(chave) {
         resetEFiltrar();
     }
 
-    setTimeout(() => window.print(), 500);
+    // --- CORREÇÃO: Aguarda imagem carregar ---
+    const imgEl = printLayer.querySelector('img');
+    if (imgEl && imgSrc) {
+        imgEl.onload = () => { setTimeout(() => window.print(), 200); };
+        imgEl.onerror = () => { window.print(); }; // Imprime mesmo com erro
+        // Timeout de segurança caso imagem trave
+        setTimeout(() => { 
+             // Verifica se a janela de impressão já abriu (aproximado)
+             // Na verdade, apenas chama o print se o onload não tiver chamado
+             if(imgEl.complete) return; // Já carregou
+             window.print(); 
+        }, 2000);
+    } else {
+        setTimeout(() => window.print(), 500);
+    }
 }
 
 function mudarStatus(chave) {
