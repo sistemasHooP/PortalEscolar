@@ -118,7 +118,7 @@ body {
         top: 0; left: 0; 
         flex-direction: column; 
         justify-content: flex-start; 
-        padding-top: 2rem; 
+        padding-top: 3.5rem; /* Aumentado para descer o menu */
         z-index: 100;
     }
     .admin-content { 
@@ -131,7 +131,7 @@ body {
 .admin-nav {
     background: #1e293b;
     color: white;
-    padding: 1rem;
+    padding: 1.5rem; /* Aumentado o padding geral */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -140,7 +140,7 @@ body {
 .nav-brand {
     font-size: 1.3rem;
     font-weight: bold;
-    margin-bottom: 30px;
+    margin-bottom: 40px; /* Mais espaço abaixo da logo */
     display: none;
     text-align: center;
 }
@@ -191,15 +191,21 @@ body {
 
 /* --- CONTEÚDO --- */
 .admin-content {
-    padding: 2rem;
-    padding-bottom: 100px; /* Espaço para barra flutuante */
+    padding: 3.5rem 2.5rem; /* Muito mais espaço no topo e laterais */
+    padding-bottom: 120px; /* Espaço para barra flutuante */
+}
+
+@media(max-width: 768px) {
+    .admin-content {
+        padding: 2rem 1.5rem; /* Ajuste para mobile, mas ainda espaçoso */
+    }
 }
 
 .header-action {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
+    margin-bottom: 30px;
     flex-wrap: wrap;
     gap: 15px;
 }
@@ -276,12 +282,11 @@ body {
     padding: 0 !important;
 }
 
-/* Ajuste de largura para aproveitar mais a tela no PC - REMOVIDO min-width fixo */
+/* Ajuste de largura para aproveitar mais a tela no PC */
 @media(min-width: 992px) {
     div:where(.swal2-container) div:where(.swal2-popup) {
         width: auto !important;
-        max-width: 900px !important;
-        /* Removido min-width: 600px que quebrava o loading */
+        max-width: 900px !important; 
     }
 }
 
