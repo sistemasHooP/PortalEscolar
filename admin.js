@@ -17,9 +17,10 @@ const CAMPOS_PADRAO = [
 let mapaEventos = {}; 
 let cacheEventos = {}; 
 let chartEventosInstance = null; let chartStatusInstance = null;
-let todasInscricoes = [];      
+let todasInscricoes = [];       
 let inscricoesFiltradas = []; 
-let dashboardData = []; 
+let dashboardData = []; // Dados brutos carregados no dashboard
+let dashboardDataFiltrados = []; // Dados filtrados pelo select
 let paginaAtual = 1;
 const ITENS_POR_PAGINA = 50;
 let selecionados = new Set(); 
@@ -72,7 +73,7 @@ function realizarLogin(e) {
 // --- LOGOUT REDIRECT ---
 function logout() { 
     sessionStorage.removeItem('admin_token'); 
-    window.location.href = 'https://sistemashoop.github.io/PortalEscolar/'; 
+    window.location.href = 'index.html'; // Volta para a tela inicial pública
 }
 
 function switchTab(tabId) {
@@ -81,9 +82,11 @@ function switchTab(tabId) {
     document.getElementById(tabId).classList.remove('hidden');
     event.currentTarget.classList.add('active');
     aplicarEstilosVisuais();
+    
     if(tabId === 'tab-dashboard') carregarDashboard();
     if(tabId === 'tab-eventos') carregarEventosAdmin();
     if(tabId === 'tab-inscricoes') carregarInscricoes();
+    if(tabId === 'tab-relatorios') carregarAbaRelatorios();
     if(tabId === 'tab-config') {
         carregarInstituicoes();
         carregarConfigDrive(); 
@@ -136,78 +139,164 @@ function aplicarEstilosVisuais() {
     }
 }
 
-// --- DASHBOARD ---
+// --- DASHBOARD INTELIGENTE ---
 function carregarDashboard() {
     const token = sessionStorage.getItem('admin_token');
+    
+    // Mostra loading discreto se for refresh manual
+    const btnRefresh = document.querySelector('#tab-dashboard .btn-refresh i');
+    if(btnRefresh) btnRefresh.classList.add('fa-spin');
+
     Promise.all([
         fetch(`${URL_API}?action=getTodosEventos`).then(r => r.json()),
         fetch(`${URL_API}?action=getInscricoesAdmin&token=${token}`).then(r => r.json())
     ]).then(([jsonEventos, jsonInscricoes]) => {
+        if(btnRefresh) btnRefresh.classList.remove('fa-spin');
+
         mapaEventos = {}; 
         cacheEventos = {}; 
         if(jsonEventos.data) jsonEventos.data.forEach(ev => {
             mapaEventos[ev.id] = ev.titulo;
             cacheEventos[ev.id] = ev; 
         });
-        dashboardData = jsonInscricoes.data || [];
-        atualizarSelectsRelatorio(jsonEventos.data || [], dashboardData);
-        atualizarEstatisticasDashboard(dashboardData, "Visão Geral (Todos os Eventos)");
-
-        const contagemEventos = {}, contagemStatus = {};
-        dashboardData.forEach(i => {
-            const nome = mapaEventos[i.eventoId] || 'Outro';
-            contagemEventos[nome] = (contagemEventos[nome] || 0) + 1;
-            contagemStatus[i.status] = (contagemStatus[i.status] || 0) + 1;
-        });
-        renderizarGraficos(contagemEventos, contagemStatus);
         
-        const selEvento = document.getElementById('relatorio-evento');
-        selEvento.onchange = () => {
-            const eventoId = selEvento.value;
-            if (eventoId) {
-                const dadosFiltrados = dashboardData.filter(i => String(i.eventoId) === String(eventoId));
-                atualizarEstatisticasDashboard(dadosFiltrados, mapaEventos[eventoId]);
-            } else {
-                atualizarEstatisticasDashboard(dashboardData, "Visão Geral (Todos os Eventos)");
-            }
-        };
+        dashboardData = jsonInscricoes.data || [];
+        
+        // Popula o Select de Filtro do Dashboard
+        const select = document.getElementById('dash-filtro-evento');
+        const valorAtual = select.value; // Tenta manter a seleção atual
+        select.innerHTML = '<option value="">Todos os Eventos</option>';
+        jsonEventos.data.forEach(ev => {
+            select.innerHTML += `<option value="${ev.id}">${ev.titulo}</option>`;
+        });
+        if(valorAtual) select.value = valorAtual;
+
+        // Executa a filtragem inicial (ou mantém a atual)
+        filtrarDashboard();
     });
 }
 
-function atualizarEstatisticasDashboard(dados, titulo) {
-    document.getElementById('stat-total').innerText = dados.length;
-    document.getElementById('stat-aprovados').innerText = dados.filter(i => i.status.includes('Aprovada') || i.status.includes('Emitida')).length;
-    document.getElementById('stat-pendentes').innerText = dados.filter(i => i.status === 'Pendente').length;
-    let banner = document.getElementById('dashboard-banner');
-    if(!banner) {
-        banner = document.createElement('div');
-        banner.id = 'dashboard-banner';
-        banner.style.cssText = "background:linear-gradient(to right, #1e293b, #334155); color:white; padding:15px; border-radius:12px; margin-bottom:20px; box-shadow:0 4px 6px rgba(0,0,0,0.1); display:flex; align-items:center; justify-content:space-between;";
-        const container = document.querySelector('.stats-grid');
-        container.parentNode.insertBefore(banner, container);
+function filtrarDashboard() {
+    const eventoId = document.getElementById('dash-filtro-evento').value;
+    
+    // Se evento selecionado, filtra. Se não, usa todos.
+    if(eventoId) {
+        dashboardDataFiltrados = dashboardData.filter(i => String(i.eventoId) === String(eventoId));
+    } else {
+        dashboardDataFiltrados = [...dashboardData];
     }
-    banner.innerHTML = `<div><small style="text-transform:uppercase; opacity:0.8; font-size:0.75rem;">Painel de Controle</small><h3 style="margin:0; font-size:1.2rem;">${titulo}</h3></div><div style="font-size:1.5rem; background:rgba(255,255,255,0.1); width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:50%;"><i class="fa-solid fa-chart-simple"></i></div>`;
+
+    const tituloGrafico = eventoId ? mapaEventos[eventoId] : "Visão Geral (Todos)";
+    
+    atualizarEstatisticasDashboard(dashboardDataFiltrados);
+    atualizarGraficos(dashboardDataFiltrados, tituloGrafico);
 }
 
-function renderizarGraficos(dadosEventos, dadosStatus) {
+function atualizarEstatisticasDashboard(dados) {
+    // Animação simples nos números
+    const total = dados.length;
+    const aprovados = dados.filter(i => i.status.includes('Aprovada') || i.status.includes('Emitida')).length;
+    const pendentes = dados.filter(i => i.status === 'Pendente').length;
+
+    document.getElementById('stat-total').innerText = total;
+    document.getElementById('stat-aprovados').innerText = aprovados;
+    document.getElementById('stat-pendentes').innerText = pendentes;
+}
+
+function atualizarGraficos(dados, tituloContexto) {
+    const ctxEventos = document.getElementById('chartEventos').getContext('2d');
+    const ctxStatus = document.getElementById('chartStatus').getContext('2d');
+
+    // 1. Gráfico de Eventos
+    // Se estiver vendo "Todos", mostra barras por evento.
+    // Se estiver vendo "Um Evento", mostra talvez histórico por data (simplificação: vamos manter barras mas terá apenas 1 barra se for especifico, ou podemos ocultar).
+    
+    const contagemEventos = {};
+    const contagemStatus = {};
+
+    dados.forEach(i => {
+        const nomeEvento = mapaEventos[i.eventoId] || `Evento #${i.eventoId}`;
+        contagemEventos[nomeEvento] = (contagemEventos[nomeEvento] || 0) + 1;
+        contagemStatus[i.status] = (contagemStatus[i.status] || 0) + 1;
+    });
+
     if(chartEventosInstance) chartEventosInstance.destroy();
-    chartEventosInstance = new Chart(document.getElementById('chartEventos').getContext('2d'), {
-        type: 'bar', data: { labels: Object.keys(dadosEventos), datasets: [{ label: 'Inscritos', data: Object.values(dadosEventos), backgroundColor: '#3b82f6', borderRadius: 6 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    chartEventosInstance = new Chart(ctxEventos, {
+        type: 'bar', 
+        data: { 
+            labels: Object.keys(contagemEventos), 
+            datasets: [{ 
+                label: 'Inscritos', 
+                data: Object.values(contagemEventos), 
+                backgroundColor: '#3b82f6', 
+                borderRadius: 6 
+            }] 
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { 
+                legend: { display: false },
+                title: { display: true, text: 'Distribuição' }
+            } 
+        }
     });
+
+    // 2. Gráfico de Status (Rosca)
     if(chartStatusInstance) chartStatusInstance.destroy();
-    chartStatusInstance = new Chart(document.getElementById('chartStatus').getContext('2d'), {
-        type: 'doughnut', data: { labels: Object.keys(dadosStatus), datasets: [{ data: Object.values(dadosStatus), backgroundColor: ['#f59e0b', '#10b981', '#ef4444', '#3b82f6'], borderWidth: 0 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+    chartStatusInstance = new Chart(ctxStatus, {
+        type: 'doughnut', 
+        data: { 
+            labels: Object.keys(contagemStatus), 
+            datasets: [{ 
+                data: Object.values(contagemStatus), 
+                backgroundColor: ['#f59e0b', '#10b981', '#ef4444', '#3b82f6', '#6366f1'], 
+                borderWidth: 0 
+            }] 
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { 
+                legend: { position: 'right' },
+                title: { display: true, text: tituloContexto }
+            } 
+        }
     });
 }
 
-function atualizarSelectsRelatorio(eventos, inscricoes) {
+// --- ABA RELATÓRIOS (NOVO) ---
+function carregarAbaRelatorios() {
+    const token = sessionStorage.getItem('admin_token');
+    
+    // Reutiliza os dados do dashboard se já carregados, ou busca novos
+    if(Object.keys(mapaEventos).length === 0) {
+        showLoading('Carregando dados...');
+        Promise.all([
+            fetch(`${URL_API}?action=getTodosEventos`).then(r => r.json()),
+            fetch(`${URL_API}?action=getInscricoesAdmin&token=${token}`).then(r => r.json())
+        ]).then(([jsonEventos, jsonInscricoes]) => {
+            Swal.close();
+            if(jsonEventos.data) jsonEventos.data.forEach(ev => {
+                mapaEventos[ev.id] = ev.titulo;
+                cacheEventos[ev.id] = ev; 
+            });
+            dashboardData = jsonInscricoes.data || [];
+            popularSelectsRelatorio(jsonEventos.data || [], dashboardData);
+        });
+    } else {
+        // Usa dados em memória
+        // Precisamos reconstruir a lista de eventos para o select pois é outra aba
+        // Como o JS é o mesmo, podemos ter salvo eventos em cacheEventos
+        const eventosArray = Object.values(cacheEventos);
+        popularSelectsRelatorio(eventosArray, dashboardData);
+    }
+}
+
+function popularSelectsRelatorio(eventos, inscricoes) {
     const selEvento = document.getElementById('relatorio-evento');
-    const atual = selEvento.value;
-    selEvento.innerHTML = '<option value="">Todos os Eventos</option>';
+    selEvento.innerHTML = '<option value="">Todos os Eventos (Geral)</option>';
     eventos.forEach(ev => selEvento.innerHTML += `<option value="${ev.id}">${ev.titulo}</option>`);
-    if(atual) selEvento.value = atual;
     
     let instituicoes = new Set();
     inscricoes.forEach(ins => { try { instituicoes.add(JSON.parse(ins.dadosJson).NomeInstituicao); } catch(e){} });
@@ -880,13 +969,13 @@ function imprimirCarteirinhaAdmin(chave) {
             if (aluno.foto.startsWith('data:image') || aluno.foto.startsWith('http')) {
                 // Se for URL do Drive, tenta formatar para visualização direta
                 if (aluno.foto.includes('drive.google.com') && !aluno.foto.startsWith('data:image')) {
-                     // Função auxiliar local para formatar
-                     let id = '';
-                     const parts = aluno.foto.split(/\/d\/|id=/);
-                     if (parts.length > 1) id = parts[1].split(/\/|&/)[0];
-                     imgSrc = id ? `https://lh3.googleusercontent.com/d/${id}` : aluno.foto;
+                      // Função auxiliar local para formatar
+                      let id = '';
+                      const parts = aluno.foto.split(/\/d\/|id=/);
+                      if (parts.length > 1) id = parts[1].split(/\/|&/)[0];
+                      imgSrc = id ? `https://lh3.googleusercontent.com/d/${id}` : aluno.foto;
                 } else {
-                     imgSrc = aluno.foto;
+                      imgSrc = aluno.foto;
                 }
             }
         }
