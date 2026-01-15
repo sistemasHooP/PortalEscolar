@@ -125,6 +125,7 @@ main {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    width: 100%; /* Garante largura total */
 }
 
 .section-title h2 {
@@ -137,6 +138,10 @@ main {
     display: flex;
     align-items: center;
     gap: 10px;
+    /* Ajustes para não quebrar layout */
+    max-width: 100%;
+    flex-wrap: wrap; 
+    line-height: 1.4;
 }
 
 .title-bar {
@@ -165,7 +170,8 @@ main {
     padding: 20px;
     transition: all 0.3s ease;
     border: 1px solid rgba(0,0,0,0.05);
-    position: relative;
+    /* Removido position: relative do card para o status não flutuar solto se usasse absolute */
+    position: relative; 
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -177,14 +183,16 @@ main {
     border-color: var(--secondary);
 }
 
+/* CORREÇÃO: Status agora faz parte do fluxo, não fica por cima */
 .card-status {
-    position: absolute;
-    top: 15px; right: 15px;
-    font-size: 0.75rem;
+    align-self: flex-start; /* Alinha à esquerda */
+    font-size: 0.7rem;
     font-weight: 700;
     padding: 4px 10px;
     border-radius: 20px;
     text-transform: uppercase;
+    margin-bottom: 10px; /* Empurra o título para baixo */
+    display: inline-block;
 }
 .status-ativo { background: #dcfce7; color: #166534; }
 
@@ -192,7 +200,8 @@ main {
     font-size: 1.15rem;
     color: var(--primary-dark);
     margin-bottom: 10px;
-    padding-right: 60px; /* Espaço para o status */
+    line-height: 1.3;
+    /* Removido padding-right excessivo pois o status não flutua mais */
 }
 
 .card-desc {
