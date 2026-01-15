@@ -17,9 +17,72 @@ const CAMPO_DEFS = {
 };
 
 let listaInstituicoesCache = [];
+let configSistemaCache = null; // Cache para guardar nome, logo, etc.
 
 // Inicialização
-document.addEventListener('DOMContentLoaded', () => { carregarEventos(); });
+document.addEventListener('DOMContentLoaded', () => { 
+    carregarConfiguracoesVisuais();
+    carregarEventos(); 
+});
+
+// --- NOVO: CARREGAR CONFIGURAÇÕES VISUAIS (CAPA, LOGO, NOME) ---
+function carregarConfiguracoesVisuais() {
+    // Tenta pegar do SessionStorage primeiro para não piscar
+    const cached = sessionStorage.getItem('sys_config');
+    if(cached) {
+        aplicarConfiguracoes(JSON.parse(cached));
+    }
+
+    fetch(`${URL_API}?action=getPublicConfig`)
+        .then(res => res.json())
+        .then(json => {
+            if(json.status === 'success') {
+                sessionStorage.setItem('sys_config', JSON.stringify(json.config));
+                configSistemaCache = json.config;
+                aplicarConfiguracoes(json.config);
+            }
+        })
+        .catch(e => console.error("Erro config visual:", e));
+}
+
+function aplicarConfiguracoes(config) {
+    if(!config) return;
+
+    // 1. Textos
+    if(config.nomeSistema) {
+        document.getElementById('sys-name').innerText = config.nomeSistema;
+        document.getElementById('footer-sys-name').innerText = config.nomeSistema;
+        document.title = config.nomeSistema;
+        
+        // Nome na carteirinha digital
+        const cartSys = document.getElementById('cart-sys-name');
+        if(cartSys) cartSys.innerText = config.nomeSistema.toUpperCase();
+    }
+    
+    if(config.fraseMotivacional) {
+        document.getElementById('sys-phrase').innerText = config.fraseMotivacional;
+    }
+
+    // 2. Logo (Hero, Loader e Carteirinha)
+    if(config.urlLogo && config.urlLogo.trim() !== "") {
+        const logoUrl = formatarUrlDrive(config.urlLogo); // Helper para garantir link direto
+        
+        const logoEls = ['sys-logo', 'loader-img-tag', 'cart-logo-img'];
+        logoEls.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) { 
+                el.src = logoUrl; 
+                el.style.display = 'block'; 
+            }
+        });
+    }
+
+    // 3. Capa (Background Hero)
+    if(config.urlCapa && config.urlCapa.trim() !== "") {
+        const capaUrl = formatarUrlDrive(config.urlCapa);
+        document.getElementById('hero-section').style.backgroundImage = `url('${capaUrl}')`;
+    }
+}
 
 // --- UTILS UI ---
 function toggleLoader(show, msg = "Processando...") {
@@ -38,7 +101,8 @@ function showSuccess(titulo, html, callback) {
         title: titulo, 
         html: html, 
         confirmButtonColor: '#2563eb', 
-        confirmButtonText: 'OK' 
+        confirmButtonText: 'OK',
+        allowOutsideClick: false
     }).then(() => { if(callback) callback(); });
 }
 
@@ -106,7 +170,23 @@ function ativarMascaras() {
     }
 }
 
-// --- IMAGEM ---
+// --- UPLOAD PREVIEW (NOVO) ---
+// Altera o ícone e cor do label quando um arquivo é selecionado
+function previewArquivo(input) {
+    const label = input.parentElement.querySelector('label');
+    const statusIcon = label.querySelector('.status-icon');
+    
+    if(input.files && input.files[0]) {
+        label.style.borderColor = '#10b981'; // Verde
+        label.style.backgroundColor = '#ecfdf5';
+        statusIcon.innerHTML = '<i class="fa-solid fa-circle-check" style="color:#10b981"></i>';
+    } else {
+        label.style.borderColor = '#e2e8f0';
+        label.style.backgroundColor = 'white';
+        statusIcon.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i>';
+    }
+}
+
 async function comprimirImagem(file, maxWidth = 1000, quality = 0.7) {
     if(file.type === 'application/pdf') return toBase64(file);
     return new Promise((resolve, reject) => {
@@ -132,7 +212,7 @@ async function comprimirImagem(file, maxWidth = 1000, quality = 0.7) {
 
 // --- LÓGICA PRINCIPAL ---
 function carregarEventos() {
-    toggleLoader(true, "Buscando eventos...");
+    toggleLoader(true, "Carregando eventos...");
     fetch(`${URL_API}?action=getEventosAtivos`)
         .then(res => res.json())
         .then(json => {
@@ -141,31 +221,45 @@ function carregarEventos() {
             c.innerHTML = '';
             
             if (!json.data || json.data.length === 0) { 
-                c.innerHTML = `<div style="text-align:center; padding:2rem; color:#64748b;"><h3>Nenhum evento aberto.</h3></div>`; 
+                c.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:3rem; color:#64748b; background:white; border-radius:16px;">
+                    <i class="fa-regular fa-calendar-xmark" style="font-size:3rem; margin-bottom:15px; opacity:0.5;"></i>
+                    <h3>Nenhum evento disponível no momento.</h3>
+                    <p>Fique atento às próximas datas!</p>
+                </div>`; 
                 return; 
             }
             
+            // RENDERIZAÇÃO NOVO DESIGN (ACTION CARDS)
             json.data.forEach(ev => {
                 c.innerHTML += `
-                    <div class="card fade-in">
-                        <h3>${ev.titulo}</h3>
-                        <p>${ev.descricao}</p>
-                        <small>📅 Até: ${formatarData(ev.fim)}</small>
-                        <button class="btn-primary" onclick='abrirInscricao(${JSON.stringify(ev)})'>
-                            Inscrever-se <i class="fa-solid fa-arrow-right"></i>
+                    <div class="card-event fade-in">
+                        <div class="card-status status-ativo">Inscrições Abertas</div>
+                        
+                        <h3 class="card-title">${ev.titulo}</h3>
+                        
+                        <div class="card-dates">
+                            <i class="fa-regular fa-calendar-days"></i> Até ${formatarData(ev.fim)}
+                        </div>
+                        
+                        <p class="card-desc">${ev.descricao}</p>
+                        
+                        <button class="btn-inscrever" onclick='abrirInscricao(${JSON.stringify(ev)})'>
+                            <span>Inscrever-se Agora</span>
+                            <i class="fa-solid fa-arrow-right"></i>
                         </button>
                     </div>`;
             });
         })
         .catch(() => { 
             toggleLoader(false); 
-            document.getElementById('cards-container').innerHTML = '<p style="text-align:center;color:red">Erro de conexão.</p>'; 
+            document.getElementById('cards-container').innerHTML = '<div style="grid-column:1/-1; text-align:center; color:red; padding:20px;">Erro de conexão. Verifique sua internet.</div>'; 
         });
 }
 
 async function abrirInscricao(evento) {
     document.getElementById('lista-eventos').classList.add('hidden'); 
     document.getElementById('fab-consulta').classList.add('hidden'); 
+    document.getElementById('hero-section').classList.add('hidden'); // Oculta Hero para focar no form
     document.getElementById('area-inscricao').classList.remove('hidden');
     
     document.getElementById('titulo-evento').innerText = evento.titulo; 
@@ -175,36 +269,42 @@ async function abrirInscricao(evento) {
     try { config = typeof evento.config === 'string' ? JSON.parse(evento.config) : evento.config; } catch(e) {}
     document.getElementById('form-inscricao').dataset.config = JSON.stringify(config);
 
-    const area = document.getElementById('campos-dinamicos'); 
-    area.innerHTML = '';
+    const areaCampos = document.getElementById('campos-dinamicos'); 
+    areaCampos.innerHTML = '';
     
-    // Alerta de topo
+    const areaAvisos = document.getElementById('area-avisos');
+    areaAvisos.innerHTML = '';
+    
+    // Alerta de topo (Nova Estilização)
     if(config.mensagemAlerta) {
-        area.innerHTML += `
-            <div class="info-banner">
-                <i class="fa-solid fa-circle-exclamation"></i> 
-                <div><strong>Aviso:</strong><br>${config.mensagemAlerta}</div>
+        areaAvisos.innerHTML += `
+            <div class="info-banner" style="background-color:#fff7ed; border-left-color:#f97316; color:#9a3412;">
+                <i class="fa-solid fa-triangle-exclamation"></i> 
+                <div><strong>Atenção:</strong> ${config.mensagemAlerta}</div>
             </div>`;
     }
     
     // Observações
     if(config.observacoesTexto) {
-        area.innerHTML += `
-            <div style="background:#f0f9ff; color:#0369a1; padding:15px; border-radius:8px; border-left:4px solid #3b82f6; margin-bottom:20px; font-size:0.95rem;">
-                <h4 style="margin:0 0 5px 0; color:#1e40af;"><i class="fa-solid fa-circle-info"></i> Informações Importantes:</h4>
-                <p style="margin:0; line-height:1.5;">${config.observacoesTexto.replace(/\n/g, '<br>')}</p>
+        areaAvisos.innerHTML += `
+            <div class="info-banner" style="background-color:#eff6ff; border-left-color:#2563eb; color:#1e40af;">
+                <i class="fa-solid fa-circle-info"></i>
+                <div>
+                    <strong>Instruções:</strong><br>
+                    ${config.observacoesTexto.replace(/\n/g, '<br>')}
+                </div>
             </div>
         `;
     }
     
     // Campos Fixos (CPF, Email)
-    area.innerHTML += `
+    areaCampos.innerHTML += `
         <div><label>CPF <span style="color:red">*</span></label><input type="text" name="CPF" placeholder="000.000.000-00" required></div>
         <div><label>E-mail <span style="color:red">*</span></label><input type="email" name="Email" placeholder="seu@email.com" required></div>`;
 
     // Carregar instituições se necessário
     if(config.camposTexto && config.camposTexto.includes('NomeInstituicao') && listaInstituicoesCache.length === 0) {
-        try { toggleLoader(true,"Carregando..."); const r = await fetch(`${URL_API}?action=getInstituicoes`); const j = await r.json(); if(j.data) listaInstituicoesCache = j.data; } catch(e){} finally { toggleLoader(false); }
+        try { toggleLoader(true,"Carregando lista..."); const r = await fetch(`${URL_API}?action=getInstituicoes`); const j = await r.json(); if(j.data) listaInstituicoesCache = j.data; } catch(e){} finally { toggleLoader(false); }
     }
 
     // Gerar Campos Dinâmicos
@@ -218,46 +318,46 @@ async function abrirInscricao(evento) {
                 if (key === 'NomeInstituicao' && listaInstituicoesCache.length > 0) {
                     let opt = '<option value="">Selecione...</option>'; 
                     listaInstituicoesCache.forEach(i => opt += `<option value="${i}">${i}</option>`); 
-                    opt += `<option value="Outra">Outra</option>`;
-                    area.innerHTML += `<div>${labelHTML}<select name="${key}" required onchange="verificarOutraInst(this)">${opt}</select><input type="text" id="input_outra_inst" placeholder="Digite o nome" style="display:none; margin-top:5px;"></div>`;
+                    opt += `<option value="Outra">Outra (Digitar nome)</option>`;
+                    areaCampos.innerHTML += `<div>${labelHTML}<select name="${key}" required onchange="verificarOutraInst(this)">${opt}</select><input type="text" id="input_outra_inst" placeholder="Digite o nome da instituição" style="display:none; margin-top:10px;"></div>`;
                 }
-                // LÓGICA DE CIDADE (Lista Restrita ou Texto)
+                // LÓGICA DE CIDADE
                 else if (key === 'Cidade') {
                     if (config.cidadesPermitidas && config.cidadesPermitidas.length > 0) {
                         let optCidade = '<option value="">Selecione sua cidade...</option>';
                         config.cidadesPermitidas.forEach(c => optCidade += `<option value="${c}">${c}</option>`);
-                        area.innerHTML += `<div>${labelHTML}<select name="${key}" required>${optCidade}</select></div>`;
+                        areaCampos.innerHTML += `<div>${labelHTML}<select name="${key}" required>${optCidade}</select></div>`;
                     } else {
-                        area.innerHTML += `<div>${labelHTML}<input type="text" name="${key}" placeholder="${def.placeholder}" required></div>`;
+                        areaCampos.innerHTML += `<div>${labelHTML}<input type="text" name="${key}" placeholder="${def.placeholder}" required></div>`;
                     }
                 }
-                // LÓGICA DE ESTADO (Lista fixa)
+                // LÓGICA DE ESTADO
                 else if (key === 'Estado' && def.options) {
                     let optUF = `<option value="">UF</option>`;
                     def.options.forEach(uf => optUF += `<option value="${uf}">${uf}</option>`);
-                    area.innerHTML += `<div>${labelHTML}<select name="${key}" required>${optUF}</select></div>`;
+                    areaCampos.innerHTML += `<div>${labelHTML}<select name="${key}" required>${optUF}</select></div>`;
                 }
                 // OUTROS CAMPOS
                 else {
-                    area.innerHTML += `<div>${labelHTML}<input type="${def.type}" name="${key}" placeholder="${def.placeholder||''}" required></div>`;
+                    areaCampos.innerHTML += `<div>${labelHTML}<input type="${def.type}" name="${key}" placeholder="${def.placeholder||''}" required></div>`;
                 }
             }
         });
     }
 
     if(config.camposPersonalizados && config.camposPersonalizados.length > 0) {
-        area.innerHTML += `<div style="grid-column:1/-1; margin-top:15px; border-top:1px dashed #ccc; padding-top:10px;"><h4>Perguntas Adicionais</h4></div>`;
+        areaCampos.innerHTML += `<div style="grid-column:1/-1; margin-top:20px; padding-top:10px; border-top:1px dashed #e2e8f0;"><h4 style="color:var(--primary); font-size:1rem; margin-bottom:15px;">Perguntas Adicionais</h4></div>`;
         config.camposPersonalizados.forEach(p => {
-            area.innerHTML += `<div><label>${p} <span style="color:red">*</span></label><input type="text" name="${p}" required placeholder="Responda aqui"></div>`;
+            areaCampos.innerHTML += `<div><label>${p} <span style="color:red">*</span></label><input type="text" name="${p}" required placeholder="Sua resposta"></div>`;
         });
     }
 
     ativarMascaras();
     
-    // Uploads
+    // Reset Uploads Visuals
     const df = document.getElementById('div-upload-foto'), dd = document.getElementById('div-upload-doc');
-    df.classList.add('hidden'); document.getElementById('file-foto').required = false;
-    dd.classList.add('hidden'); document.getElementById('file-doc').required = false;
+    df.classList.add('hidden'); document.getElementById('file-foto').required = false; previewArquivo({parentElement: df, files: []});
+    dd.classList.add('hidden'); document.getElementById('file-doc').required = false; previewArquivo({parentElement: dd, files: []});
     
     if(config.arquivos?.foto) { df.classList.remove('hidden'); document.getElementById('file-foto').required = true; }
     if(config.arquivos?.doc) { dd.classList.remove('hidden'); document.getElementById('file-doc').required = true; }
@@ -267,18 +367,25 @@ async function abrirInscricao(evento) {
 
 window.verificarOutraInst = function(s) { 
     const i = document.getElementById('input_outra_inst'); 
-    if(s.value==='Outra'){ i.style.display='block'; i.required=true; } else { i.style.display='none'; i.required=false; } 
+    if(s.value==='Outra'){ i.style.display='block'; i.required=true; i.focus(); } else { i.style.display='none'; i.required=false; } 
 }
 
 async function enviarInscricao(e) {
     e.preventDefault();
     const iCPF = document.querySelector('input[name="CPF"]');
-    if(!validarCPF(iCPF.value)) return showError('CPF Inválido', 'CPF inválido.');
+    if(!validarCPF(iCPF.value)) return showError('CPF Inválido', 'Por favor, verifique o CPF digitado.');
     
-    const r = await Swal.fire({ title: 'Enviar?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Sim' });
+    const r = await Swal.fire({ 
+        title: 'Confirmar envio?', 
+        text: 'Verifique se todos os dados estão corretos.',
+        icon: 'question', 
+        showCancelButton: true, 
+        confirmButtonText: 'Sim, Enviar',
+        confirmButtonColor: '#2563eb'
+    });
     if(!r.isConfirmed) return;
 
-    toggleLoader(true, "Enviando...");
+    toggleLoader(true, "Enviando seus dados...");
     
     const inputs = document.querySelectorAll('#campos-dinamicos input, #campos-dinamicos select, #campos-dinamicos textarea');
     let dados = {};
@@ -302,22 +409,30 @@ async function enviarInscricao(e) {
         .then(j => {
             toggleLoader(false);
             if(j.status === 'success') {
-                showSuccess('Sucesso!', `Chave: <strong>${j.chave}</strong>`, () => { document.getElementById('form-inscricao').reset(); voltarHome(); });
+                showSuccess('Inscrição Realizada!', `
+                    <div style="text-align:center">
+                        <p>Anote sua chave de acesso:</p>
+                        <h2 style="color:#2563eb; font-size:2rem; margin:10px 0; letter-spacing:2px; font-family:monospace;">${j.chave}</h2>
+                        <p style="font-size:0.9rem; color:#64748b;">Enviamos uma confirmação para seu e-mail.</p>
+                    </div>`, 
+                    () => { document.getElementById('form-inscricao').reset(); voltarHome(); });
             } else {
-                showError('Erro', j.message);
+                showError('Não foi possível enviar', j.message);
             }
         });
     } catch(err) { 
-        toggleLoader(false); showError('Erro', 'Falha no envio.'); 
+        toggleLoader(false); showError('Erro Técnico', 'Ocorreu uma falha no envio. Tente novamente.'); 
+        console.error(err);
     }
 }
 
 // --- CONSULTA E CARTEIRINHA ---
 function consultarChave() {
     const c = document.getElementById('busca-chave').value.trim();
-    if(!c) return showError('Atenção', 'Digite a chave.');
+    if(!c) return showError('Atenção', 'Digite a chave de acesso.');
     
-    document.getElementById('resultado-busca').innerHTML = 'Buscando...';
+    const areaResult = document.getElementById('resultado-busca');
+    areaResult.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;"><i class="fa-solid fa-circle-notch fa-spin"></i> Buscando...</div>';
     
     fetch(`${URL_API}?action=consultarInscricao&chave=${c}`)
         .then(r => r.json())
@@ -325,25 +440,29 @@ function consultarChave() {
             if(j.status === 'success') {
                 const situacao = j.data.situacao;
                 const aprovado = situacao.includes('Aprovada') || situacao.includes('Emitida');
+                
+                let cssClass = aprovado ? 'result-success' : 'result-pending';
+                let icon = aprovado ? 'fa-circle-check' : 'fa-clock';
                 let cor = aprovado ? '#10b981' : '#f59e0b';
                 
-                let btnFicha = ''; 
                 let btnCarteirinha = '';
                 if (aprovado && j.data.emiteCarteirinha) {
-                    btnCarteirinha = `<button class="btn-primary" style="margin-top:10px;" onclick='abrirCarteirinha(${JSON.stringify(j.data.aluno)})'><i class="fa-solid fa-id-card"></i> Carteirinha Digital</button>`;
+                    btnCarteirinha = `<button class="btn-ver-cart" onclick='abrirCarteirinha(${JSON.stringify(j.data.aluno)})'><i class="fa-solid fa-id-card"></i> Ver Carteirinha Digital</button>`;
+                } else if (aprovado) {
+                    btnCarteirinha = `<div style="margin-top:10px; font-size:0.8rem; color:#64748b;">* Carteirinha indisponível para este evento.</div>`;
                 }
 
-                document.getElementById('resultado-busca').innerHTML = `
-                    <div class="card" style="border-left:5px solid ${cor}; background:#f0f9ff; text-align:left;">
-                        <h3 style="color:${cor}; margin:0; font-size:1.1rem;">${situacao}</h3>
-                        <p style="font-size:0.9rem; color:#64748b;">Inscrito em: ${formatarData(j.data.data_inscricao)}</p>
-                        ${btnFicha}
+                areaResult.innerHTML = `
+                    <div class="result-card ${cssClass}">
+                        <h4 style="color:${cor}; margin-bottom:5px; font-size:1.1rem;"><i class="fa-solid ${icon}"></i> ${situacao}</h4>
+                        <p style="font-size:0.9rem; color:#334155;">Data: ${formatarData(j.data.data_inscricao)}</p>
                         ${btnCarteirinha}
                     </div>`;
             } else {
-                document.getElementById('resultado-busca').innerHTML = `<p style="color:red;">${j.message}</p>`;
+                areaResult.innerHTML = `<div class="result-card" style="border-color:#ef4444; background:#fef2f2; color:#b91c1c;"><i class="fa-solid fa-circle-xmark"></i> ${j.message}</div>`;
             }
-        });
+        })
+        .catch(() => areaResult.innerHTML = '<p style="color:red; text-align:center;">Erro na busca.</p>');
 }
 
 function abrirCarteirinha(aluno) {
@@ -353,22 +472,19 @@ function abrirCarteirinha(aluno) {
     document.getElementById('cart-mat').innerText = aluno.matricula || '-';
     document.getElementById('cart-validade').innerText = aluno.validade;
     
+    // Atualiza nome do sistema na carteirinha se disponível
+    if(configSistemaCache && configSistemaCache.nomeSistema) {
+        document.getElementById('cart-sys-name').innerText = configSistemaCache.nomeSistema.toUpperCase();
+    }
+    
     const img = document.getElementById('cart-img');
-    img.src = 'https://via.placeholder.com/150?text=Carregando...'; 
+    img.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNlMmU4ZjAiLz48L3N2Zz4='; // Placeholder
     
     if (aluno.foto) {
         if (aluno.foto.startsWith('data:image') || aluno.foto.startsWith('http')) {
-            if (aluno.foto.includes('drive.google.com') && !aluno.foto.startsWith('data:image')) {
-                 img.src = formatarUrlDrive(aluno.foto);
-            } else {
-                 img.src = aluno.foto;
-            }
-        } else {
-            img.src = 'https://via.placeholder.com/150?text=FOTO';
+             img.src = formatarUrlDrive(aluno.foto);
         }
         img.onerror = function() { this.src = 'https://via.placeholder.com/150?text=FOTO'; };
-    } else {
-        img.src = 'https://via.placeholder.com/150?text=FOTO';
     }
 
     document.getElementById('modal-carteirinha').classList.remove('hidden');
@@ -377,6 +493,7 @@ function abrirCarteirinha(aluno) {
 
 function formatarUrlDrive(url) {
     if (!url) return '';
+    if (url.startsWith('data:')) return url;
     let id = '';
     const parts = url.split(/\/d\/|id=/);
     if (parts.length > 1) id = parts[1].split(/\/|&/)[0];
@@ -387,6 +504,7 @@ function formatarUrlDrive(url) {
 function voltarHome() { 
     document.getElementById('area-inscricao').classList.add('hidden'); 
     document.getElementById('fab-consulta').classList.remove('hidden'); 
+    document.getElementById('hero-section').classList.remove('hidden'); // Exibe Hero novamente
     document.getElementById('lista-eventos').classList.remove('hidden'); 
 }
 
