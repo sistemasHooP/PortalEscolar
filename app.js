@@ -63,11 +63,12 @@ function aplicarConfiguracoes(config) {
         document.getElementById('sys-phrase').innerText = config.fraseMotivacional;
     }
 
-    // 2. Logo (Hero, Loader e Carteirinha)
+    // 2. Logo (Hero e Carteirinha APENAS - Loader mantido original)
     if(config.urlLogo && config.urlLogo.trim() !== "") {
         const logoUrl = formatarUrlDrive(config.urlLogo); // Helper para garantir link direto
         
-        const logoEls = ['sys-logo', 'loader-img-tag', 'cart-logo-img'];
+        // LISTA ATUALIZADA: Removi 'loader-img-tag' para preservar a logo do repositório
+        const logoEls = ['sys-logo', 'cart-logo-img'];
         logoEls.forEach(id => {
             const el = document.getElementById(id);
             if(el) { 
