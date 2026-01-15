@@ -208,9 +208,6 @@ function atualizarGraficos(dados, tituloContexto) {
     const ctxStatus = document.getElementById('chartStatus').getContext('2d');
 
     // 1. Gráfico de Eventos
-    // Se estiver vendo "Todos", mostra barras por evento.
-    // Se estiver vendo "Um Evento", mostra talvez histórico por data (simplificação: vamos manter barras mas terá apenas 1 barra se for especifico, ou podemos ocultar).
-    
     const contagemEventos = {};
     const contagemStatus = {};
 
@@ -497,6 +494,7 @@ function carregarEventosAdmin() {
     });
 }
 
+// --- MODAL DE EDIÇÃO MELHORADO ---
 function abrirEdicaoEvento(evento) {
     let config = {}; try { config = JSON.parse(evento.config); } catch(e){}
     
@@ -507,32 +505,47 @@ function abrirEdicaoEvento(evento) {
     Swal.fire({
         title: 'Editar Evento',
         html: `
-            <div class="modal-form-grid">
-                <div class="modal-full">
-                    <label class="swal-label">Prorrogar Data Fim</label>
-                    <input type="date" id="edit_fim" class="swal-input" value="${evento.fim ? evento.fim.split('T')[0] : ''}">
+            <div class="modal-form-grid" style="text-align: left;">
+                
+                <div class="modal-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div class="modal-full">
+                        <label class="swal-label">Data de Término</label>
+                        <input type="date" id="edit_fim" class="swal-input" value="${evento.fim ? evento.fim.split('T')[0] : ''}">
+                    </div>
+                    <div class="modal-full">
+                        <label class="swal-label">Cidades Permitidas (Opcional)</label>
+                        <input type="text" id="edit_cidades" class="swal-input" placeholder="Todas liberadas" value="${cidades}">
+                    </div>
                 </div>
+
                 <div class="modal-full">
-                    <label class="swal-label">Restrição de Cidades (Opcional)</label>
-                    <input type="text" id="edit_cidades" class="swal-input" placeholder="Ex: Natal, Parnamirim" value="${cidades}">
-                </div>
-                <div class="modal-full">
-                    <label class="swal-label">Mensagem de Alerta</label>
-                    <textarea id="edit_msg" class="swal-input" style="height:80px;">${config.mensagemAlerta || ''}</textarea>
+                    <label class="swal-label">Mensagem de Alerta / Aviso</label>
+                    <textarea id="edit_msg" class="swal-input" style="height:100px; resize: vertical; padding: 10px;">${config.mensagemAlerta || ''}</textarea>
+                    <small style="color:#64748b; font-size: 0.8rem;">Aparece no topo do formulário de inscrição.</small>
                 </div>
                 
-                <div class="modal-full" style="text-align:left; margin-top:10px;">
-                    <label class="checkbox-card" style="border-color: #f59e0b; background: #fffbeb; margin-bottom:5px;">
-                        <input type="checkbox" id="edit_req_ficha" ${checkFicha}> 
-                        <strong>Exigir Ficha Presencial?</strong>
-                    </label>
-                    <label class="checkbox-card" style="border-color: #3b82f6; background: #eff6ff;">
-                        <input type="checkbox" id="edit_emitir_carteirinha" ${checkCart}> 
-                        <strong>Emitir Carteirinha Digital?</strong>
-                    </label>
+                <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <label class="swal-label" style="margin-bottom:10px; display:block;">Configurações Avançadas</label>
+                    <div class="checkbox-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <label class="checkbox-card" style="border-left: 4px solid #f59e0b; padding: 15px; display: flex; align-items: start; gap: 10px;">
+                            <input type="checkbox" id="edit_req_ficha" ${checkFicha} style="margin-top: 4px;"> 
+                            <div>
+                                <strong style="display:block; margin-bottom:2px;">Exigir Ficha?</strong>
+                                <div style="font-size:0.75rem; color:#666;">Aluno deve ir à secretaria assinar.</div>
+                            </div>
+                        </label>
+                        <label class="checkbox-card" style="border-left: 4px solid #3b82f6; padding: 15px; display: flex; align-items: start; gap: 10px;">
+                            <input type="checkbox" id="edit_emitir_carteirinha" ${checkCart} style="margin-top: 4px;"> 
+                            <div>
+                                <strong style="display:block; margin-bottom:2px;">Carteirinha Digital</strong>
+                                <div style="font-size:0.75rem; color:#666;">Libera acesso no portal do aluno.</div>
+                            </div>
+                        </label>
+                    </div>
                 </div>
             </div>`,
-        width: '600px', showCancelButton: true, confirmButtonText: 'Salvar', confirmButtonColor: '#2563eb',
+        width: '800px', // Aumentado para 800px
+        showCancelButton: true, confirmButtonText: 'Salvar Alterações', confirmButtonColor: '#2563eb',
         preConfirm: () => { 
             const cidadesTexto = document.getElementById('edit_cidades').value;
             const cidadesArr = cidadesTexto ? cidadesTexto.split(',').map(s => s.trim()).filter(s => s) : [];
