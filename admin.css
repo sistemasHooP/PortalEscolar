@@ -87,6 +87,21 @@ body {
     box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
+/* Botão Voltar no Login */
+.btn-back-login {
+    color: #64748b;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.btn-back-login:hover {
+    color: var(--primary);
+}
+
 /* --- LAYOUT DO PAINEL --- */
 #admin-panel {
     display: flex;
@@ -101,9 +116,9 @@ body {
         height: 100vh; 
         position: fixed; 
         top: 0; left: 0; 
-        flex-direction: column;
-        justify-content: flex-start;
-        padding-top: 2rem;
+        flex-direction: column; 
+        justify-content: flex-start; 
+        padding-top: 2rem; 
         z-index: 100;
     }
     .admin-content { 
@@ -261,12 +276,12 @@ body {
     padding: 0 !important;
 }
 
-/* Ajuste de largura para aproveitar mais a tela no PC */
+/* Ajuste de largura para aproveitar mais a tela no PC - REMOVIDO min-width fixo */
 @media(min-width: 992px) {
     div:where(.swal2-container) div:where(.swal2-popup) {
         width: auto !important;
-        max-width: 900px !important; /* Bem mais largo no PC */
-        min-width: 600px;
+        max-width: 900px !important;
+        /* Removido min-width: 600px que quebrava o loading */
     }
 }
 
@@ -333,11 +348,11 @@ body {
         top: 0; 
         left: 0; 
         width: 100%; 
-        min-height: 100vh;
-        background: white;
-        z-index: 9999;
-        padding: 0;
-        margin: 0;
+        min-height: 100vh; 
+        background: white; 
+        z-index: 9999; 
+        padding: 0; 
+        margin: 0; 
     }
 
     @page { 
@@ -364,8 +379,8 @@ body {
     .report-logo { 
         height: 50px; 
         margin-right: 15px; 
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact; 
+        print-color-adjust: exact; 
     }
     
     .header-left { display: flex; align-items: center; }
@@ -395,8 +410,8 @@ body {
     .group-header { 
         background-color: #ddd !important; 
         font-weight: bold; 
-        text-align: left;
-        -webkit-print-color-adjust: exact;
+        text-align: left; 
+        -webkit-print-color-adjust: exact; 
     }
 
     /* Assinatura */
