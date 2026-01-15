@@ -240,9 +240,9 @@ body {
 @media(min-width: 900px) { .charts-container { grid-template-columns: 2fr 1fr; } }
 .chart-box { background: white; padding: 20px; border-radius: 16px; box-shadow: var(--shadow-sm); border: 1px solid #e2e8f0; }
 
-/* Tabelas (MODIFICADO PARA REMOVER SCROLL HORIZONTAL) */
+/* Tabelas */
 .table-responsive {
-    overflow-x: visible; /* Permite expansão */
+    overflow-x: visible;
     background: white;
     border-radius: 12px;
     box-shadow: var(--shadow-sm);
@@ -253,8 +253,8 @@ body {
     width: 100%; 
     border-collapse: collapse; 
     font-size: 0.9rem; 
-    white-space: normal; /* Permite quebra de linha */
-    table-layout: fixed; /* Distribui largura fixamente */
+    white-space: normal; 
+    table-layout: fixed; 
 }
 
 .data-table th { 
@@ -264,25 +264,24 @@ body {
     font-weight: 600; 
     color: #64748b; 
     border-bottom: 2px solid #e2e8f0; 
-    word-wrap: break-word; /* Quebra palavras se necessário */
+    word-wrap: break-word; 
 }
 
 .data-table td { 
     padding: 15px; 
     border-bottom: 1px solid #e2e8f0; 
     vertical-align: middle; 
-    word-wrap: break-word; /* Quebra texto longo */
+    word-wrap: break-word; 
 }
 
 .data-table tr:last-child td { border-bottom: none; }
 
-/* Larguras Específicas das Colunas para layout limpo */
-.data-table th:nth-child(1), .data-table td:nth-child(1) { width: 50px; text-align: center; } /* Checkbox */
-.data-table th:nth-child(2), .data-table td:nth-child(2) { width: 100px; } /* Data */
-.data-table th:nth-child(3), .data-table td:nth-child(3) { width: 20%; } /* Evento */
-.data-table th:nth-child(4), .data-table td:nth-child(4) { width: 30%; } /* Aluno/Chave */
-.data-table th:nth-child(5), .data-table td:nth-child(5) { width: 120px; } /* Status */
-.data-table th:nth-child(6), .data-table td:nth-child(6) { width: 160px; text-align: right; } /* Ações */
+.data-table th:nth-child(1), .data-table td:nth-child(1) { width: 50px; text-align: center; } 
+.data-table th:nth-child(2), .data-table td:nth-child(2) { width: 100px; } 
+.data-table th:nth-child(3), .data-table td:nth-child(3) { width: 20%; } 
+.data-table th:nth-child(4), .data-table td:nth-child(4) { width: 30%; } 
+.data-table th:nth-child(5), .data-table td:nth-child(5) { width: 120px; } 
+.data-table th:nth-child(6), .data-table td:nth-child(6) { width: 160px; text-align: right; }
 
 /* Badges e Botões */
 .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; display: inline-block; text-align: center; }
@@ -291,7 +290,7 @@ body {
 .badge-Pendente { background: #fff7ed; color: #c2410c; }
 .badge-Aprovada { background: #dcfce7; color: #15803d; }
 .badge-Rejeitada { background: #fef2f2; color: #b91c1c; }
-.badge-FichaEmitida { background: #dbeafe; color: #1e40af; } /* Novo estilo */
+.badge-FichaEmitida { background: #dbeafe; color: #1e40af; }
 
 .action-btn {
     border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; color: white; margin-left: 5px;
@@ -316,7 +315,7 @@ body {
 @media(min-width: 992px) {
     div:where(.swal2-container) div:where(.swal2-popup) {
         width: auto !important;
-        max-width: 900px !important; 
+        /* REMOVIDO O MAX-WIDTH FIXO PARA PERMITIR EXPANSÃO QUANDO SOLICITADO PELO JS */
     }
 }
 
@@ -370,11 +369,16 @@ body {
         background: white; z-index: 9999; padding: 0; margin: 0; 
     }
 
-    @page { size: A4 landscape; margin: 5mm; }
+    /* AUMENTADO A MARGEM DA PÁGINA PARA 15mm */
+    @page { size: A4 landscape; margin: 15mm; }
 
-    /* Estilos da Ficha de Inscrição Impressa */
+    /* Estilos da Ficha de Inscrição Impressa - MARGENS E PADDING AUMENTADOS */
     .ficha-container {
-        font-family: 'Helvetica', Arial, sans-serif; padding: 30px; color: #1e293b; font-size: 13px; line-height: 1.4;
+        font-family: 'Helvetica', Arial, sans-serif; 
+        padding: 40px; /* Mais espaço interno */
+        color: #1e293b; font-size: 13px; line-height: 1.4;
+        max-width: 100%;
+        box-sizing: border-box;
     }
     .ficha-header-table { width: 100%; border-bottom: 3px solid #2563eb; margin-bottom: 25px; padding-bottom: 10px; }
     .ficha-header-title { color: #2563eb; font-size: 24px; font-weight: 700; text-transform: uppercase; margin: 0; }
