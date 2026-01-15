@@ -40,7 +40,7 @@
                 </button>
             </form>
 
-            <!-- NOVO: Botão Voltar ao Portal -->
+            <!-- Botão Voltar ao Portal -->
             <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
                 <a href="index.html" class="btn-back-login">
                     <i class="fa-solid fa-arrow-left"></i> Voltar ao Portal
@@ -67,6 +67,10 @@
                 <button class="nav-btn" onclick="switchTab('tab-inscricoes')">
                     <i class="fa-solid fa-users"></i> Inscrições
                 </button>
+                <!-- NOVA ABA RELATÓRIOS -->
+                <button class="nav-btn" onclick="switchTab('tab-relatorios')">
+                    <i class="fa-solid fa-file-pdf"></i> Relatórios
+                </button>
                 <button class="nav-btn" onclick="switchTab('tab-config')">
                     <i class="fa-solid fa-gears"></i> Configurações
                 </button>
@@ -79,12 +83,20 @@
         <!-- CONTEÚDO -->
         <main class="admin-content">
             
-            <!-- DASHBOARD -->
+            <!-- DASHBOARD (MODIFICADO) -->
             <section id="tab-dashboard" class="tab-content active">
                 <div class="header-action">
                     <h2>Visão Geral</h2>
-                    <button onclick="carregarDashboard()" class="btn-refresh"><i class="fa-solid fa-rotate-right"></i></button>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <!-- FILTRO INTELIGENTE DO DASHBOARD -->
+                        <select id="dash-filtro-evento" style="padding: 8px; border-radius: 8px; border: 1px solid #cbd5e1; min-width: 200px;" onchange="filtrarDashboard()">
+                            <option value="">Carregando...</option>
+                        </select>
+                        <button onclick="carregarDashboard()" class="btn-refresh" title="Atualizar Dados"><i class="fa-solid fa-rotate-right"></i></button>
+                    </div>
                 </div>
+
+                <!-- CARDS DE ESTATÍSTICA (Atualizam conforme o filtro) -->
                 <div class="stats-grid">
                     <div class="stat-card">
                         <h3>Total Inscritos</h3>
@@ -102,27 +114,18 @@
                         <i class="fa-solid fa-clock"></i>
                     </div>
                 </div>
+
+                <!-- GRÁFICOS (Atualizam conforme o filtro) -->
                 <div class="charts-container">
                     <div class="chart-box">
-                        <h4>Inscrições por Evento</h4>
+                        <h4 id="titulo-grafico-eventos">Inscrições por Evento</h4>
                         <div style="height:250px;"><canvas id="chartEventos"></canvas></div>
                     </div>
                     <div class="chart-box">
-                        <h4>Status Geral</h4>
+                        <h4>Status das Inscrições</h4>
                         <div style="height:250px;"><canvas id="chartStatus"></canvas></div>
                     </div>
                 </div>
-                
-                <!-- Relatório -->
-                <div style="background:white; padding:20px; border-radius:12px; border:1px solid #e2e8f0;">
-                    <h3 style="margin-top:0; color:var(--primary);"><i class="fa-solid fa-print"></i> Relatório de Transporte</h3>
-                    <div class="filters" style="box-shadow:none; padding:0; border:none;">
-                        <select id="relatorio-evento"><option value="">Carregando eventos...</option></select>
-                        <select id="relatorio-inst"><option value="">Todas as Instituições</option></select>
-                        <button class="btn-primary" style="width:auto; margin-top:0;" onclick="gerarRelatorioTransporte()">Gerar Lista</button>
-                    </div>
-                </div>
-                <div id="area-impressao"></div>
             </section>
 
             <!-- EVENTOS -->
@@ -190,6 +193,50 @@
                 </div>
             </section>
 
+            <!-- NOVA ABA: RELATÓRIOS -->
+            <section id="tab-relatorios" class="tab-content hidden">
+                <div class="header-action">
+                    <h2>Central de Relatórios</h2>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap:20px;">
+                    
+                    <!-- Card Gerador de Lista de Transporte -->
+                    <div style="background:white; padding:25px; border-radius:12px; border:1px solid #e2e8f0; box-shadow: var(--shadow-sm);">
+                        <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px;">
+                            <div style="width:50px; height:50px; background:#eff6ff; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--primary); font-size:1.5rem;">
+                                <i class="fa-solid fa-bus"></i>
+                            </div>
+                            <div>
+                                <h3 style="margin:0; color:var(--text-dark);">Lista de Transporte</h3>
+                                <p style="margin:0; color:#64748b; font-size:0.9rem;">Gere listas de presença ou controle por rota/instituição.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="filters" style="box-shadow:none; padding:0; border:none; display:flex; flex-direction:column; gap:15px;">
+                            <div>
+                                <label style="font-weight:600; color:#64748b; font-size:0.85rem;">Selecione o Evento</label>
+                                <select id="relatorio-evento" style="width:100%; margin-top:5px;"><option value="">Carregando...</option></select>
+                            </div>
+                            <div>
+                                <label style="font-weight:600; color:#64748b; font-size:0.85rem;">Filtrar Instituição (Opcional)</label>
+                                <select id="relatorio-inst" style="width:100%; margin-top:5px;"><option value="">Todas as Instituições</option></select>
+                            </div>
+                            <button class="btn-primary" style="width:100%; justify-content:center; margin-top:10px;" onclick="gerarRelatorioTransporte()">
+                                <i class="fa-solid fa-file-pdf"></i> Gerar PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Placeholder para futuros relatórios -->
+                    <div style="background:#f8fafc; padding:25px; border-radius:12px; border:2px dashed #cbd5e1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; color:#94a3b8;">
+                        <i class="fa-solid fa-chart-line" style="font-size:3rem; margin-bottom:15px; opacity:0.5;"></i>
+                        <h3>Mais relatórios em breve</h3>
+                        <p>Estatísticas avançadas e exportação CSV.</p>
+                    </div>
+                </div>
+                <div id="area-impressao"></div>
+            </section>
+
             <!-- CONFIGURAÇÕES -->
             <section id="tab-config" class="tab-content hidden">
                 <h2>Configurações</h2>
@@ -203,7 +250,6 @@
                         <div id="lista-instituicoes" style="max-height:300px; overflow-y:auto; border:1px solid #eee; border-radius:8px;"></div>
                     </div>
                     
-                    <!-- Card de Configuração do Drive (Substituiu Planilha) -->
                     <div style="background:white; padding:20px; border-radius:12px; border:1px solid #e2e8f0;">
                         <h3>Configuração de Armazenamento</h3>
                         <p style="color:#666; font-size:0.9rem; margin-bottom:15px;">Defina o ID da pasta do Google Drive onde os arquivos (fotos e docs) serão salvos.</p>
