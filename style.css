@@ -252,7 +252,8 @@ main {
 /* --- FORMULÁRIO DE INSCRIÇÃO --- */
 #area-inscricao {
     position: relative;
-    padding-top: 10px;
+    /* CORREÇÃO AQUI: Aumentado padding-top para o botão 'Voltar' não ficar cortado ou colado */
+    padding-top: 40px; 
 }
 
 /* CORREÇÃO DO BOTÃO VOLTAR */
