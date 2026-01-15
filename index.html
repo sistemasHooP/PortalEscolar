@@ -8,7 +8,7 @@
     <!-- Fontes e Ícones (Google Fonts - Poppins) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Importação de Ícones (FontAwesome) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -16,26 +16,30 @@
     <!-- Arquivo de Estilos Principal -->
     <link rel="stylesheet" href="style.css">
     
-    <!-- Manifesto para PWA (Opcional, mas recomendado para Mobile) -->
+    <!-- Manifesto para PWA -->
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
 
     <!-- Overlay de Carregamento (Loader) -->
-    <!-- Fica invisível (hidden) até ser ativado pelo JavaScript -->
     <div id="loader-overlay" class="hidden">
-        <!-- Substituído spinner CSS por Imagem da Logo com classe para animar -->
-        <img src="logo.png" alt="Carregando..." class="loader-logo">
+        <!-- Logo pulsante no loader (será substituída via JS se houver logo personalizada) -->
+        <img src="logo.png" alt="Carregando..." class="loader-logo" id="loader-img-tag" onerror="this.style.display='none'">
+        <div class="spinner-ring"></div>
         <p id="loader-text">Processando...</p>
     </div>
 
-    <!-- Cabeçalho Principal -->
-    <header>
-        <div class="brand">
-            <i class="fa-solid fa-graduation-cap"></i>
-            <div class="brand-text">
-                <h1>Educação Conectada</h1>
-                <small>Secretaria de Educação</small>
+    <!-- NOVA HERO SECTION (Capa + Logo + Títulos) -->
+    <!-- Os IDs abaixo serão preenchidos pelo app.js buscando da planilha -->
+    <header id="hero-section" class="hero-header">
+        <div class="hero-bg-overlay"></div> <!-- Camada escura para legibilidade -->
+        <div class="hero-content fade-in-down">
+            <div class="logo-container">
+                <img src="logo.png" alt="Logo do Sistema" id="sys-logo" class="sys-logo" onerror="this.style.display='none'">
+            </div>
+            <div class="text-container">
+                <h1 id="sys-name">Portal Educacional</h1>
+                <p id="sys-phrase" class="sys-phrase">Inovação e compromisso com o futuro.</p>
             </div>
         </div>
     </header>
@@ -45,73 +49,87 @@
         
         <!-- SEÇÃO 1: Lista de Eventos (Tela Inicial) -->
         <section id="lista-eventos" class="fade-in">
-            <div class="section-header">
-                <h2><i class="fa-regular fa-calendar-check"></i> Eventos Disponíveis</h2>
-                <p>Selecione um evento abaixo para iniciar sua inscrição.</p>
+            <div class="section-title">
+                <h2><i class="fa-regular fa-calendar-check"></i> Inscrições Abertas</h2>
+                <div class="title-bar"></div>
             </div>
             
-            <!-- O JavaScript vai inserir os cards dos eventos aqui dentro -->
-            <div id="cards-container"></div>
+            <!-- O JavaScript vai inserir os cards REESTILIZADOS aqui -->
+            <div id="cards-container" class="cards-grid"></div>
         </section>
 
 
         <!-- SEÇÃO 2: Formulário de Inscrição (Escondido inicialmente) -->
-        <section id="area-inscricao" class="hidden fade-in">
-            <!-- Espaçador para o botão não ficar coberto pelo header fixo -->
-            <div class="spacer-top"></div>
-
-            <!-- Botão de Voltar -->
-            <button class="btn-back" onclick="voltarHome()">
-                <i class="fa-solid fa-chevron-left"></i> Voltar para Início
-            </button>
+        <section id="area-inscricao" class="hidden fade-in-up">
+            <!-- Botão de Voltar Flutuante no Topo da Seção -->
+            <div class="nav-bar">
+                <button class="btn-back" onclick="voltarHome()">
+                    <i class="fa-solid fa-arrow-left"></i> Voltar
+                </button>
+            </div>
             
-            <div class="form-card">
-                <!-- Título do Evento Selecionado -->
-                <div class="form-header">
-                    <h2 id="titulo-evento">Nome do Evento</h2>
-                    <p class="subtitle">Preencha todos os dados com atenção antes de enviar.</p>
-                </div>
-                
-                <form id="form-inscricao" onsubmit="enviarInscricao(event)">
+            <div class="form-card-container">
+                <div class="form-card">
+                    <!-- Título do Evento Selecionado -->
+                    <div class="form-header">
+                        <div class="header-icon"><i class="fa-solid fa-pen-nib"></i></div>
+                        <div>
+                            <h2 id="titulo-evento">Nome do Evento</h2>
+                            <p class="subtitle">Preencha seus dados corretamente.</p>
+                        </div>
+                    </div>
                     
-                    <!-- 
-                        A LISTA DE INSTITUIÇÕES SERÁ INJETADA AQUI 
-                        O javascript (app.js) cria o <select> com as opções
-                        dentro desta div quando o evento for carregado.
-                    -->
-                    <div id="campos-dinamicos" class="grid-form"></div>
-                    
-                    <hr class="divider">
-
-                    <!-- Área de Upload de Documentos -->
-                    <div class="upload-section">
-                        <h3><i class="fa-solid fa-cloud-arrow-up"></i> Documentação</h3>
-                        <p class="upload-info">Os campos abaixo dependem das regras do evento.</p>
+                    <form id="form-inscricao" onsubmit="enviarInscricao(event)">
                         
-                        <!-- Upload Foto (Com ID para controle via JS) -->
-                        <div id="div-upload-foto" class="file-input-wrapper hidden">
-                            <label for="file-foto">
-                                <i class="fa-solid fa-user"></i> Foto 3x4 (Rosto visível)
-                            </label>
-                            <input type="file" id="file-foto" accept="image/*">
+                        <!-- ÁREA DE MENSAGENS E ALERTAS DO EVENTO -->
+                        <div id="area-avisos"></div>
+
+                        <!-- CAMPOS DO FORMULÁRIO (Injetados via JS) -->
+                        <div id="campos-dinamicos" class="grid-form"></div>
+                        
+                        <div class="divider-form">
+                            <span>Documentação</span>
                         </div>
 
-                        <!-- Upload Documento (Com ID para controle via JS) -->
-                        <div id="div-upload-doc" class="file-input-wrapper hidden">
-                            <label for="file-doc">
-                                <i class="fa-solid fa-file-pdf"></i> Declaração de Matrícula (PDF)
-                            </label>
-                            <input type="file" id="file-doc" accept="application/pdf">
-                        </div>
-                    </div>
+                        <!-- Área de Upload de Documentos -->
+                        <div class="upload-section">
+                            <p class="upload-info"><i class="fa-solid fa-circle-info"></i> Anexe os arquivos solicitados abaixo (Formatos: JPG, PNG ou PDF).</p>
+                            
+                            <!-- Upload Foto -->
+                            <div id="div-upload-foto" class="file-input-wrapper hidden">
+                                <label for="file-foto" class="file-label">
+                                    <div class="icon-box"><i class="fa-solid fa-user"></i></div>
+                                    <div class="text-box">
+                                        <strong>Foto 3x4</strong>
+                                        <small>Rosto visível e fundo claro</small>
+                                    </div>
+                                    <div class="status-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                                </label>
+                                <input type="file" id="file-foto" accept="image/*" onchange="previewArquivo(this)">
+                            </div>
 
-                    <!-- Botão de Envio -->
-                    <div class="form-actions">
-                        <button type="submit" class="btn-primary pulse">
-                            Confirmar Inscrição <i class="fa-solid fa-paper-plane"></i>
-                        </button>
-                    </div>
-                </form>
+                            <!-- Upload Documento -->
+                            <div id="div-upload-doc" class="file-input-wrapper hidden">
+                                <label for="file-doc" class="file-label">
+                                    <div class="icon-box"><i class="fa-solid fa-file-contract"></i></div>
+                                    <div class="text-box">
+                                        <strong>Comprovante / Declaração</strong>
+                                        <small>Arquivo PDF legível</small>
+                                    </div>
+                                    <div class="status-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                                </label>
+                                <input type="file" id="file-doc" accept="application/pdf" onchange="previewArquivo(this)">
+                            </div>
+                        </div>
+
+                        <!-- Botão de Envio -->
+                        <div class="form-actions">
+                            <button type="submit" class="btn-submit pulse-effect">
+                                Confirmar Inscrição <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </section>
 
@@ -119,88 +137,92 @@
 
     <!-- BOTÃO FLUTUANTE (FAB) PARA CONSULTA -->
     <button id="fab-consulta" onclick="abrirModalConsulta()" title="Consultar Minha Inscrição">
-        <i class="fa-solid fa-magnifying-glass"></i>
+        <span class="fab-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
+        <span class="fab-text">Consultar</span>
     </button>
 
     <!-- MODAL DE CONSULTA (Overlay) -->
     <div id="modal-consulta" class="modal-overlay hidden">
-        <div class="modal-content fade-in">
-            <div class="modal-header">
-                <h3><i class="fa-solid fa-ticket"></i> Minha Inscrição</h3>
-                <button class="btn-close" onclick="fecharModalConsulta()" title="Fechar">
+        <div class="modal-content zoom-in">
+            <div class="modal-header-modern">
+                <h3>Minha Inscrição</h3>
+                <button class="btn-close-modern" onclick="fecharModalConsulta()">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
             
-            <p style="color:#64748b; margin-bottom:15px;">Digite sua Chave Única para verificar o status.</p>
-            
-            <div class="input-group">
-                <input type="text" id="busca-chave" placeholder="Ex: A1B2C3D4">
-                <button onclick="consultarChave()"><i class="fa-solid fa-arrow-right"></i></button>
+            <div class="modal-body-centered">
+                <div class="icon-circle"><i class="fa-solid fa-ticket"></i></div>
+                <p>Digite sua <strong>Chave de Acesso</strong> para verificar o status ou obter sua carteirinha.</p>
+                
+                <div class="input-group-modern">
+                    <input type="text" id="busca-chave" placeholder="Ex: A1B2C3D4">
+                    <button onclick="consultarChave()"><i class="fa-solid fa-arrow-right"></i></button>
+                </div>
+                
+                <!-- Resultado da busca aparecerá aqui -->
+                <div id="resultado-busca" class="result-area"></div>
             </div>
-            
-            <!-- Resultado da busca aparecerá aqui -->
-            <div id="resultado-busca"></div>
         </div>
     </div>
 
-    <!-- MODAL DA CARTEIRINHA (NOVO) -->
+    <!-- MODAL DA CARTEIRINHA -->
     <div id="modal-carteirinha" class="modal-overlay hidden" style="z-index: 3000;">
-        <div class="modal-content fade-in" style="background:transparent; box-shadow:none; padding:0; display:flex; justify-content:center; align-items:center;">
-            <div class="carteirinha-container">
+        <div class="modal-content zoom-in transparent-modal">
+            <div class="carteirinha-wrapper">
                 <!-- Frente -->
-                <div class="carteirinha-card">
+                <div class="carteirinha-card" id="cart-digital">
+                    <div class="cart-bg-pattern"></div>
                     <div class="cart-header">
-                        <img src="logo.png" alt="Logo" class="cart-logo">
-                        <div>
-                            <h3>TRANSPORTE ESCOLAR</h3>
+                        <img src="logo.png" alt="Logo" class="cart-logo" id="cart-logo-img">
+                        <div class="cart-org-info">
+                            <h3 id="cart-sys-name">TRANSPORTE ESCOLAR</h3>
                             <small>Secretaria de Educação</small>
                         </div>
                     </div>
                     <div class="cart-body">
-                        <div class="cart-photo">
+                        <div class="cart-photo-frame">
                             <img id="cart-img" src="" alt="Foto Aluno">
                         </div>
-                        <div class="cart-info">
+                        <div class="cart-info-col">
                             <h2 id="cart-nome">Nome do Aluno</h2>
-                            <p id="cart-inst">Instituição de Ensino</p>
-                            <p id="cart-curso">Curso / Série</p>
-                            <div class="cart-meta">
-                                <span>Mat: <b id="cart-mat">0000</b></span>
-                                <span>Validade: <b id="cart-validade">01/01/2026</b></span>
+                            <p class="info-row"><i class="fa-solid fa-building-columns"></i> <span id="cart-inst">Instituição</span></p>
+                            <p class="info-row"><i class="fa-solid fa-graduation-cap"></i> <span id="cart-curso">Curso</span></p>
+                            
+                            <div class="cart-badges">
+                                <span class="badge-mat">MAT: <b id="cart-mat">0000</b></span>
+                                <span class="badge-val">VAL: <b id="cart-validade">2026</b></span>
                             </div>
                         </div>
                     </div>
                     <div class="cart-footer">
-                        <div id="cart-qrcode"></div> <!-- Área para QR Code futuro -->
+                        <div class="cart-status-pill">ATIVO</div>
                         <span>Uso Pessoal e Intransferível</span>
                     </div>
                 </div>
                 
-                <button class="btn-primary" style="margin-top:20px; background:white; color:#2563eb;" onclick="document.getElementById('modal-carteirinha').classList.add('hidden')">
-                    Fechar
-                </button>
+                <div class="modal-actions-row">
+                    <button class="btn-action-sec" onclick="document.getElementById('modal-carteirinha').classList.add('hidden')">
+                        Fechar
+                    </button>
+                    <button class="btn-action-pri" onclick="window.print()">
+                        <i class="fa-solid fa-print"></i> Imprimir
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Rodapé -->
-    <footer>
-        <p>&copy; 2025 Secretaria de Educação - Sistema Seguro & Responsivo</p>
-        
-        <!-- Link para Área Administrativa -->
-        <div style="margin-top: 15px;">
-            <a href="admin.html" style="color: #94a3b8; font-size: 0.8rem; text-decoration: none; opacity: 0.6; transition: opacity 0.3s;">
-                <i class="fa-solid fa-lock"></i> Acesso Restrito
-            </a>
+    <footer id="main-footer">
+        <p>&copy; <span id="year">2025</span> <span id="footer-sys-name">Sistema Educacional</span></p>
+        <div class="footer-links">
+            <a href="admin.html"><i class="fa-solid fa-lock"></i> Área Administrativa</a>
         </div>
     </footer>
 
     <!-- Scripts -->
-    <!-- SweetAlert2: Para alertas bonitos e modais -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <!-- Nosso Script Principal -->
     <script src="app.js"></script>
 
 </body>
