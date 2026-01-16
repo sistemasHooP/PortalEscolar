@@ -74,20 +74,29 @@ function logout() {
 
 // --- NAVEGAÇÃO APP SHELL ---
 function switchTab(tabId) {
-    // Esconde todas as abas
+    // 1. Esconde TODAS as abas (força a classe hidden)
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     
-    // Remove active do menu lateral
+    // 2. Remove classe active de TODOS os botões do menu
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     
-    // Mostra aba atual
-    document.getElementById(tabId).classList.remove('hidden');
+    // 3. Mostra APENAS a aba selecionada
+    const selectedTab = document.getElementById(tabId);
+    if(selectedTab) selectedTab.classList.remove('hidden');
     
-    // Ativa botão no menu
-    const btn = document.querySelector(`.nav-item[onclick="switchTab('${tabId}')"]`);
-    if(btn) btn.classList.add('active');
+    // 4. Ativa o botão correspondente no menu
+    let btnId = '';
+    if(tabId === 'tab-dashboard') btnId = 'btn-dashboard';
+    if(tabId === 'tab-eventos') btnId = 'btn-eventos';
+    if(tabId === 'tab-inscricoes') btnId = 'btn-inscricoes';
+    if(tabId === 'tab-config') btnId = 'btn-config';
+    
+    if(btnId) {
+        const btn = document.getElementById(btnId);
+        if(btn) btn.classList.add('active');
+    }
 
-    // Carrega dados específicos
+    // 5. Carrega dados específicos da aba
     if(tabId === 'tab-dashboard') carregarDashboard();
     if(tabId === 'tab-eventos') carregarEventosAdmin();
     if(tabId === 'tab-inscricoes') carregarInscricoes();
@@ -138,7 +147,7 @@ function carregarDashboard() {
         });
         dashboardData = jsonInscricoes.data || [];
         atualizarSelectsRelatorio(jsonEventos.data || [], dashboardData);
-        atualizarEstatisticasDashboard(dashboardData, "Visão Geral");
+        atualizarEstatisticasDashboard(dashboardData);
 
         const contagemEventos = {}, contagemStatus = {};
         dashboardData.forEach(i => {
