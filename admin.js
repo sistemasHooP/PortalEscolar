@@ -1,23 +1,23 @@
 const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
 
-// --- CONFIGURAÇÃO DA LOGO ---
+// --- CONFIGURAÇÃO GERAL ---
 const URL_LOGO = './logo.png'; 
 
 const CAMPOS_PADRAO = [
     { key: 'NomeCompleto', label: 'Nome Completo' }, { key: 'CPF', label: 'CPF' },
     { key: 'DataNascimento', label: 'Nascimento' }, { key: 'Telefone', label: 'Celular' }, 
     { key: 'Endereco', label: 'Endereço' },
-    // Novos campos adicionados ao padrão para seleção no relatório
     { key: 'Cidade', label: 'Cidade' }, { key: 'Estado', label: 'UF' },
     { key: 'NomeInstituicao', label: 'Instituição' }, 
     { key: 'NomeCurso', label: 'Curso' }, { key: 'PeriodoCurso', label: 'Período' }, 
     { key: 'Matricula', label: 'Matrícula' }, { key: 'Email', label: 'E-mail' }
 ];
 
+// Estado da Aplicação
 let mapaEventos = {}; 
 let cacheEventos = {}; 
 let chartEventosInstance = null; let chartStatusInstance = null;
-let todasInscricoes = [];      
+let todasInscricoes = [];       
 let inscricoesFiltradas = []; 
 let dashboardData = []; 
 let paginaAtual = 1;
@@ -30,12 +30,12 @@ function showLoading(msg = 'Processando...') {
         html: `
             <div style="display:flex; flex-direction:column; align-items:center; gap:15px; padding:20px;">
                 <img src="${URL_LOGO}" style="width:80px; height:auto; animation: pulse-swal 1.5s infinite ease-in-out;" onerror="this.style.display='none'">
-                <h3 style="font-family:sans-serif; font-size:1.1rem; color:#1e293b; margin:0;">${msg}</h3>
-                <p style="font-family:sans-serif; font-size:0.85rem; color:#64748b; margin:0;">Aguarde um momento...</p>
+                <h3 style="font-family:'Poppins', sans-serif; font-size:1.1rem; color:#1e293b; margin:0; font-weight:600;">${msg}</h3>
+                <p style="font-family:'Poppins', sans-serif; font-size:0.85rem; color:#64748b; margin:0;">Aguarde um momento...</p>
                 <style>@keyframes pulse-swal { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }</style>
             </div>
         `,
-        showConfirmButton: false, allowOutsideClick: false, width: '300px'
+        showConfirmButton: false, allowOutsideClick: false, width: '320px', background: '#fff'
     });
 }
 
@@ -44,7 +44,7 @@ function safeDate(val) {
     try { const d = new Date(val); return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('pt-BR'); } catch(e) { return '-'; }
 }
 
-// --- AUTH ---
+// --- AUTH & NAVEGAÇÃO ---
 function toggleSenha() {
     const input = document.getElementById('admin-pass');
     const icon = document.querySelector('.password-toggle');
@@ -64,23 +64,24 @@ function realizarLogin(e) {
             document.getElementById('admin-panel').classList.remove('hidden');
             sessionStorage.setItem('admin_token', pass);
             carregarDashboard();
-            aplicarEstilosVisuais();
-        } else { Swal.fire({icon: 'error', title: 'Erro', text: 'Senha incorreta'}); }
-    }).catch(() => Swal.fire('Erro', 'Sem conexão', 'error'));
+        } else { Swal.fire({icon: 'error', title: 'Acesso Negado', text: 'Senha administrativa incorreta.'}); }
+    }).catch(() => Swal.fire('Erro de Conexão', 'Verifique sua internet.', 'error'));
 }
 
-// --- LOGOUT REDIRECT ---
 function logout() { 
     sessionStorage.removeItem('admin_token'); 
-    window.location.href = 'https://sistemashoop.github.io/PortalEscolar/'; 
+    window.location.href = 'index.html'; 
 }
 
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
     document.getElementById(tabId).classList.remove('hidden');
-    event.currentTarget.classList.add('active');
-    aplicarEstilosVisuais();
+    
+    // Atualiza botão ativo
+    const btn = document.querySelector(`.nav-btn[onclick="switchTab('${tabId}')"]`);
+    if(btn) btn.classList.add('active');
+
     if(tabId === 'tab-dashboard') carregarDashboard();
     if(tabId === 'tab-eventos') carregarEventosAdmin();
     if(tabId === 'tab-inscricoes') carregarInscricoes();
@@ -103,7 +104,7 @@ function carregarConfigDrive() {
 
 function salvarConfigDrive() {
     const id = document.getElementById('config-drive-id').value;
-    showLoading('Salvando...');
+    showLoading('Salvando Configuração...');
     fetch(URL_API, { 
         method: 'POST', 
         body: JSON.stringify({ 
@@ -112,28 +113,8 @@ function salvarConfigDrive() {
             idPasta: id 
         }) 
     }).then(() => {
-        Swal.fire({icon: 'success', title: 'Salvo!', timer: 1500});
+        Swal.fire({icon: 'success', title: 'Configuração Salva!', timer: 1500, showConfirmButton: false});
     });
-}
-
-// --- LAYOUT HELPER ---
-function aplicarEstilosVisuais() {
-    const styleId = 'admin-layout-fix';
-    if (!document.getElementById(styleId)) {
-        const style = document.createElement('style');
-        style.id = styleId;
-        style.innerHTML = `
-            .container, .main-content { max-width: 98% !important; width: 98% !important; margin: 0 auto; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { padding: 12px 15px; text-align: left; }
-            .nav-tabs { justify-content: flex-start; gap: 10px; border-bottom: 2px solid #e2e8f0; margin-bottom: 20px; }
-            .nav-btn { flex: initial; padding: 10px 25px; border-radius: 8px 8px 0 0; }
-            .nav-btn.active { border-bottom: 3px solid #2563eb; color: #2563eb; background: #eff6ff; }
-            .filters-bar { display: flex; flex-wrap: wrap; gap: 15px; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
-            .search-box { flex: 1; min-width: 250px; }
-        `;
-        document.head.appendChild(style);
-    }
 }
 
 // --- DASHBOARD ---
@@ -151,11 +132,11 @@ function carregarDashboard() {
         });
         dashboardData = jsonInscricoes.data || [];
         atualizarSelectsRelatorio(jsonEventos.data || [], dashboardData);
-        atualizarEstatisticasDashboard(dashboardData, "Visão Geral (Todos os Eventos)");
+        atualizarEstatisticasDashboard(dashboardData, "Visão Geral");
 
         const contagemEventos = {}, contagemStatus = {};
         dashboardData.forEach(i => {
-            const nome = mapaEventos[i.eventoId] || 'Outro';
+            const nome = mapaEventos[i.eventoId] || `Evento ${i.eventoId}`;
             contagemEventos[nome] = (contagemEventos[nome] || 0) + 1;
             contagemStatus[i.status] = (contagemStatus[i.status] || 0) + 1;
         });
@@ -168,7 +149,7 @@ function carregarDashboard() {
                 const dadosFiltrados = dashboardData.filter(i => String(i.eventoId) === String(eventoId));
                 atualizarEstatisticasDashboard(dadosFiltrados, mapaEventos[eventoId]);
             } else {
-                atualizarEstatisticasDashboard(dashboardData, "Visão Geral (Todos os Eventos)");
+                atualizarEstatisticasDashboard(dashboardData, "Visão Geral");
             }
         };
     });
@@ -178,27 +159,20 @@ function atualizarEstatisticasDashboard(dados, titulo) {
     document.getElementById('stat-total').innerText = dados.length;
     document.getElementById('stat-aprovados').innerText = dados.filter(i => i.status.includes('Aprovada') || i.status.includes('Emitida')).length;
     document.getElementById('stat-pendentes').innerText = dados.filter(i => i.status === 'Pendente').length;
-    let banner = document.getElementById('dashboard-banner');
-    if(!banner) {
-        banner = document.createElement('div');
-        banner.id = 'dashboard-banner';
-        banner.style.cssText = "background:linear-gradient(to right, #1e293b, #334155); color:white; padding:15px; border-radius:12px; margin-bottom:20px; box-shadow:0 4px 6px rgba(0,0,0,0.1); display:flex; align-items:center; justify-content:space-between;";
-        const container = document.querySelector('.stats-grid');
-        container.parentNode.insertBefore(banner, container);
-    }
-    banner.innerHTML = `<div><small style="text-transform:uppercase; opacity:0.8; font-size:0.75rem;">Painel de Controle</small><h3 style="margin:0; font-size:1.2rem;">${titulo}</h3></div><div style="font-size:1.5rem; background:rgba(255,255,255,0.1); width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:50%;"><i class="fa-solid fa-chart-simple"></i></div>`;
 }
 
 function renderizarGraficos(dadosEventos, dadosStatus) {
     if(chartEventosInstance) chartEventosInstance.destroy();
     chartEventosInstance = new Chart(document.getElementById('chartEventos').getContext('2d'), {
-        type: 'bar', data: { labels: Object.keys(dadosEventos), datasets: [{ label: 'Inscritos', data: Object.values(dadosEventos), backgroundColor: '#3b82f6', borderRadius: 6 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        type: 'bar', 
+        data: { labels: Object.keys(dadosEventos), datasets: [{ label: 'Inscritos', data: Object.values(dadosEventos), backgroundColor: '#2563eb', borderRadius: 6 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { borderDash: [2, 4] } }, x: { grid: { display: false } } } }
     });
     if(chartStatusInstance) chartStatusInstance.destroy();
     chartStatusInstance = new Chart(document.getElementById('chartStatus').getContext('2d'), {
-        type: 'doughnut', data: { labels: Object.keys(dadosStatus), datasets: [{ data: Object.values(dadosStatus), backgroundColor: ['#f59e0b', '#10b981', '#ef4444', '#3b82f6'], borderWidth: 0 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+        type: 'doughnut', 
+        data: { labels: Object.keys(dadosStatus), datasets: [{ data: Object.values(dadosStatus), backgroundColor: ['#ca8a04', '#16a34a', '#dc2626', '#2563eb'], borderWidth: 0 }] },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8 } } } }
     });
 }
 
@@ -229,7 +203,7 @@ function gerarRelatorioTransporte() {
     });
 
     if (alunosFiltrados.length === 0) {
-        return Swal.fire({ icon: 'info', title: 'Atenção', text: 'Nenhum aluno APROVADO encontrado com esses filtros.' });
+        return Swal.fire({ icon: 'info', title: 'Sem dados', text: 'Nenhum aluno APROVADO encontrado com esses filtros.' });
     }
 
     const todasChaves = new Set();
@@ -259,28 +233,23 @@ function gerarRelatorioTransporte() {
         const label = CAMPOS_PADRAO.find(c => c.key === chave)?.label || chave;
         const checked = chavesPrioritarias.includes(chave) ? 'checked' : '';
         htmlChecks += `
-            <label class="checkbox-card" style="font-size:0.85rem;">
+            <label class="checkbox-card">
                 <input type="checkbox" class="col-check" value="${chave}" ${checked}> ${label}
             </label>`;
     });
     htmlChecks += `</div>`;
 
     Swal.fire({
-        title: 'Personalizar Relatório',
-        html: `
-            <p style="font-size:0.9rem; color:#64748b; margin-bottom:15px;">Selecione as colunas que deseja exibir:</p>
-            ${htmlChecks}
-        `,
-        width: '600px',
+        title: 'Gerar Relatório Personalizado',
+        html: `<p style="font-size:0.9rem; color:#64748b; margin-bottom:15px;">Selecione as colunas para o PDF:</p>${htmlChecks}`,
+        width: '700px',
         showCancelButton: true,
         confirmButtonText: 'Gerar PDF',
         confirmButtonColor: '#2563eb',
         preConfirm: () => {
             const selecionados = [];
             document.querySelectorAll('.col-check:checked').forEach(c => selecionados.push(c.value));
-            if (selecionados.length === 0) {
-                Swal.showValidationMessage('Selecione pelo menos uma coluna.');
-            }
+            if (selecionados.length === 0) Swal.showValidationMessage('Selecione pelo menos uma coluna.');
             return selecionados;
         }
     }).then((res) => {
@@ -291,7 +260,7 @@ function gerarRelatorioTransporte() {
 }
 
 function construirRelatorioFinal(alunos, colunasKeys, eventoId) {
-    showLoading('Gerando Layout...');
+    showLoading('Renderizando Relatório...');
 
     const tituloEvento = eventoId ? (mapaEventos[eventoId] || 'Evento') : "Relatório Geral";
     const dataHoje = new Date().toLocaleDateString('pt-BR');
@@ -312,7 +281,7 @@ function construirRelatorioFinal(alunos, colunasKeys, eventoId) {
                 <div class="header-left">
                     <img src="${URL_LOGO}" alt="Logo" class="report-logo" onerror="this.style.opacity='0'">
                     <div class="header-titles">
-                        <h1>Relatório de Transporte</h1>
+                        <h1>Relatório de Transporte Escolar</h1>
                         <p>${tituloEvento}</p>
                     </div>
                 </div>
@@ -338,7 +307,7 @@ function construirRelatorioFinal(alunos, colunasKeys, eventoId) {
         listaAlunos.sort((a,b) => (a['NomeCompleto']||'').localeCompare(b['NomeCompleto']||''));
 
         htmlContent += `
-            <div style="margin-top: 20px; margin-bottom: 5px; font-weight: bold; background: #e5e7eb; padding: 5px 10px; border: 1px solid #000; border-bottom: none; font-size: 11px;">
+            <div class="group-header" style="margin-top: 20px; padding: 8px; font-weight: bold; background: #e5e7eb; border: 1px solid #000; border-bottom: none; font-size: 11px;">
                 INSTITUIÇÃO: ${instNome.toUpperCase()} (${listaAlunos.length} ALUNOS)
             </div>
             <table class="report-table" style="margin-top:0;">
@@ -363,12 +332,8 @@ function construirRelatorioFinal(alunos, colunasKeys, eventoId) {
 
     htmlContent += `
             <div class="report-footer">
-                <div class="sign-box">
-                    <div class="sign-line">Responsável pelo Transporte</div>
-                </div>
-                <div class="sign-box">
-                    <div class="sign-line">Secretaria de Educação</div>
-                </div>
+                <div class="sign-box"><div class="sign-line">Responsável pelo Transporte</div></div>
+                <div class="sign-box"><div class="sign-line">Secretaria de Educação</div></div>
             </div>
         </div>
     `;
@@ -386,13 +351,13 @@ function construirRelatorioFinal(alunos, colunasKeys, eventoId) {
     setTimeout(() => window.print(), 500);
 }
 
-// --- EVENTOS E MODAL ---
+// --- EVENTOS E MODAL (WIDESCREEN) ---
 function carregarEventosAdmin() {
     fetch(`${URL_API}?action=getTodosEventos`).then(res => res.json()).then(json => {
         const tbody = document.getElementById('lista-eventos-admin'); 
         tbody.innerHTML = '';
         mapaEventos = {};
-        if(!json.data || json.data.length === 0) { tbody.innerHTML = '<tr><td colspan="4">Vazio</td></tr>'; return; }
+        if(!json.data || json.data.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 2rem;">Nenhum evento criado.</td></tr>'; return; }
         
         json.data.forEach(ev => {
             mapaEventos[ev.id] = ev.titulo;
@@ -401,53 +366,67 @@ function carregarEventosAdmin() {
         
         json.data.sort((a,b) => b.id - a.id).forEach(ev => {
             let btnAction = ev.status === 'Ativo' ? 
-                `<button class="action-btn" style="background:#eab308; color:black;" onclick="toggleStatusEvento('${ev.id}','Inativo')" title="Pausar"><i class="fa-solid fa-pause"></i></button>` : 
-                `<button class="action-btn" style="background:#22c55e; color:#fff;" onclick="toggleStatusEvento('${ev.id}','Ativo')" title="Ativar"><i class="fa-solid fa-play"></i></button>`;
-            tbody.innerHTML += `<tr><td>#${ev.id}</td><td><strong>${ev.titulo}</strong><br><small>${safeDate(ev.inicio)} - ${safeDate(ev.fim)}</small></td><td><span class="badge badge-${ev.status}">${ev.status}</span></td><td style="text-align:right;">${btnAction}<button class="action-btn btn-edit" onclick='abrirEdicaoEvento(${JSON.stringify(ev)})'><i class="fa-solid fa-pen"></i></button></td></tr>`;
+                `<button class="action-btn" style="background:#eab308;" onclick="toggleStatusEvento('${ev.id}','Inativo')" title="Pausar Inscrições"><i class="fa-solid fa-pause"></i></button>` : 
+                `<button class="action-btn" style="background:#22c55e;" onclick="toggleStatusEvento('${ev.id}','Ativo')" title="Ativar Inscrições"><i class="fa-solid fa-play"></i></button>`;
+            
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>#${ev.id}</strong></td>
+                    <td>
+                        <div style="font-weight:600; color:var(--primary); font-size:1rem;">${ev.titulo}</div>
+                        <div style="font-size:0.85rem; color:#64748b;">${safeDate(ev.inicio)} até ${safeDate(ev.fim)}</div>
+                    </td>
+                    <td><span class="badge badge-${ev.status}">${ev.status}</span></td>
+                    <td style="text-align:right;">
+                        ${btnAction}
+                        <button class="action-btn btn-edit" onclick='abrirEdicaoEvento(${JSON.stringify(ev)})'><i class="fa-solid fa-pen"></i></button>
+                    </td>
+                </tr>`;
         });
     });
 }
 
 function abrirEdicaoEvento(evento) {
     let config = {}; try { config = JSON.parse(evento.config); } catch(e){}
-    
     const checkFicha = config.exigeFicha ? 'checked' : '';
     const checkCart = config.emiteCarteirinha ? 'checked' : '';
     const cidades = config.cidadesPermitidas ? config.cidadesPermitidas.join(', ') : '';
 
     Swal.fire({
         title: 'Editar Evento',
+        width: '800px',
         html: `
-            <div class="modal-form-grid">
-                <div class="modal-full">
-                    <label class="swal-label">Prorrogar Data Fim</label>
+            <div class="grid-2">
+                <div>
+                    <label class="swal-label">Data de Encerramento</label>
                     <input type="date" id="edit_fim" class="swal-input" value="${evento.fim ? evento.fim.split('T')[0] : ''}">
                 </div>
-                <div class="modal-full">
-                    <label class="swal-label">Restrição de Cidades (Opcional)</label>
-                    <input type="text" id="edit_cidades" class="swal-input" placeholder="Ex: Natal, Parnamirim" value="${cidades}">
+                <div>
+                    <label class="swal-label">Restrição de Cidades</label>
+                    <input type="text" id="edit_cidades" class="swal-input" placeholder="Separe por vírgulas..." value="${cidades}">
                 </div>
-                <div class="modal-full">
-                    <label class="swal-label">Mensagem de Alerta</label>
-                    <textarea id="edit_msg" class="swal-input" style="height:80px;">${config.mensagemAlerta || ''}</textarea>
-                </div>
-                
-                <div class="modal-full" style="text-align:left; margin-top:10px;">
-                    <label class="checkbox-card" style="border-color: #f59e0b; background: #fffbeb; margin-bottom:5px;">
-                        <input type="checkbox" id="edit_req_ficha" ${checkFicha}> 
-                        <strong>Exigir Ficha Presencial?</strong>
-                    </label>
-                    <label class="checkbox-card" style="border-color: #3b82f6; background: #eff6ff;">
-                        <input type="checkbox" id="edit_emitir_carteirinha" ${checkCart}> 
-                        <strong>Emitir Carteirinha Digital?</strong>
-                    </label>
-                </div>
-            </div>`,
-        width: '600px', showCancelButton: true, confirmButtonText: 'Salvar', confirmButtonColor: '#2563eb',
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <label class="swal-label">Mensagem de Alerta (Topo do Formulário)</label>
+                <textarea id="edit_msg" class="swal-input" style="height:80px;">${config.mensagemAlerta || ''}</textarea>
+            </div>
+            
+            <div class="checkbox-grid" style="margin-top: 20px;">
+                <label class="checkbox-card">
+                    <input type="checkbox" id="edit_req_ficha" ${checkFicha}> 
+                    <div><strong>Exigir Ficha Presencial</strong><br><small style="color:#64748b;">Aluno deve levar assinado</small></div>
+                </label>
+                <label class="checkbox-card">
+                    <input type="checkbox" id="edit_emitir_carteirinha" ${checkCart}> 
+                    <div><strong>Carteirinha Digital</strong><br><small style="color:#64748b;">Liberar após aprovação</small></div>
+                </label>
+            </div>
+        `,
+        showCancelButton: true, confirmButtonText: 'Salvar Alterações', confirmButtonColor: '#2563eb',
         preConfirm: () => { 
             const cidadesTexto = document.getElementById('edit_cidades').value;
             const cidadesArr = cidadesTexto ? cidadesTexto.split(',').map(s => s.trim()).filter(s => s) : [];
-
             return { 
                 fim: document.getElementById('edit_fim').value, 
                 msg: document.getElementById('edit_msg').value,
@@ -468,7 +447,7 @@ function abrirEdicaoEvento(evento) {
                     ...res.value 
                 }) 
             }).then(() => { 
-                Swal.fire({icon: 'success', title: 'Salvo!'}); 
+                Swal.fire({icon: 'success', title: 'Evento Atualizado!'}); 
                 carregarEventosAdmin(); 
             }); 
         }
@@ -484,103 +463,86 @@ function toggleStatusEvento(id, status) {
 function modalNovoEvento() {
     let htmlCampos = '<div class="checkbox-grid">';
     CAMPOS_PADRAO.forEach(c => {
-        if(c.key !== 'Cidade' && c.key !== 'Estado') { // Cidade e Estado já são tratados à parte
+        if(c.key !== 'Cidade' && c.key !== 'Estado') { 
              htmlCampos += `<label class="checkbox-card"><input type="checkbox" id="check_${c.key}" value="${c.key}" checked> ${c.label}</label>`;
         }
     });
     htmlCampos += '</div>';
 
     Swal.fire({
-        title: 'Criar Novo Evento', width: '800px',
+        title: 'Criar Novo Evento', 
+        width: '900px',
         html: `
-            <div class="modal-form-grid">
-                <input id="swal-titulo" class="swal-input" placeholder="Título do Evento">
-                <input id="swal-desc" class="swal-input" placeholder="Descrição Curta">
-                <div class="modal-row">
-                    <div><label class="swal-label">Início *</label><input type="date" id="swal-inicio" class="swal-input"></div>
-                    <div><label class="swal-label">Fim *</label><input type="date" id="swal-fim" class="swal-input"></div>
+            <div class="grid-2">
+                <div>
+                    <label class="swal-label">Título do Evento</label>
+                    <input id="swal-titulo" class="swal-input" placeholder="Ex: Transporte 2025.1">
                 </div>
+                <div>
+                    <label class="swal-label">Descrição Curta</label>
+                    <input id="swal-desc" class="swal-input" placeholder="Ex: Período letivo regular">
+                </div>
+            </div>
+            
+            <div class="grid-2" style="margin-top: 15px;">
+                <div><label class="swal-label">Início das Inscrições</label><input type="date" id="swal-inicio" class="swal-input"></div>
+                <div><label class="swal-label">Fim das Inscrições</label><input type="date" id="swal-fim" class="swal-input"></div>
+            </div>
+
+            <div style="background: #f8fafc; padding: 20px; border-radius: 10px; margin-top: 20px; border: 1px solid #e2e8f0;">
+                <h4 style="margin: 0 0 15px 0; color: var(--primary);">Configuração do Formulário</h4>
                 
-                <div class="modal-full" style="background:#f8fafc; padding:15px; border:1px solid #e2e8f0; border-radius:8px;">
-                    <div style="background:#eff6ff; color:#1e40af; padding:8px; border-radius:6px; font-size:0.85rem; margin-bottom:10px; border:1px solid #dbeafe; display:flex; align-items:center; gap:8px;">
-                        <i class="fa-solid fa-circle-info"></i>
-                        <strong>CPF, E-mail, Cidade e Estado</strong> são automáticos.
+                <label class="swal-label">Campos do Aluno</label>
+                ${htmlCampos}
+                
+                <div class="grid-2" style="margin-top: 15px;">
+                    <div>
+                        <label class="swal-label">Restrição de Cidades</label>
+                        <input type="text" id="swal-cidades" class="swal-input" placeholder="Deixe vazio para todas">
                     </div>
-                    
-                    <label class="swal-label" style="color:var(--primary);">Configuração do Formulário:</label>
-                    ${htmlCampos}
-                    <hr style="margin:10px 0; border:0; border-top:1px dashed #ccc;">
-                    
-                    <label class="swal-label">Restrição de Cidades (Opcional)</label>
-                    <input type="text" id="swal-cidades" class="swal-input" placeholder="Ex: Natal, Parnamirim (Deixe vazio para liberar todas)">
-                    <small style="color:#64748b;">Se preenchido, o aluno só poderá escolher uma dessas cidades.</small>
-
-                    <hr style="margin:10px 0; border:0; border-top:1px dashed #ccc;">
-
-                    <label class="swal-label">Campos Extras</label>
-                    <div id="container-extras" style="display:flex; flex-direction:column; gap:5px; margin-bottom:10px;"></div>
-                    <button type="button" class="action-btn btn-view" style="width:100%;" id="btn-add-extra">+ Adicionar Pergunta</button>
-                    
-                    <div class="modal-full" style="margin-top:15px;">
-                        <label class="swal-label">Instruções / Observações (Somente Leitura)</label>
-                        <textarea id="txt_obs_admin" class="swal-input" style="height:80px;" placeholder="Ex: Trazer comprovante original..."></textarea>
+                    <div>
+                        <label class="swal-label">Observações (Somente Leitura)</label>
+                        <textarea id="txt_obs_admin" class="swal-input" style="height:42px;" placeholder="Instruções para o aluno..."></textarea>
                     </div>
                 </div>
 
-                <!-- SWITCHES CONFIGURAÇÃO -->
-                <div class="modal-full">
-                    <label class="swal-label">Configurações de Processo</label>
-                    <div style="display:flex; gap:10px; flex-direction: column;">
-                        <label class="checkbox-card" style="border-color: #f59e0b; background: #fffbeb;">
+                <label class="swal-label" style="margin-top: 15px;">Documentos Obrigatórios</label>
+                <div class="checkbox-grid">
+                    <label class="checkbox-card"><input type="checkbox" id="req_foto" checked> Foto 3x4</label>
+                    <label class="checkbox-card"><input type="checkbox" id="req_doc" checked> Declaração/Comprovante</label>
+                </div>
+
+                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed #cbd5e1;">
+                     <label class="swal-label">Regras de Negócio</label>
+                     <div class="checkbox-grid">
+                        <label class="checkbox-card" style="background: #fffbeb; border-color: #f59e0b;">
                             <input type="checkbox" id="req_ficha" checked> 
-                            <strong>Exigir Ficha/Assinatura Presencial?</strong>
-                            <br><span style="font-size:0.75rem; color:#b45309; font-weight:normal; margin-left:24px;">Se marcado, o aluno receberá aviso para assinar ficha na secretaria.</span>
+                            <strong>Exigir Assinatura Presencial</strong>
                         </label>
-                        
-                        <!-- NOVO SWITCH: CARTEIRINHA DIGITAL -->
-                        <label class="checkbox-card" style="border-color: #3b82f6; background: #eff6ff;">
+                        <label class="checkbox-card" style="background: #eff6ff; border-color: #3b82f6;">
                             <input type="checkbox" id="emitir_carteirinha"> 
-                            <strong>Emitir Carteirinha Digital?</strong>
-                            <br><span style="font-size:0.75rem; color:#1e40af; font-weight:normal; margin-left:24px;">Habilita a carteirinha no portal do aluno após aprovação.</span>
+                            <strong>Emitir Carteirinha Digital</strong>
                         </label>
-                    </div>
-                </div>
-
-                <div class="modal-full">
-                    <label class="swal-label">Uploads Obrigatórios</label>
-                    <div style="display:flex; gap:20px;">
-                        <label class="checkbox-card"><input type="checkbox" id="req_foto" checked> Foto 3x4</label>
-                        <label class="checkbox-card"><input type="checkbox" id="req_doc" checked> Declaração</label>
-                    </div>
+                     </div>
                 </div>
             </div>
         `,
-        showCancelButton: true, confirmButtonText: 'Publicar', confirmButtonColor: '#2563eb',
-        didOpen: () => {
-            document.getElementById('btn-add-extra').addEventListener('click', () => {
-                const div = document.createElement('div');
-                div.innerHTML = `<div style="display:flex; gap:5px;"><input type="text" class="swal-input extra-field" placeholder="Nome do campo..." style="margin-bottom:5px; flex:1;"><button type="button" class="action-btn btn-delete" onclick="this.parentElement.parentElement.remove()">X</button></div>`;
-                document.getElementById('container-extras').appendChild(div);
-            });
-        },
+        showCancelButton: true, confirmButtonText: 'Publicar Evento', confirmButtonColor: '#2563eb',
         preConfirm: () => {
             const titulo = document.getElementById('swal-titulo').value;
             const inicio = document.getElementById('swal-inicio').value;
             const fim = document.getElementById('swal-fim').value;
 
             if(!titulo || !inicio || !fim) {
-                Swal.showValidationMessage('Preencha Título, Data Início e Data Fim.');
+                Swal.showValidationMessage('Preencha Título e Datas.');
                 return false;
             }
 
-            const sels = ['Cidade', 'Estado']; // Sempre inclui Cidade e Estado
+            const sels = ['Cidade', 'Estado']; 
             CAMPOS_PADRAO.forEach(c => { 
                 const el = document.getElementById(`check_${c.key}`);
                 if(el && el.checked) sels.push(c.key); 
             });
-            
-            const extras = [];
-            document.querySelectorAll('.extra-field').forEach(inp => { if(inp.value.trim()) extras.push(inp.value.trim()); });
             
             const cidadesTexto = document.getElementById('swal-cidades').value;
             const cidadesArr = cidadesTexto ? cidadesTexto.split(',').map(s => s.trim()).filter(s => s) : [];
@@ -590,12 +552,12 @@ function modalNovoEvento() {
                 inicio: inicio, fim: fim,
                 config: { 
                     camposTexto: sels, 
-                    camposPersonalizados: extras,
+                    camposPersonalizados: [], 
                     observacoesTexto: document.getElementById('txt_obs_admin').value,
                     arquivos: { foto: document.getElementById('req_foto').checked, doc: document.getElementById('req_doc').checked },
                     exigeFicha: document.getElementById('req_ficha').checked,
                     emiteCarteirinha: document.getElementById('emitir_carteirinha').checked,
-                    cidadesPermitidas: cidadesArr // NOVA CONFIG
+                    cidadesPermitidas: cidadesArr 
                 }, 
                 status: 'Ativo'
             }
@@ -604,28 +566,17 @@ function modalNovoEvento() {
         if(res.isConfirmed) {
             showLoading('Criando Evento...');
             fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'criarEvento', senha: sessionStorage.getItem('admin_token'), dados: res.value }) })
-            .then(() => { Swal.fire({icon: 'success', title: 'Sucesso!'}); carregarEventosAdmin(); });
+            .then(() => { Swal.fire({icon: 'success', title: 'Evento Criado!'}); carregarEventosAdmin(); });
         }
     });
 }
 
-// --- INSCRIÇÕES (MODIFICADO: Carrega eventos para ter config) ---
+// --- INSCRIÇÕES (Logic) ---
 function carregarInscricoes() {
     const tbody = document.getElementById('lista-inscricoes-admin');
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Carregando...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem;">Carregando dados...</td></tr>';
     
-    const selStatus = document.getElementById('filtro-status');
-    if(selStatus) {
-        selStatus.innerHTML = `
-            <option value="">Todos Status</option>
-            <option value="Pendente">Pendente</option>
-            <option value="Aprovada">Aprovada</option>
-            <option value="Rejeitada">Rejeitada</option>
-            <option value="Ficha Emitida">Ficha Emitida</option>
-        `;
-    }
-
-    // 1. Carrega Eventos (Para ter o mapa e configurações)
+    // 1. Carrega Eventos
     fetch(`${URL_API}?action=getTodosEventos`)
     .then(r => r.json())
     .then(jsonEventos => {
@@ -634,7 +585,6 @@ function carregarInscricoes() {
                  mapaEventos[ev.id] = ev.titulo; 
                  cacheEventos[ev.id] = ev; 
              });
-             // Atualiza filtro de eventos
              const select = document.getElementById('filtro-evento');
              if(select && select.options.length <= 1) {
                  Object.keys(mapaEventos).forEach(id => select.innerHTML += `<option value="${id}">${mapaEventos[id]}</option>`);
@@ -649,7 +599,7 @@ function carregarInscricoes() {
         resetEFiltrar();
     })
     .catch(() => {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">Erro ao carregar.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#dc2626;">Erro de comunicação.</td></tr>';
     });
 }
 
@@ -661,104 +611,160 @@ function resetEFiltrar() {
     inscricoesFiltradas = todasInscricoes.filter(i => {
         let d = {}; try { d = JSON.parse(i.dadosJson); } catch(e){}
         const nome = (d.NomeCompleto || "").toLowerCase();
-        return (nome.includes(termo) || i.chave.toLowerCase().includes(termo)) && (status === "" || i.status === status) && (eventoId === "" || String(i.eventoId) === String(eventoId));
+        const cpf = (d.CPF || "").replace(/\D/g, '');
+        return (nome.includes(termo) || i.chave.toLowerCase().includes(termo) || cpf.includes(termo)) && 
+               (status === "" || i.status === status) && 
+               (eventoId === "" || String(i.eventoId) === String(eventoId));
     });
     document.getElementById('lista-inscricoes-admin').innerHTML = '';
     renderizarProximaPagina();
 }
 
-// --- RENDERIZAÇÃO DA TABELA CORRIGIDA ---
 function renderizarProximaPagina() {
     const tbody = document.getElementById('lista-inscricoes-admin');
     const lote = inscricoesFiltradas.slice((paginaAtual - 1) * ITENS_POR_PAGINA, paginaAtual * ITENS_POR_PAGINA);
-    if(paginaAtual === 1 && lote.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Vazio.</td></tr>'; document.getElementById('btn-load-more').style.display = 'none'; return; }
+    
+    if(paginaAtual === 1 && lote.length === 0) { 
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 2rem; color: #64748b;">Nenhum registro encontrado.</td></tr>'; 
+        document.getElementById('btn-load-more').style.display = 'none'; 
+        return; 
+    }
     
     lote.forEach(ins => {
         let d = {}; try { d = JSON.parse(ins.dadosJson); } catch(e){}
         const checked = selecionados.has(ins.chave) ? 'checked' : '';
-        let btnFicha = ins.link_ficha ? `<a href="${ins.link_ficha}" target="_blank" class="action-btn btn-view" style="background:#059669;" title="Baixar PDF"><i class="fa-solid fa-file-pdf"></i></a>` : `<button class="action-btn" style="background:#6366f1;" onclick="gerarFicha('${ins.chave}')" title="Gerar Ficha"><i class="fa-solid fa-print"></i></button>`;
         
-        // --- CORREÇÃO: Exibe botão de Carteirinha APENAS se o evento permitir ---
+        // Botões de Ação
+        let btnFicha = ins.link_ficha ? 
+            `<a href="${ins.link_ficha}" target="_blank" class="action-btn btn-view" style="background:#059669;" title="Baixar Ficha PDF"><i class="fa-solid fa-file-pdf"></i></a>` : 
+            `<button class="action-btn" style="background:#6366f1;" onclick="gerarFicha('${ins.chave}')" title="Gerar Ficha"><i class="fa-solid fa-print"></i></button>`;
+        
         let btnCartAdm = '';
         const evento = cacheEventos[ins.eventoId];
         if (evento) {
-            let config = {};
-            try { config = JSON.parse(evento.config); } catch(e) {}
+            let config = {}; try { config = JSON.parse(evento.config); } catch(e) {}
             if (config.emiteCarteirinha) {
                 btnCartAdm = `<button class="action-btn" style="background:#3b82f6;" onclick="imprimirCarteirinhaAdmin('${ins.chave}')" title="Carteirinha"><i class="fa-solid fa-id-card"></i></button>`;
             }
         }
         
         tbody.innerHTML += `<tr>
-            <td><input type="checkbox" class="bulk-check" value="${ins.chave}" ${checked} onclick="toggleCheck('${ins.chave}')"></td>
-            <td>${safeDate(ins.data)}</td><td><small>${mapaEventos[ins.eventoId]||ins.eventoId}</small></td>
-            <td><strong>${d.NomeCompleto||'Aluno'}</strong><br><small style="color:#64748b;">${ins.chave}</small></td>
+            <td style="text-align:center;"><input type="checkbox" class="bulk-check" value="${ins.chave}" ${checked} onclick="toggleCheck('${ins.chave}')"></td>
+            <td>${safeDate(ins.data)}</td>
+            <td><div class="badge" style="background:#f1f5f9; color:#475569; font-weight:500;">${mapaEventos[ins.eventoId]||ins.eventoId}</div></td>
+            <td>
+                <div style="font-weight:600; font-size:0.95rem;">${d.NomeCompleto||'Sem Nome'}</div>
+                <div style="font-size:0.8rem; color:#64748b; font-family:monospace;">${ins.chave}</div>
+            </td>
             <td><span class="badge badge-${ins.status.replace(/\s/g, '')}">${ins.status}</span></td>
-            <td><div style="display:flex; gap:5px; justify-content:flex-end;"><button class="action-btn" style="background:#f59e0b;" onclick="abrirEdicaoInscricao('${ins.chave}')" title="Editar Dados"><i class="fa-solid fa-pen"></i></button><button class="action-btn btn-edit" onclick="mudarStatus('${ins.chave}')" title="Alterar Status"><i class="fa-solid fa-list-check"></i></button>${btnCartAdm}${btnFicha}${ins.doc ? `<a href="${ins.doc}" target="_blank" class="action-btn btn-view" title="Ver Anexo"><i class="fa-solid fa-paperclip"></i></a>` : ''}</div></td>
+            <td style="text-align:right;">
+                <div style="display:flex; gap:4px; justify-content:flex-end;">
+                    <button class="action-btn" style="background:#f59e0b;" onclick="abrirEdicaoInscricao('${ins.chave}')" title="Detalhes & Edição"><i class="fa-solid fa-user-pen"></i></button>
+                    ${btnCartAdm}
+                    ${btnFicha}
+                    ${ins.doc ? `<a href="${ins.doc}" target="_blank" class="action-btn btn-view" title="Ver Documento"><i class="fa-solid fa-paperclip"></i></a>` : ''}
+                </div>
+            </td>
         </tr>`;
     });
     paginaAtual++;
     document.getElementById('btn-load-more').style.display = (paginaAtual * ITENS_POR_PAGINA < inscricoesFiltradas.length + ITENS_POR_PAGINA) ? 'block' : 'none';
 }
 
-// --- FUNÇÃO ATUALIZADA: EDIÇÃO CONDICIONAL ---
+// --- EDIÇÃO DE INSCRIÇÃO (WIDESCREEN MODAL) ---
 function abrirEdicaoInscricao(chave) {
     const inscricao = todasInscricoes.find(i => i.chave === chave);
     if (!inscricao) return;
-    let dados = {};
-    try { dados = JSON.parse(inscricao.dadosJson); } catch(e) {}
     
-    // Busca config do evento para saber se exibe uploads
+    let dados = {}; try { dados = JSON.parse(inscricao.dadosJson); } catch(e) {}
     let evento = cacheEventos[inscricao.eventoId] || {};
-    let configEvento = {};
-    try { configEvento = JSON.parse(evento.config || '{}'); } catch(e) {}
-    
-    let formHtml = '<div style="display:flex; flex-direction:column; gap:10px; text-align:left; max-height:400px; overflow-y:auto; padding:5px;">';
-    const ignorar = ['linkFoto', 'linkDoc'];
-    
-    // Campos de Texto
-    for (const [key, val] of Object.entries(dados)) {
-        if (!ignorar.includes(key)) {
-            const labelAmigavel = CAMPOS_PADRAO.find(c => c.key === key)?.label || key;
-            formHtml += `<div><label style="font-size:0.85rem; font-weight:600; color:#64748b;">${labelAmigavel}</label><input type="text" id="edit_aluno_${key}" value="${val}" class="swal-input" style="padding:8px;"></div>`;
+    let configEvento = {}; try { configEvento = JSON.parse(evento.config || '{}'); } catch(e) {}
+
+    // Tratamento de imagem para o modal
+    let fotoUrl = 'https://via.placeholder.com/150?text=Sem+Foto';
+    if(dados.linkFoto) {
+        if(dados.linkFoto.includes('drive.google.com')) {
+             let id = dados.linkFoto.split(/\/d\/|id=/)[1].split(/\/|&/)[0];
+             fotoUrl = `https://lh3.googleusercontent.com/d/${id}`;
+        } else {
+             fotoUrl = dados.linkFoto;
         }
     }
-    
-    // Campos de Upload (SÓ SE O EVENTO EXIGIR)
+
+    // Construção dos Campos em 2 Colunas
+    let htmlCamposEsquerda = ''; // Dados Pessoais
+    let htmlCamposDireita = '';  // Dados Acadêmicos
+
+    const ignorar = ['linkFoto', 'linkDoc'];
+    const camposAcad = ['NomeInstituicao', 'NomeCurso', 'PeriodoCurso', 'Matricula', 'Turno'];
+
+    for (const [key, val] of Object.entries(dados)) {
+        if (!ignorar.includes(key)) {
+            const label = CAMPOS_PADRAO.find(c => c.key === key)?.label || key;
+            const inputHtml = `<div><label class="swal-label">${label}</label><input type="text" id="edit_aluno_${key}" value="${val}" class="swal-input"></div>`;
+            
+            if (camposAcad.includes(key) || key.startsWith('Inst') || key.includes('Curso')) {
+                htmlCamposDireita += inputHtml;
+            } else {
+                htmlCamposEsquerda += inputHtml;
+            }
+        }
+    }
+
+    // Área de Uploads Condicional
+    let htmlUploads = '';
     const pedeFoto = configEvento.arquivos && configEvento.arquivos.foto;
     const pedeDoc = configEvento.arquivos && configEvento.arquivos.doc;
 
     if (pedeFoto || pedeDoc) {
-        formHtml += `
-            <hr style="margin:15px 0; border:0; border-top:1px solid #eee;">
-            <h4 style="margin:0 0 10px 0; color:#1e40af; font-size:0.9rem;">Substituir Arquivos</h4>
-            <div style="background:#f8fafc; padding:10px; border-radius:8px;">
-        `;
-        
-        if (pedeFoto) {
-            formHtml += `
-                <label style="font-size:0.85rem; font-weight:600; display:block;">Nova Foto 3x4:</label>
-                <input type="file" id="edit_upload_foto" accept="image/*" class="swal-input" style="font-size:0.8rem;">
-            `;
-        }
-        
-        if (pedeDoc) {
-            formHtml += `
-                <label style="font-size:0.85rem; font-weight:600; display:block; margin-top:10px;">Nova Declaração (PDF):</label>
-                <input type="file" id="edit_upload_doc" accept="application/pdf" class="swal-input" style="font-size:0.8rem;">
-            `;
-        }
-        
-        formHtml += `</div>`;
+        htmlUploads = `<div class="grid-2" style="margin-top:20px; border-top:1px solid #e2e8f0; padding-top:15px;">`;
+        if (pedeFoto) htmlUploads += `<div><label class="swal-label">Nova Foto 3x4</label><input type="file" id="edit_upload_foto" accept="image/*" class="swal-input"></div>`;
+        if (pedeDoc) htmlUploads += `<div><label class="swal-label">Novo Comprovante</label><input type="file" id="edit_upload_doc" accept="application/pdf" class="swal-input"></div>`;
+        htmlUploads += `</div>`;
     }
-    
-    formHtml += '</div>';
-    
+
     Swal.fire({
-        title: 'Editar Dados do Aluno', html: formHtml, width: '600px', showCancelButton: true, confirmButtonText: 'Salvar', confirmButtonColor: '#2563eb',
+        width: '1000px', // Modal Largo
+        title: '', 
+        html: `
+            <div class="grid-sidebar">
+                <!-- COLUNA LATERAL (FOTO + AÇÕES RÁPIDAS) -->
+                <div style="background: #f8fafc; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid #e2e8f0;">
+                    <img src="${fotoUrl}" style="width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 4px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 15px;">
+                    <h3 style="font-size: 1.1rem; margin: 0; color: var(--primary); font-weight:700;">${dados.NomeCompleto || 'Estudante'}</h3>
+                    <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px;">${dados.CPF || ''}</p>
+                    
+                    <div style="text-align: left;">
+                        <label class="swal-label">Alterar Status</label>
+                        <select id="novo_status_modal" class="swal-input" style="font-weight:600;">
+                            <option value="Pendente" ${inscricao.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
+                            <option value="Aprovada" ${inscricao.status === 'Aprovada' ? 'selected' : ''}>Aprovada</option>
+                            <option value="Rejeitada" ${inscricao.status === 'Rejeitada' ? 'selected' : ''}>Rejeitada</option>
+                            <option value="Ficha Emitida" ${inscricao.status === 'Ficha Emitida' ? 'selected' : ''}>Ficha Emitida</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-top: 20px; display: grid; gap: 10px;">
+                        ${inscricao.doc ? `<a href="${inscricao.doc}" target="_blank" class="action-btn btn-view" style="width:100%; border-radius:6px; text-decoration:none;"><i class="fa-solid fa-eye"></i> Visualizar Comprovante</a>` : ''}
+                    </div>
+                </div>
+
+                <!-- COLUNA PRINCIPAL (FORMULÁRIO) -->
+                <div>
+                    <h3 style="margin: 0 0 20px 0; color: var(--text-primary); border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Dados Cadastrais</h3>
+                    
+                    <div class="grid-2" style="align-items: start;">
+                        <div style="display:grid; gap:10px;">${htmlCamposEsquerda}</div>
+                        <div style="display:grid; gap:10px;">${htmlCamposDireita}</div>
+                    </div>
+
+                    ${htmlUploads}
+                </div>
+            </div>
+        `,
+        showCancelButton: true, confirmButtonText: 'Salvar Alterações', confirmButtonColor: '#2563eb',
         preConfirm: async () => {
             const novosDados = {};
-            // Coleta dados de texto
             for (const key of Object.keys(dados)) { 
                 if (!ignorar.includes(key)) { 
                     const el = document.getElementById(`edit_aluno_${key}`); 
@@ -766,41 +772,47 @@ function abrirEdicaoInscricao(chave) {
                 } 
             }
             
+            const novoStatus = document.getElementById('novo_status_modal').value;
+            
             // Coleta Arquivos
             const arqs = {};
             if (pedeFoto) {
-                const fileFoto = document.getElementById('edit_upload_foto').files[0];
-                if(fileFoto) arqs.foto = { data: await toBase64(fileFoto), mime: 'image/jpeg' };
+                const f = document.getElementById('edit_upload_foto').files[0];
+                if(f) arqs.foto = { data: await toBase64(f), mime: 'image/jpeg' };
             }
             if (pedeDoc) {
-                const fileDoc = document.getElementById('edit_upload_doc').files[0];
-                if(fileDoc) arqs.doc = { data: await toBase64(fileDoc), mime: 'application/pdf' };
+                const f = document.getElementById('edit_upload_doc').files[0];
+                if(f) arqs.doc = { data: await toBase64(f), mime: 'application/pdf' };
             }
 
-            return { novosDados, arquivos: Object.keys(arqs).length > 0 ? arqs : null };
+            return { novosDados, status: novoStatus, arquivos: Object.keys(arqs).length > 0 ? arqs : null };
         }
     }).then((result) => {
         if (result.isConfirmed) {
             showLoading('Salvando...');
-            fetch(URL_API, { 
-                method: 'POST', 
-                body: JSON.stringify({ 
-                    action: 'editarInscricao', 
-                    senha: sessionStorage.getItem('admin_token'), 
-                    chave: chave, 
-                    novosDados: result.value.novosDados,
-                    arquivos: result.value.arquivos // Envia arquivos se houver
-                }) 
-            }).then(res => res.json()).then(json => {
-                if(json.status === 'success') { 
-                    Swal.fire({icon: 'success', title: 'Dados Atualizados!'}); 
-                    // Atualiza cache local para refletir na tela sem recarregar tudo
-                    let jsonNovo = { ...dados, ...result.value.novosDados }; 
-                    inscricao.dadosJson = JSON.stringify(jsonNovo); 
-                    resetEFiltrar(); 
-                } else { 
-                    Swal.fire('Erro', json.message, 'error'); 
-                }
+            
+            // Atualiza status primeiro se mudou
+            const promiseStatus = (result.value.status !== inscricao.status) ? 
+                fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'atualizarStatus', senha: sessionStorage.getItem('admin_token'), chave, novoStatus: result.value.status }) }) : 
+                Promise.resolve();
+
+            promiseStatus.then(() => {
+                return fetch(URL_API, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ 
+                        action: 'editarInscricao', 
+                        senha: sessionStorage.getItem('admin_token'), 
+                        chave: chave, 
+                        novosDados: result.value.novosDados,
+                        arquivos: result.value.arquivos 
+                    }) 
+                });
+            }).then(() => {
+                Swal.fire({icon: 'success', title: 'Dados Atualizados!'});
+                // Atualiza Cache Local
+                inscricao.status = result.value.status;
+                inscricao.dadosJson = JSON.stringify({ ...dados, ...result.value.novosDados });
+                resetEFiltrar();
             });
         }
     });
@@ -812,16 +824,16 @@ function atualizarBarraBulk() { const b = document.getElementById('bulk-bar'); d
 function desmarcarTudo() { selecionados.clear(); document.getElementById('check-all').checked = false; document.querySelectorAll('.bulk-check').forEach(c => c.checked = false); atualizarBarraBulk(); }
 
 function acaoEmMassa(s) {
-    Swal.fire({title: `Marcar ${selecionados.size} como ${s}?`, showCancelButton: true}).then((r) => {
+    Swal.fire({title: `Marcar ${selecionados.size} como ${s}?`, icon: 'warning', showCancelButton: true}).then((r) => {
         if(r.isConfirmed) {
-            showLoading('Atualizando...');
+            showLoading('Processando...');
             fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'atualizarStatusEmMassa', senha: sessionStorage.getItem('admin_token'), chaves: Array.from(selecionados), novoStatus: s }) }).then(() => { Swal.fire({icon: 'success', title: 'Atualizado!'}); todasInscricoes.forEach(i => { if(selecionados.has(i.chave)) i.status = s; }); resetEFiltrar(); });
         }
     });
 }
 
 function gerarFicha(chave) {
-    Swal.fire({ title: 'Gerar Ficha Oficial?', text: "O status mudará para 'Ficha Emitida'.", icon: 'question', showCancelButton: true, confirmButtonText: 'Sim', confirmButtonColor: '#4f46e5' }).then((r) => {
+    Swal.fire({ title: 'Emitir Ficha Oficial', text: "O status do aluno mudará para 'Ficha Emitida'.", icon: 'info', showCancelButton: true, confirmButtonText: 'Confirmar Emissão' }).then((r) => {
         if(r.isConfirmed) {
             showLoading('Gerando PDF...');
             fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'gerarFichaPDF', senha: sessionStorage.getItem('admin_token'), chave: chave }) })
@@ -834,38 +846,9 @@ function gerarFicha(chave) {
     });
 }
 
-function mudarStatus(chave) {
-    Swal.fire({
-        title: 'Atualizar Status',
-        html: `<div style="display:flex; flex-direction:column; gap:10px; padding:10px; text-align:left;"><label style="font-weight:600; color:#64748b; font-size:0.9rem;">Novo Status:</label><select id="novo_status" class="swal2-select" style="display:flex; width:100%; margin:0; border:1px solid #cbd5e1; border-radius:8px; padding:10px;"><option value="Pendente">Pendente (Em análise)</option><option value="Aprovada">Aprovada (Ok)</option><option value="Rejeitada">Rejeitada (Negado)</option><option value="Ficha Emitida">Ficha Emitida (Finalizado)</option></select></div>`,
-        showCancelButton: true, confirmButtonText: 'Salvar', confirmButtonColor: '#2563eb',
-        preConfirm: () => { return document.getElementById('novo_status').value; }
-    }).then((res) => {
-        if(res.isConfirmed) {
-            showLoading('Atualizando...');
-            fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'atualizarStatus', senha: sessionStorage.getItem('admin_token'), chave, novoStatus: res.value }) }).then(() => {
-                const item = todasInscricoes.find(i => i.chave === chave);
-                if(item) item.status = res.value; 
-                resetEFiltrar();
-                Swal.fire({icon: 'success', title: 'Status Atualizado!', timer: 1500, showConfirmButton: false});
-            });
-        }
-    });
-}
-
-// --- FILE HELPER ---
-const toBase64 = f => new Promise((r, j) => { 
-    const rd = new FileReader(); 
-    rd.readAsDataURL(f); 
-    rd.onload = () => r(rd.result.split(',')[1]); 
-    rd.onerror = e => j(e); 
-});
-
 // --- IMPRESSÃO CARTEIRINHA ADM ---
 function imprimirCarteirinhaAdmin(chave) {
-    showLoading('Gerando Carteirinha...');
-    
-    // Busca dados ATUALIZADOS do servidor (para pegar a foto em Base64)
+    showLoading('Carregando Dados...');
     fetch(`${URL_API}?action=consultarInscricao&chave=${chave}`)
     .then(r => r.json())
     .then(j => {
@@ -873,21 +856,14 @@ function imprimirCarteirinhaAdmin(chave) {
         if(j.status !== 'success') return Swal.fire('Erro', 'Dados não encontrados.', 'error');
         
         const aluno = j.data.aluno;
-        
-        // Tratamento da Foto
         let imgSrc = 'https://via.placeholder.com/150?text=FOTO';
         if (aluno.foto) {
             if (aluno.foto.startsWith('data:image') || aluno.foto.startsWith('http')) {
-                // Se for URL do Drive, tenta formatar para visualização direta
                 if (aluno.foto.includes('drive.google.com') && !aluno.foto.startsWith('data:image')) {
-                     // Função auxiliar local para formatar
-                     let id = '';
-                     const parts = aluno.foto.split(/\/d\/|id=/);
+                     let id = ''; const parts = aluno.foto.split(/\/d\/|id=/);
                      if (parts.length > 1) id = parts[1].split(/\/|&/)[0];
                      imgSrc = id ? `https://lh3.googleusercontent.com/d/${id}` : aluno.foto;
-                } else {
-                     imgSrc = aluno.foto;
-                }
+                } else { imgSrc = aluno.foto; }
             }
         }
 
@@ -896,15 +872,10 @@ function imprimirCarteirinhaAdmin(chave) {
                 <div class="carteirinha-card" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
                     <div class="cart-header">
                         <img src="${URL_LOGO}" alt="Logo" class="cart-logo" style="background:white; border-radius:50%;">
-                        <div>
-                            <h3>TRANSPORTE ESCOLAR</h3>
-                            <small>Secretaria de Educação</small>
-                        </div>
+                        <div><h3>TRANSPORTE ESCOLAR</h3><small>Secretaria de Educação</small></div>
                     </div>
                     <div class="cart-body">
-                        <div class="cart-photo">
-                            <img src="${imgSrc}" alt="Foto" style="width:100%; height:100%; object-fit:cover;">
-                        </div>
+                        <div class="cart-photo"><img src="${imgSrc}" alt="Foto" style="width:100%; height:100%; object-fit:cover;"></div>
                         <div class="cart-info">
                             <h2 style="font-size:16px; margin:0 0 5px 0;">${aluno.nome}</h2>
                             <p style="font-size:11px; margin:0;">${aluno.instituicao}</p>
@@ -915,25 +886,20 @@ function imprimirCarteirinhaAdmin(chave) {
                             </div>
                         </div>
                     </div>
-                    <div class="cart-footer">
-                        <span>Uso Pessoal e Intransferível</span>
-                    </div>
+                    <div class="cart-footer"><span>Uso Pessoal e Intransferível</span></div>
                 </div>
             </div>
         `;
-
         let printLayer = document.getElementById('print-layer');
-        if (!printLayer) {
-            printLayer = document.createElement('div');
-            printLayer.id = 'print-layer';
-            document.body.appendChild(printLayer);
-        }
-        
+        if (!printLayer) { printLayer = document.createElement('div'); printLayer.id = 'print-layer'; document.body.appendChild(printLayer); }
         printLayer.innerHTML = htmlCarteirinha;
         setTimeout(() => window.print(), 500);
     });
 }
 
-function carregarInstituicoes() { fetch(`${URL_API}?action=getInstituicoes`).then(r => r.json()).then(json => { const d = document.getElementById('lista-instituicoes'); d.innerHTML = ''; if(json.data) json.data.forEach(n => d.innerHTML += `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;">${n} <button onclick="removerInst('${n}')" style="color:red; border:none; cursor:pointer;">X</button></div>`); }); }
+// --- CONFIGURAÇÃO INSTITUIÇÕES ---
+function carregarInstituicoes() { fetch(`${URL_API}?action=getInstituicoes`).then(r => r.json()).then(json => { const d = document.getElementById('lista-instituicoes'); d.innerHTML = ''; if(json.data) json.data.forEach(n => d.innerHTML += `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;"><span>${n}</span> <button onclick="removerInst('${n}')" class="action-btn btn-delete" style="width:24px; height:24px;"><i class="fa-solid fa-times"></i></button></div>`); }); }
 function addInstituicao() { const n = document.getElementById('nova-inst').value; if(n) fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'adicionarInstituicao', nome: n, senha: sessionStorage.getItem('admin_token') }) }).then(() => { document.getElementById('nova-inst').value = ''; carregarInstituicoes(); }); }
 function removerInst(n) { fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'removerInstituicao', nome: n, senha: sessionStorage.getItem('admin_token') }) }).then(() => carregarInstituicoes()); }
+
+const toBase64 = f => new Promise((r, j) => { const rd = new FileReader(); rd.readAsDataURL(f); rd.onload = () => r(rd.result.split(',')[1]); rd.onerror = e => j(e); });
