@@ -87,6 +87,7 @@ function switchTab(tabId) {
     // 4. Ativa o botão correspondente no menu
     let btnId = '';
     if(tabId === 'tab-dashboard') btnId = 'btn-dashboard';
+    if(tabId === 'tab-relatorios') btnId = 'btn-relatorios'; // Nova Aba
     if(tabId === 'tab-eventos') btnId = 'btn-eventos';
     if(tabId === 'tab-inscricoes') btnId = 'btn-inscricoes';
     if(tabId === 'tab-config') btnId = 'btn-config';
@@ -97,7 +98,9 @@ function switchTab(tabId) {
     }
 
     // 5. Carrega dados específicos da aba
-    if(tabId === 'tab-dashboard') carregarDashboard();
+    // Nota: A aba de relatórios precisa dos mesmos dados do Dashboard (Eventos + Inscrições) para os filtros
+    if(tabId === 'tab-dashboard' || tabId === 'tab-relatorios') carregarDashboard();
+    
     if(tabId === 'tab-eventos') carregarEventosAdmin();
     if(tabId === 'tab-inscricoes') carregarInscricoes();
     if(tabId === 'tab-config') {
@@ -132,37 +135,51 @@ function salvarConfigDrive() {
     });
 }
 
-// --- DASHBOARD ---
+// --- DASHBOARD E DADOS GERAIS ---
 function carregarDashboard() {
     const token = sessionStorage.getItem('admin_token');
+    // Carrega Eventos e Inscrições em paralelo
     Promise.all([
         fetch(`${URL_API}?action=getTodosEventos`).then(r => r.json()),
         fetch(`${URL_API}?action=getInscricoesAdmin&token=${token}`).then(r => r.json())
     ]).then(([jsonEventos, jsonInscricoes]) => {
+        // Processa Eventos
         mapaEventos = {}; 
         cacheEventos = {}; 
         if(jsonEventos.data) jsonEventos.data.forEach(ev => {
             mapaEventos[ev.id] = ev.titulo;
             cacheEventos[ev.id] = ev; 
         });
+        
+        // Processa Inscrições
         dashboardData = jsonInscricoes.data || [];
+        
+        // Atualiza Elementos de UI
         atualizarSelectsRelatorio(jsonEventos.data || [], dashboardData);
         atualizarEstatisticasDashboard(dashboardData);
 
+        // Gera Gráficos
         const contagemEventos = {}, contagemStatus = {};
         dashboardData.forEach(i => {
             const nome = mapaEventos[i.eventoId] || `Evento ${i.eventoId}`;
             contagemEventos[nome] = (contagemEventos[nome] || 0) + 1;
             contagemStatus[i.status] = (contagemStatus[i.status] || 0) + 1;
         });
-        renderizarGraficos(contagemEventos, contagemStatus);
+        
+        // Verifica se os elementos de gráfico existem (só existem na aba dashboard)
+        if(document.getElementById('chartEventos')) {
+            renderizarGraficos(contagemEventos, contagemStatus);
+        }
     });
 }
 
 function atualizarEstatisticasDashboard(dados) {
-    document.getElementById('stat-total').innerText = dados.length;
-    document.getElementById('stat-aprovados').innerText = dados.filter(i => i.status.includes('Aprovada') || i.status.includes('Emitida')).length;
-    document.getElementById('stat-pendentes').innerText = dados.filter(i => i.status === 'Pendente').length;
+    const elTotal = document.getElementById('stat-total');
+    if(elTotal) {
+        elTotal.innerText = dados.length;
+        document.getElementById('stat-aprovados').innerText = dados.filter(i => i.status.includes('Aprovada') || i.status.includes('Emitida')).length;
+        document.getElementById('stat-pendentes').innerText = dados.filter(i => i.status === 'Pendente').length;
+    }
 }
 
 function renderizarGraficos(dadosEventos, dadosStatus) {
@@ -182,14 +199,18 @@ function renderizarGraficos(dadosEventos, dadosStatus) {
 
 function atualizarSelectsRelatorio(eventos, inscricoes) {
     const selEvento = document.getElementById('relatorio-evento');
-    selEvento.innerHTML = '<option value="">Todos os Eventos</option>';
-    eventos.forEach(ev => selEvento.innerHTML += `<option value="${ev.id}">${ev.titulo}</option>`);
+    if(selEvento) {
+        selEvento.innerHTML = '<option value="">Todos os Eventos</option>';
+        eventos.forEach(ev => selEvento.innerHTML += `<option value="${ev.id}">${ev.titulo}</option>`);
+    }
     
-    let instituicoes = new Set();
-    inscricoes.forEach(ins => { try { instituicoes.add(JSON.parse(ins.dadosJson).NomeInstituicao); } catch(e){} });
     const selInst = document.getElementById('relatorio-inst');
-    selInst.innerHTML = '<option value="">Todas as Instituições</option>';
-    Array.from(instituicoes).sort().forEach(inst => { if(inst) selInst.innerHTML += `<option value="${inst}">${inst}</option>`; });
+    if(selInst) {
+        let instituicoes = new Set();
+        inscricoes.forEach(ins => { try { instituicoes.add(JSON.parse(ins.dadosJson).NomeInstituicao); } catch(e){} });
+        selInst.innerHTML = '<option value="">Todas as Instituições</option>';
+        Array.from(instituicoes).sort().forEach(inst => { if(inst) selInst.innerHTML += `<option value="${inst}">${inst}</option>`; });
+    }
 }
 
 // --- RELATÓRIO PDF ---
