@@ -35,6 +35,7 @@ body {
     background-color: var(--bg-body);
     color: var(--text-main);
     font-size: 14px;
+    overflow-x: hidden; /* Impede scroll horizontal global */
 }
 
 /* --- TELA DE LOGIN --- */
@@ -64,11 +65,12 @@ body {
 .btn-back-login { color: #64748b; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: color 0.2s; display: inline-flex; align-items: center; gap: 6px; }
 .btn-back-login:hover { color: var(--primary); }
 
-/* --- LAYOUT DO DASHBOARD --- */
+/* --- LAYOUT DO DASHBOARD (Otimizado para Tela Cheia) --- */
 #admin-panel {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    width: 100vw; /* Garante largura total */
 }
 
 /* Sidebar Desktop */
@@ -90,8 +92,9 @@ body {
     
     .admin-content { 
         margin-left: 250px; 
-        width: calc(100% - 250px); 
+        width: calc(100% - 250px); /* Ocupa exatamente o restante */
         padding: 1.5rem 2rem; 
+        /* Sem max-width para aproveitar telas grandes */
     }
 }
 
@@ -139,7 +142,6 @@ body {
     } 
 }
 
-/* Botões da Navegação */
 .nav-btn {
     background: transparent;
     color: #94a3b8;
@@ -157,21 +159,10 @@ body {
     transition: all 0.2s ease;
     white-space: nowrap;
 }
-
 .nav-btn i { width: 20px; text-align: center; font-size: 1.1rem; }
+.nav-btn:hover { background: rgba(255,255,255,0.05); color: white; }
+.nav-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
 
-.nav-btn:hover { 
-    background: rgba(255,255,255,0.05); 
-    color: white; 
-}
-
-.nav-btn.active { 
-    background: var(--primary); 
-    color: white; 
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-/* Botão Sair */
 .logout-btn {
     background: transparent;
     color: #ef4444;
@@ -198,7 +189,6 @@ body {
     background-color: #f1f5f9;
 }
 
-/* Cabeçalho das Seções */
 .header-action {
     display: flex;
     justify-content: space-between;
@@ -212,10 +202,7 @@ body {
     flex-wrap: wrap;
     gap: 10px;
 }
-
-.header-action h2 { 
-    margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--text-main); 
-}
+.header-action h2 { margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--text-main); }
 
 /* --- CARDS ESTATÍSTICOS --- */
 .stats-grid {
@@ -239,7 +226,6 @@ body {
 .stat-card p { font-size: 1.8rem; font-weight: 700; margin: 5px 0 0 0; color: #1e293b; }
 .stat-card i { position: absolute; right: 20px; bottom: 20px; font-size: 2.5rem; opacity: 0.05; color: #000; }
 
-/* Gráficos */
 .charts-container {
     display: grid;
     grid-template-columns: 2fr 1fr;
@@ -250,10 +236,10 @@ body {
 .chart-box { background: white; padding: 20px; border-radius: var(--radius); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); }
 .chart-box h4 { margin: 0 0 15px 0; font-size: 1rem; color: var(--text-main); }
 
-/* --- TABELAS (CORREÇÃO DE LARGURA) --- */
+/* --- TABELAS 100% LARGURA (SEM SCROLL HORIZONTAL) --- */
 .table-responsive {
     width: 100%;
-    overflow-x: auto;
+    /* overflow-x: auto; -> Removido para evitar barra, exceto em mobile muito pequeno */
     background: white;
     border-radius: var(--radius);
     border: 1px solid var(--border-color);
@@ -264,7 +250,7 @@ body {
     width: 100%; 
     border-collapse: collapse; 
     font-size: 0.85rem;
-    table-layout: auto; /* Permite que o navegador ajuste conforme o conteúdo */
+    table-layout: fixed; /* TRAVA A LARGURA PARA NÃO ESTOURAR */
 }
 
 .data-table th { 
@@ -274,7 +260,7 @@ body {
     font-weight: 600; 
     color: var(--text-light); 
     border-bottom: 1px solid var(--border-color); 
-    white-space: nowrap;
+    word-wrap: break-word; /* Quebra palavras longas */
 }
 
 .data-table td { 
@@ -282,18 +268,19 @@ body {
     border-bottom: 1px solid #f1f5f9; 
     vertical-align: middle; 
     color: var(--text-main);
+    word-wrap: break-word; /* OBRIGA A QUEBRA DE LINHA */
+    white-space: normal;   /* PERMITE VÁRIAS LINHAS */
 }
 .data-table tr:hover td { background-color: #f8fafc; }
 .data-table tr:last-child td { border-bottom: none; }
 
-/* AJUSTE FINO DE COLUNAS: A coluna 4 (Aluno) agora força espaço */
-.data-table th:nth-child(1), .data-table td:nth-child(1) { width: 40px; text-align: center; } /* Check */
-.data-table th:nth-child(2), .data-table td:nth-child(2) { width: 90px; } /* Data */
-.data-table th:nth-child(3), .data-table td:nth-child(3) { width: 15%; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* Evento */
-/* ALUNO: Min-width força a ocupar o vazio e evita quebra */
-.data-table th:nth-child(4), .data-table td:nth-child(4) { width: auto; min-width: 250px; font-weight: 500; white-space: nowrap; } 
-.data-table th:nth-child(5), .data-table td:nth-child(5) { width: 110px; } /* Status */
-.data-table th:nth-child(6), .data-table td:nth-child(6) { width: 140px; text-align: right; } /* Ações */
+/* LARGURAS DISTRIBUÍDAS PARA PREENCHER A TELA */
+.data-table th:nth-child(1), .data-table td:nth-child(1) { width: 5%; text-align: center; } /* Check */
+.data-table th:nth-child(2), .data-table td:nth-child(2) { width: 10%; } /* Data */
+.data-table th:nth-child(3), .data-table td:nth-child(3) { width: 20%; } /* Evento */
+.data-table th:nth-child(4), .data-table td:nth-child(4) { width: 35%; } /* Aluno/Chave (MAIOR ESPAÇO) */
+.data-table th:nth-child(5), .data-table td:nth-child(5) { width: 12%; } /* Status */
+.data-table th:nth-child(6), .data-table td:nth-child(6) { width: 18%; text-align: right; } /* Ações */
 
 /* Badges e Botões */
 .badge { padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; display: inline-block; }
@@ -320,12 +307,12 @@ body {
 /* --- MODAIS (SweetAlert2) - PREENCHENDO A TELA --- */
 .swal2-popup { font-family: 'Inter', sans-serif !important; padding: 0 !important; border-radius: 12px !important; }
 
-/* MODAL VERDADEIRAMENTE LARGO E EXPANSIVO */
+/* MODAL DE EDIÇÃO AGORA USA 95% DA TELA EM DESKTOP */
 @media(min-width: 992px) {
     div:where(.swal2-container) div:where(.swal2-popup) {
-        width: auto !important;
-        min-width: 900px !important; 
-        max-width: 95vw !important; /* Quase a tela toda se precisar */
+        width: 95% !important; /* QUASE TELA TODA */
+        max-width: 1600px !important; /* Limite gigante para monitores ultrawide */
+        min-width: 800px !important;
         display: flex;
         flex-direction: column;
     }
@@ -339,7 +326,13 @@ body {
 .modal-form-grid { display: grid; gap: 25px; }
 .modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
 .modal-full { display: flex; flex-direction: column; gap: 6px; }
-.modal-fields-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; } /* Campos mais largos */
+
+/* Grid de 4 colunas para campos em telas largas (aproveita o modal gigante) */
+.modal-fields-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Mais colunas por linha */
+    gap: 25px;
+}
 
 .swal-label { font-size: 0.9rem; font-weight: 600; color: #475569; display: block; margin-bottom: 5px; }
 .swal-input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; background: #fff; transition: border 0.2s; box-sizing: border-box; }
@@ -395,6 +388,8 @@ body {
 @media(max-width: 992px) {
     .modal-row { grid-template-columns: 1fr; }
     .checkbox-grid { grid-template-columns: 1fr; }
-    .data-table th:nth-child(3), .data-table th:nth-child(5) { display: none; } 
+    .data-table th:nth-child(3), .data-table th:nth-child(5) { display: none; } /* Ocultar colunas menos importantes em mobile */
     .data-table td:nth-child(3), .data-table td:nth-child(5) { display: none; }
+    /* Mobile volta a ter scroll para não quebrar */
+    .table-responsive { overflow-x: auto; }
 }
