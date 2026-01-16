@@ -62,6 +62,10 @@
                     <button id="btn-dashboard" class="nav-item active" onclick="switchTab('tab-dashboard')">
                         <i class="fa-solid fa-gauge-high"></i> Dashboard
                     </button>
+                    <!-- NOVA ABA RELATÓRIOS -->
+                    <button id="btn-relatorios" class="nav-item" onclick="switchTab('tab-relatorios')">
+                        <i class="fa-solid fa-file-contract"></i> Relatórios
+                    </button>
                     <button id="btn-eventos" class="nav-item" onclick="switchTab('tab-eventos')">
                         <i class="fa-regular fa-calendar-days"></i> Eventos
                     </button>
@@ -89,7 +93,7 @@
                     <!-- ========================================= -->
                     <!-- ABA 1: DASHBOARD -->
                     <!-- ========================================= -->
-                    <section id="tab-dashboard" class="tab-content">
+                    <section id="tab-dashboard" class="tab-content active">
                         <div class="page-header">
                             <div class="page-title">
                                 <h1>Visão Geral</h1>
@@ -131,20 +135,49 @@
                                 </div>
                             </div>
                         </div>
+                    </section>
 
-                        <!-- Área de Relatórios -->
-                        <div style="margin-top: 2rem; background: var(--bg-card); padding: 1.5rem; border-radius: var(--radius); border: var(--border); box-shadow: var(--shadow);">
-                            <h3 style="margin-top: 0; font-size: 1rem; color: var(--text-main);">Exportação de Relatórios</h3>
-                            <div style="display: flex; gap: 1rem; align-items: center; margin-top: 1rem; flex-wrap: wrap;">
-                                <select id="relatorio-evento" class="filter-select">
-                                    <option value="">Selecione o Evento...</option>
-                                </select>
-                                <select id="relatorio-inst" class="filter-select">
-                                    <option value="">Todas Instituições</option>
-                                </select>
-                                <button class="btn btn-primary" onclick="gerarRelatorioTransporte()">
-                                    <i class="fa-solid fa-file-pdf"></i> Gerar PDF Oficial
-                                </button>
+                    <!-- ========================================= -->
+                    <!-- NOVA ABA: RELATÓRIOS -->
+                    <!-- ========================================= -->
+                    <section id="tab-relatorios" class="tab-content hidden">
+                        <div class="page-header">
+                            <div class="page-title">
+                                <h1>Central de Relatórios</h1>
+                                <p>Geração de listas e documentos oficiais.</p>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-grid">
+                            <!-- Card Principal de Relatório -->
+                            <div class="card-widget" style="grid-column: 1 / -1;">
+                                <h3 style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 1rem;">
+                                    <i class="fa-solid fa-file-pdf" style="color: var(--primary);"></i> Lista de Transporte
+                                </h3>
+                                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
+                                    Gere a lista oficial de alunos aprovados para o controle do transporte escolar. 
+                                    Você pode filtrar por evento específico e instituição de ensino.
+                                </p>
+                                
+                                <div style="display: flex; gap: 1.5rem; align-items: flex-end; flex-wrap: wrap; background: #f8fafc; padding: 1.5rem; border-radius: var(--radius); border: 1px solid var(--border);">
+                                    <div style="flex: 1; min-width: 200px;">
+                                        <label class="swal-label">Selecionar Evento</label>
+                                        <select id="relatorio-evento" class="filter-select" style="width: 100%;">
+                                            <option value="">Carregando eventos...</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div style="flex: 1; min-width: 200px;">
+                                        <label class="swal-label">Filtrar Instituição</label>
+                                        <select id="relatorio-inst" class="filter-select" style="width: 100%;">
+                                            <option value="">Todas as Instituições</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <button class="btn btn-primary" onclick="gerarRelatorioTransporte()" style="height: 42px;">
+                                        <i class="fa-solid fa-print"></i> Gerar PDF Oficial
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </section>
@@ -257,7 +290,7 @@
                             </div>
                         </div>
 
-                        <div class="dashboard-grid">
+                        <div class="swal-grid-2">
                             <!-- Card Instituições -->
                             <div class="card-widget">
                                 <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text-main);">Instituições de Ensino</h3>
