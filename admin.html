@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Administrativo - Transporte Escolar</title>
+    <title>Gestão de Transporte Escolar | Admin</title>
     
-    <!-- Fontes e Ícones -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Fontes Modernas -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Estilos -->
@@ -15,265 +15,273 @@
 </head>
 <body>
 
-    <!-- TELA DE LOGIN -->
-    <div id="login-screen" class="login-container">
-        <div class="card login-card">
-            <div style="margin-bottom: 20px;">
-                <i class="fa-solid fa-user-shield" style="color: var(--primary); font-size: 3.5rem;"></i>
+    <!-- TELA DE LOGIN (Centralizada e Limpa) -->
+    <div id="login-screen" class="login-wrapper">
+        <div class="login-box glass-effect">
+            <div class="login-icon">
+                <i class="fa-solid fa-shield-halved"></i>
             </div>
-            <h2 style="color: var(--primary-dark); margin-bottom:5px;">Acesso Restrito</h2>
-            <p style="color:#64748b; margin-bottom:25px;">Secretaria de Educação</p>
+            <h2>Acesso Administrativo</h2>
+            <p>Secretaria de Educação</p>
             
             <form onsubmit="realizarLogin(event)">
-                <div class="input-wrapper">
-                    <!-- Ícone Esquerdo -->
-                    <i class="fa-solid fa-lock icon-left"></i>
-                    
-                    <!-- Input -->
-                    <input type="password" id="admin-pass" placeholder="Digite sua senha" required autocomplete="current-password">
-                    
-                    <!-- Ícone Olho (Toggle) -->
-                    <i class="fa-solid fa-eye password-toggle" onclick="toggleSenha()"></i>
+                <div class="input-group">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="admin-pass" placeholder="Senha de Acesso" required autocomplete="current-password">
+                    <i class="fa-solid fa-eye toggle-pass" onclick="toggleSenha()"></i>
                 </div>
-                <button type="submit" class="btn-primary" style="width:100%; justify-content:center; padding: 12px; border-radius:50px; font-size:1rem;">
-                    Entrar no Sistema
+                <button type="submit" class="btn-login">
+                    Acessar Painel <i class="fa-solid fa-arrow-right"></i>
                 </button>
             </form>
 
-            <!-- Botão Voltar ao Portal -->
-            <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
-                <a href="index.html" class="btn-back-login">
-                    <i class="fa-solid fa-arrow-left"></i> Voltar ao Portal
-                </a>
-            </div>
+            <a href="index.html" class="back-link">
+                <i class="fa-solid fa-chevron-left"></i> Voltar ao Portal do Aluno
+            </a>
         </div>
     </div>
 
-    <!-- PAINEL PRINCIPAL -->
-    <div id="admin-panel" class="hidden">
+    <!-- APP CONTAINER (Layout Principal) -->
+    <div id="admin-panel" class="app-layout hidden">
         
-        <!-- SIDEBAR (MENU LATERAL) -->
-        <nav class="admin-nav">
-            <div class="nav-brand">
-                <i class="fa-solid fa-graduation-cap"></i> Portal Admin
+        <!-- SIDEBAR (Barra Lateral Fixa) -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-area">
+                    <i class="fa-solid fa-bus-simple"></i>
+                    <span>Transporte<br><small>Gestor 2.0</small></span>
+                </div>
             </div>
-            <div class="nav-links">
-                <button class="nav-btn active" onclick="switchTab('tab-dashboard')">
-                    <i class="fa-solid fa-chart-pie"></i> Dashboard
-                </button>
-                <button class="nav-btn" onclick="switchTab('tab-eventos')">
-                    <i class="fa-regular fa-calendar"></i> Eventos
-                </button>
-                <button class="nav-btn" onclick="switchTab('tab-inscricoes')">
-                    <i class="fa-solid fa-users"></i> Inscrições
-                </button>
-                <!-- NOVA ABA RELATÓRIOS -->
-                <button class="nav-btn" onclick="switchTab('tab-relatorios')">
-                    <i class="fa-solid fa-file-pdf"></i> Relatórios
-                </button>
-                <button class="nav-btn" onclick="switchTab('tab-config')">
-                    <i class="fa-solid fa-gears"></i> Configurações
-                </button>
-            </div>
-            <button class="logout-btn" onclick="logout()">
-                <i class="fa-solid fa-right-from-bracket"></i> Sair
-            </button>
-        </nav>
-
-        <!-- CONTEÚDO -->
-        <main class="admin-content">
             
-            <!-- DASHBOARD -->
-            <section id="tab-dashboard" class="tab-content active">
-                <div class="header-action">
-                    <h2>Visão Geral</h2>
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <!-- FILTRO INTELIGENTE DO DASHBOARD -->
-                        <select id="dash-filtro-evento" style="padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; min-width: 220px;" onchange="filtrarDashboard()">
-                            <option value="">Carregando...</option>
-                        </select>
-                        <button onclick="carregarDashboard()" class="btn-refresh" title="Atualizar Dados"><i class="fa-solid fa-rotate-right"></i></button>
-                    </div>
-                </div>
+            <nav class="sidebar-nav">
+                <button class="menu-item active" onclick="switchTab('tab-dashboard')">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="menu-item" onclick="switchTab('tab-eventos')">
+                    <i class="fa-solid fa-calendar-day"></i>
+                    <span>Eventos</span>
+                </button>
+                <button class="menu-item" onclick="switchTab('tab-inscricoes')">
+                    <i class="fa-solid fa-users-viewfinder"></i>
+                    <span>Inscrições</span>
+                </button>
+                <button class="menu-item" onclick="switchTab('tab-relatorios')">
+                    <i class="fa-solid fa-file-contract"></i>
+                    <span>Relatórios</span>
+                </button>
+                <button class="menu-item" onclick="switchTab('tab-config')">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Configurações</span>
+                </button>
+            </nav>
 
-                <!-- CARDS DE ESTATÍSTICA -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h3>Total Inscritos</h3>
-                        <p id="stat-total">0</p>
-                        <i class="fa-solid fa-users"></i>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Aprovados</h3>
-                        <p id="stat-aprovados" style="color: var(--success);">0</p>
-                        <i class="fa-solid fa-check-circle"></i>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Pendentes</h3>
-                        <p id="stat-pendentes" style="color: var(--warning);">0</p>
-                        <i class="fa-solid fa-clock"></i>
-                    </div>
-                </div>
+            <div class="sidebar-footer">
+                <button class="btn-logout" onclick="logout()">
+                    <i class="fa-solid fa-power-off"></i> Sair
+                </button>
+            </div>
+        </aside>
 
-                <!-- GRÁFICOS -->
-                <div class="charts-container">
-                    <div class="chart-box">
-                        <h4 id="titulo-grafico-eventos">Inscrições por Evento</h4>
-                        <div style="height:300px;"><canvas id="chartEventos"></canvas></div>
-                    </div>
-                    <div class="chart-box">
-                        <h4>Status das Inscrições</h4>
-                        <div style="height:300px;"><canvas id="chartStatus"></canvas></div>
-                    </div>
+        <!-- MAIN CONTENT (Conteúdo Expansível) -->
+        <main class="main-content">
+            
+            <!-- HEADER SUPERIOR -->
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span id="page-title">Visão Geral</span>
                 </div>
-            </section>
+                <div class="user-info">
+                    <span class="status-indicator"></span>
+                    <span>Admin Online</span>
+                </div>
+            </header>
 
-            <!-- EVENTOS -->
-            <section id="tab-eventos" class="tab-content hidden">
-                <div class="header-action">
-                    <h2>Gerenciar Eventos</h2>
-                    <button class="btn-primary" style="width:auto; margin-top:0;" onclick="modalNovoEvento()">
-                        <i class="fa-solid fa-plus"></i> Criar Evento
-                    </button>
-                </div>
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Evento</th>
-                                <th>Status</th>
-                                <th style="text-align:right;">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="lista-eventos-admin">
-                            <!-- JS preenche aqui -->
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- INSCRIÇÕES -->
-            <section id="tab-inscricoes" class="tab-content hidden">
-                <div class="header-action">
-                    <h2>Inscrições Recebidas</h2>
-                    <button onclick="carregarInscricoes()" class="btn-refresh"><i class="fa-solid fa-rotate-right"></i> Atualizar</button>
-                </div>
-                <div class="filters">
-                    <select id="filtro-evento" onchange="resetEFiltrar()"><option value="">Todos os Eventos</option></select>
-                    <select id="filtro-status" onchange="resetEFiltrar()">
-                        <option value="">Todos Status</option>
-                        <option value="Pendente">Pendente</option>
-                        <option value="Aprovada">Aprovada</option>
-                        <option value="Rejeitada">Rejeitada</option>
-                        <option value="Ficha Emitida">Ficha Emitida</option>
-                    </select>
-                    <input type="text" id="filtro-nome" placeholder="Buscar por nome ou chave..." onkeyup="resetEFiltrar()">
-                </div>
+            <!-- CONTEÚDO DAS ABAS (Scrollável) -->
+            <div class="content-scroll">
                 
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th style="width:40px;"><input type="checkbox" id="check-all" onclick="toggleAllChecks()"></th>
-                                <th>Data</th>
-                                <th>Evento</th>
-                                <th>Aluno / Chave</th>
-                                <th>Status</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="lista-inscricoes-admin"></tbody>
-                    </table>
-                </div>
-                
-                <div style="text-align:center; margin-top:20px;">
-                    <button id="btn-load-more" class="btn-refresh" style="display:none; margin:0 auto;" onclick="renderizarProximaPagina()">
-                        Carregar Mais <i class="fa-solid fa-chevron-down"></i>
-                    </button>
-                </div>
-            </section>
+                <!-- 1. DASHBOARD -->
+                <section id="tab-dashboard" class="view-section active">
+                    <div class="toolbar">
+                        <div class="filter-group">
+                            <i class="fa-solid fa-filter"></i>
+                            <select id="dash-filtro-evento" onchange="filtrarDashboard()">
+                                <option value="">Carregando eventos...</option>
+                            </select>
+                        </div>
+                        <button onclick="carregarDashboard()" class="btn-icon" title="Atualizar"><i class="fa-solid fa-rotate"></i></button>
+                    </div>
 
-            <!-- ABA DE RELATÓRIOS (NOVA) -->
-            <section id="tab-relatorios" class="tab-content hidden">
-                <div class="header-action">
-                    <h2>Central de Relatórios</h2>
-                </div>
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap:20px;">
-                    
-                    <!-- Card Gerador de Lista de Transporte -->
-                    <div style="background:white; padding:25px; border-radius:12px; border:1px solid #e2e8f0; box-shadow: var(--shadow-sm);">
-                        <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px;">
-                            <div style="width:50px; height:50px; background:#eff6ff; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--primary); font-size:1.5rem;">
-                                <i class="fa-solid fa-bus"></i>
-                            </div>
-                            <div>
-                                <h3 style="margin:0; color:var(--text-dark); font-size:1.1rem;">Lista de Transporte</h3>
-                                <p style="margin:0; color:#64748b; font-size:0.85rem;">Gere listas de presença por rota/instituição.</p>
+                    <div class="kpi-grid">
+                        <div class="kpi-card blue">
+                            <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
+                            <div class="kpi-data">
+                                <h3 id="stat-total">0</h3>
+                                <small>Total de Inscritos</small>
                             </div>
                         </div>
-                        
-                        <div class="filters" style="box-shadow:none; padding:0; border:none; display:flex; flex-direction:column; gap:15px; margin-bottom:0;">
-                            <div>
-                                <label style="font-weight:600; color:#64748b; font-size:0.85rem; display:block; margin-bottom:5px;">Selecione o Evento</label>
-                                <select id="relatorio-evento" style="width:100%; margin:0;"><option value="">Carregando...</option></select>
+                        <div class="kpi-card green">
+                            <div class="kpi-icon"><i class="fa-solid fa-check-double"></i></div>
+                            <div class="kpi-data">
+                                <h3 id="stat-aprovados">0</h3>
+                                <small>Aprovados / Emitidos</small>
                             </div>
-                            <div>
-                                <label style="font-weight:600; color:#64748b; font-size:0.85rem; display:block; margin-bottom:5px;">Filtrar Instituição (Opcional)</label>
-                                <select id="relatorio-inst" style="width:100%; margin:0;"><option value="">Todas as Instituições</option></select>
+                        </div>
+                        <div class="kpi-card orange">
+                            <div class="kpi-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+                            <div class="kpi-data">
+                                <h3 id="stat-pendentes">0</h3>
+                                <small>Pendentes</small>
                             </div>
-                            <button class="btn-primary" style="width:100%; justify-content:center; margin-top:10px;" onclick="gerarRelatorioTransporte()">
-                                <i class="fa-solid fa-file-pdf"></i> Gerar PDF
+                        </div>
+                    </div>
+
+                    <div class="charts-grid">
+                        <div class="chart-card large">
+                            <h4>Distribuição por Evento</h4>
+                            <div class="canvas-wrapper"><canvas id="chartEventos"></canvas></div>
+                        </div>
+                        <div class="chart-card small">
+                            <h4>Status Geral</h4>
+                            <div class="canvas-wrapper"><canvas id="chartStatus"></canvas></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. EVENTOS -->
+                <section id="tab-eventos" class="view-section hidden">
+                    <div class="section-header">
+                        <h2>Gerenciamento de Eventos</h2>
+                        <button class="btn-action primary" onclick="modalNovoEvento()">
+                            <i class="fa-solid fa-plus"></i> Novo Evento
+                        </button>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th width="50">ID</th>
+                                    <th>Título do Evento</th>
+                                    <th width="120">Status</th>
+                                    <th width="150" align="right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lista-eventos-admin">
+                                <!-- JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- 3. INSCRIÇÕES -->
+                <section id="tab-inscricoes" class="view-section hidden">
+                    <div class="toolbar spread">
+                        <div class="search-bar">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="filtro-nome" placeholder="Pesquisar por nome, CPF ou chave..." onkeyup="resetEFiltrar()">
+                        </div>
+                        <div class="filters-row">
+                            <select id="filtro-evento" onchange="resetEFiltrar()"><option value="">Todos Eventos</option></select>
+                            <select id="filtro-status" onchange="resetEFiltrar()">
+                                <option value="">Todos Status</option>
+                                <option value="Pendente">Pendente</option>
+                                <option value="Aprovada">Aprovada</option>
+                                <option value="Rejeitada">Rejeitada</option>
+                            </select>
+                            <button onclick="carregarInscricoes()" class="btn-icon"><i class="fa-solid fa-rotate"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="table-container full-height">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th width="40"><input type="checkbox" id="check-all" onclick="toggleAllChecks()"></th>
+                                    <th width="100">Data</th>
+                                    <th width="180">Evento</th>
+                                    <th>Aluno / Chave</th>
+                                    <th width="120">Status</th>
+                                    <th width="160" align="right">Gerenciar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lista-inscricoes-admin"></tbody>
+                        </table>
+                        <div class="load-more-area">
+                            <button id="btn-load-more" class="btn-outline" onclick="renderizarProximaPagina()" style="display:none;">
+                                Carregar Mais <i class="fa-solid fa-chevron-down"></i>
                             </button>
                         </div>
                     </div>
+                </section>
 
-                    <!-- Placeholder para futuros relatórios -->
-                    <div style="background:#f8fafc; padding:25px; border-radius:12px; border:2px dashed #cbd5e1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; color:#94a3b8; min-height:300px;">
-                        <i class="fa-solid fa-chart-line" style="font-size:3rem; margin-bottom:15px; opacity:0.5;"></i>
-                        <h3>Mais relatórios em breve</h3>
-                        <p>Estatísticas avançadas e exportação CSV.</p>
-                    </div>
-                </div>
-            </section>
+                <!-- 4. RELATÓRIOS -->
+                <section id="tab-relatorios" class="view-section hidden">
+                    <div class="grid-cards">
+                        <div class="report-card">
+                            <div class="icon-header"><i class="fa-solid fa-print"></i></div>
+                            <h3>Lista de Transporte</h3>
+                            <p>Gere o PDF oficial com a lista de alunos aprovados por rota ou instituição.</p>
+                            
+                            <div class="form-group">
+                                <label>Evento Base</label>
+                                <select id="relatorio-evento" class="full-width"><option>Carregando...</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Instituição (Opcional)</label>
+                                <select id="relatorio-inst" class="full-width"><option>Todas</option></select>
+                            </div>
+                            
+                            <button class="btn-action primary full-width" onclick="gerarRelatorioTransporte()">
+                                Gerar Relatório PDF
+                            </button>
+                        </div>
 
-            <!-- CONFIGURAÇÕES -->
-            <section id="tab-config" class="tab-content hidden">
-                <div class="header-action">
-                    <h2>Configurações do Sistema</h2>
-                </div>
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px;">
-                    <div style="background:white; padding:25px; border-radius:12px; border:1px solid #e2e8f0; box-shadow: var(--shadow-sm);">
-                        <h3 style="margin-top:0; margin-bottom:15px; font-size:1.1rem; color:var(--text-dark);">Instituições de Ensino</h3>
-                        <div style="display:flex; gap:10px; margin-bottom:15px;">
-                            <input type="text" id="nova-inst" placeholder="Nova Instituição" class="swal-input">
-                            <button class="btn-primary" style="width:auto; margin:0;" onclick="addInstituicao()"><i class="fa-solid fa-plus"></i></button>
+                        <div class="report-card placeholder">
+                            <i class="fa-solid fa-chart-simple"></i>
+                            <h3>Estatísticas Avançadas</h3>
+                            <p>Em breve: exportação para Excel e análise demográfica.</p>
                         </div>
-                        <div id="lista-instituicoes" style="max-height:300px; overflow-y:auto; border:1px solid #eee; border-radius:8px;"></div>
                     </div>
-                    
-                    <div style="background:white; padding:25px; border-radius:12px; border:1px solid #e2e8f0; box-shadow: var(--shadow-sm);">
-                        <h3 style="margin-top:0; margin-bottom:15px; font-size:1.1rem; color:var(--text-dark);">Armazenamento (Google Drive)</h3>
-                        <p style="color:#64748b; font-size:0.85rem; margin-bottom:15px;">Defina o ID da pasta do Google Drive onde os arquivos (fotos e docs) serão salvos.</p>
-                        
-                        <label style="font-size:0.85rem; font-weight:600; color:#64748b; display:block; margin-bottom:5px;">ID da Pasta</label>
-                        <div style="display:flex; gap:10px;">
-                            <input type="text" id="config-drive-id" placeholder="Ex: 1A2b3C..." class="swal-input">
-                            <button class="btn-primary" style="width:auto; margin:0;" onclick="salvarConfigDrive()"><i class="fa-solid fa-save"></i></button>
+                    <div id="area-impressao"></div>
+                </section>
+
+                <!-- 5. CONFIGURAÇÕES -->
+                <section id="tab-config" class="view-section hidden">
+                    <div class="grid-cards">
+                        <div class="config-card">
+                            <h3><i class="fa-solid fa-school"></i> Instituições de Ensino</h3>
+                            <div class="add-row">
+                                <input type="text" id="nova-inst" placeholder="Nome da nova instituição...">
+                                <button class="btn-icon primary" onclick="addInstituicao()"><i class="fa-solid fa-plus"></i></button>
+                            </div>
+                            <div id="lista-instituicoes" class="scroll-list"></div>
                         </div>
-                        <p style="font-size:0.75rem; color:#94a3b8; margin-top:10px;">* Se deixar vazio, os arquivos irão para a raiz do Drive.</p>
+
+                        <div class="config-card">
+                            <h3><i class="fa-brands fa-google-drive"></i> Armazenamento</h3>
+                            <p>Conecte uma pasta do Google Drive para salvar as fotos e documentos.</p>
+                            <label>ID da Pasta</label>
+                            <div class="add-row">
+                                <input type="text" id="config-drive-id" placeholder="Ex: 1A2b3C...">
+                                <button class="btn-icon primary" onclick="salvarConfigDrive()"><i class="fa-solid fa-save"></i></button>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </section>
+                </section>
+
+            </div> <!-- Fim content-scroll -->
         </main>
     </div>
 
-    <!-- Barra de Ação em Massa -->
-    <div id="bulk-bar" class="bulk-actions-bar hidden-bar">
-        <span style="font-weight:600;"><span id="bulk-count">0</span> selecionados</span>
-        <button class="action-btn" style="background:#22c55e;" onclick="acaoEmMassa('Aprovada')"><i class="fa-solid fa-check"></i> Aprovar</button>
-        <button class="action-btn" style="background:#ef4444;" onclick="acaoEmMassa('Rejeitada')"><i class="fa-solid fa-xmark"></i> Rejeitar</button>
-        <button class="action-btn" style="background:#64748b;" onclick="desmarcarTudo()"><i class="fa-solid fa-minus"></i></button>
+    <!-- Barra Flutuante de Ações em Massa -->
+    <div id="bulk-bar" class="bulk-bar hidden-bar">
+        <div class="bulk-info"><span id="bulk-count">0</span> selecionados</div>
+        <div class="bulk-actions">
+            <button class="btn-bulk green" onclick="acaoEmMassa('Aprovada')"><i class="fa-solid fa-check"></i> Aprovar</button>
+            <button class="btn-bulk red" onclick="acaoEmMassa('Rejeitada')"><i class="fa-solid fa-xmark"></i> Rejeitar</button>
+            <button class="btn-bulk gray" onclick="desmarcarTudo()"><i class="fa-solid fa-minus"></i> Cancelar</button>
+        </div>
     </div>
 
     <!-- Scripts -->
