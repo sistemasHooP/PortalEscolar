@@ -35,8 +35,7 @@ function showLoading(msg = 'Processando...') {
                 <style>@keyframes pulse-swal { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }</style>
             </div>
         `,
-        showConfirmButton: false, allowOutsideClick: false, width: '300px',
-        customClass: { popup: 'swal-small' } // Tenta forçar tamanho menor para loaders
+        showConfirmButton: false, allowOutsideClick: false, width: '300px'
     });
 }
 
@@ -66,7 +65,7 @@ function realizarLogin(e) {
             sessionStorage.setItem('admin_token', pass);
             carregarDashboard();
             aplicarEstilosVisuais();
-        } else { Swal.fire({icon: 'error', title: 'Erro', text: 'Senha incorreta'}); }
+        } else { Swal.fire({icon: 'error', title: 'Erro', text: 'Senha incorreta', width: '300px'}); }
     }).catch(() => Swal.fire('Erro', 'Sem conexão', 'error'));
 }
 
@@ -113,7 +112,7 @@ function salvarConfigDrive() {
             idPasta: id 
         }) 
     }).then(() => {
-        Swal.fire({icon: 'success', title: 'Salvo!', timer: 1500});
+        Swal.fire({icon: 'success', title: 'Salvo!', timer: 1500, width: '300px'});
     });
 }
 
@@ -122,7 +121,7 @@ function aplicarEstilosVisuais() {
     if (!document.getElementById(styleId)) {
         const style = document.createElement('style');
         style.id = styleId;
-        // Removido CSS injetado pois agora o admin.css cuida de tudo
+        // O CSS agora é controlado pelo admin.css, deixamos vazio aqui para evitar conflitos
         style.innerHTML = ``; 
         document.head.appendChild(style);
     }
@@ -256,7 +255,7 @@ function gerarRelatorioTransporte() {
     });
 
     if (alunosFiltrados.length === 0) {
-        return Swal.fire({ icon: 'info', title: 'Atenção', text: 'Nenhum aluno APROVADO encontrado com esses filtros.' });
+        return Swal.fire({ icon: 'info', title: 'Atenção', text: 'Nenhum aluno APROVADO encontrado com esses filtros.', width: '400px' });
     }
 
     const todasChaves = new Set();
@@ -298,7 +297,7 @@ function gerarRelatorioTransporte() {
             <p style="font-size:0.9rem; color:#64748b; margin-bottom:15px;">Selecione as colunas que deseja exibir:</p>
             ${htmlChecks}
         `,
-        width: '600px', // Modal de seleção pode ser menor
+        width: '600px', // Modal de seleção médio
         showCancelButton: true,
         confirmButtonText: 'Gerar PDF',
         confirmButtonColor: '#2563eb',
@@ -410,8 +409,7 @@ function abrirEdicaoEvento(evento) {
 
     Swal.fire({
         title: 'Editar Evento',
-        // IMPORTANTE: Classes para modal largo via CSS
-        customClass: { popup: 'swal-wide', container: 'swal-wide' }, 
+        customClass: { popup: 'swal-wide' }, // ATIVA MODAL FULL WIDTH
         html: `
             <div class="modal-form-grid" style="text-align: left;">
                 <div class="modal-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
@@ -443,7 +441,7 @@ function abrirEdicaoEvento(evento) {
         if(res.isConfirmed) {
             showLoading('Salvando...');
             fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'editarEvento', senha: sessionStorage.getItem('admin_token'), id: evento.id, ...res.value }) })
-            .then(() => { Swal.fire({icon: 'success', title: 'Salvo!'}); carregarEventosAdmin(); }); 
+            .then(() => { Swal.fire({icon: 'success', title: 'Salvo!', width: '300px'}); carregarEventosAdmin(); }); 
         }
     });
 }
@@ -464,8 +462,8 @@ function modalNovoEvento() {
     htmlCampos += '</div>';
 
     Swal.fire({
-        title: 'Criar Novo Evento',
-        customClass: { popup: 'swal-wide', container: 'swal-wide' }, // CLASSE PARA MODAL LARGO
+        title: 'Criar Novo Evento', 
+        customClass: { popup: 'swal-wide' }, // ATIVA MODAL FULL WIDTH
         html: `
             <div class="modal-form-grid">
                 <input id="swal-titulo" class="swal-input" placeholder="Título do Evento">
@@ -521,7 +519,7 @@ function modalNovoEvento() {
         if(res.isConfirmed) {
             showLoading('Criando Evento...');
             fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'criarEvento', senha: sessionStorage.getItem('admin_token'), dados: res.value }) })
-            .then(() => { Swal.fire({icon: 'success', title: 'Sucesso!'}); carregarEventosAdmin(); });
+            .then(() => { Swal.fire({icon: 'success', title: 'Sucesso!', width: '300px'}); carregarEventosAdmin(); });
         }
     });
 }
@@ -610,8 +608,7 @@ function abrirEdicaoInscricao(chave) {
     Swal.fire({
         title: 'Editar Dados do Aluno', 
         html: formHtml, 
-        // IMPORTANTE: Adiciona a classe que permite ao modal ocupar 95% da tela
-        customClass: { popup: 'swal-wide', container: 'swal-wide' }, 
+        customClass: { popup: 'swal-wide', container: 'swal-wide' }, // ATIVA MODAL FULL WIDTH
         showCancelButton: true, confirmButtonText: 'Salvar', confirmButtonColor: '#2563eb',
         preConfirm: async () => {
             const novosDados = {}; for (const key of Object.keys(dados)) { if (!ignorar.includes(key)) { const el = document.getElementById(`edit_aluno_${key}`); if (el) novosDados[key] = el.value; } }
@@ -621,7 +618,7 @@ function abrirEdicaoInscricao(chave) {
     }).then((result) => {
         if (result.isConfirmed) {
             showLoading('Salvando...');
-            fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'editarInscricao', senha: sessionStorage.getItem('admin_token'), chave: chave, novosDados: result.value.novosDados, arquivos: result.value.arquivos }) }).then(res => res.json()).then(json => { if(json.status === 'success') { Swal.fire({icon: 'success', title: 'Dados Atualizados!'}); let jsonNovo = { ...dados, ...result.value.novosDados }; inscricao.dadosJson = JSON.stringify(jsonNovo); resetEFiltrar(); } else { Swal.fire('Erro', json.message, 'error'); } });
+            fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'editarInscricao', senha: sessionStorage.getItem('admin_token'), chave: chave, novosDados: result.value.novosDados, arquivos: result.value.arquivos }) }).then(res => res.json()).then(json => { if(json.status === 'success') { Swal.fire({icon: 'success', title: 'Dados Atualizados!', width: '300px'}); let jsonNovo = { ...dados, ...result.value.novosDados }; inscricao.dadosJson = JSON.stringify(jsonNovo); resetEFiltrar(); } else { Swal.fire('Erro', json.message, 'error'); } });
         }
     });
 }
@@ -631,7 +628,7 @@ function toggleAllChecks() { const m = document.getElementById('check-all').chec
 function atualizarBarraBulk() { const b = document.getElementById('bulk-bar'); document.getElementById('bulk-count').innerText = selecionados.size; if(selecionados.size > 0) b.classList.remove('hidden-bar'); else b.classList.add('hidden-bar'); }
 function desmarcarTudo() { selecionados.clear(); document.getElementById('check-all').checked = false; document.querySelectorAll('.bulk-check').forEach(c => c.checked = false); atualizarBarraBulk(); }
 
-function acaoEmMassa(s) { Swal.fire({title: `Marcar ${selecionados.size} como ${s}?`, showCancelButton: true}).then((r) => { if(r.isConfirmed) { showLoading('Atualizando...'); fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'atualizarStatusEmMassa', senha: sessionStorage.getItem('admin_token'), chaves: Array.from(selecionados), novoStatus: s }) }).then(() => { Swal.fire({icon: 'success', title: 'Atualizado!'}); todasInscricoes.forEach(i => { if(selecionados.has(i.chave)) i.status = s; }); resetEFiltrar(); }); } }); }
+function acaoEmMassa(s) { Swal.fire({title: `Marcar ${selecionados.size} como ${s}?`, showCancelButton: true}).then((r) => { if(r.isConfirmed) { showLoading('Atualizando...'); fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'atualizarStatusEmMassa', senha: sessionStorage.getItem('admin_token'), chaves: Array.from(selecionados), novoStatus: s }) }).then(() => { Swal.fire({icon: 'success', title: 'Atualizado!', width: '300px'}); todasInscricoes.forEach(i => { if(selecionados.has(i.chave)) i.status = s; }); resetEFiltrar(); }); } }); }
 
 // --- FUNÇÃO NOVA: GERAR FICHA FRONTEND (SEM PDF DRIVE) ---
 function gerarFicha(chave) {
@@ -750,7 +747,7 @@ function mudarStatus(chave) {
                 const item = todasInscricoes.find(i => i.chave === chave);
                 if(item) item.status = res.value; 
                 resetEFiltrar();
-                Swal.fire({icon: 'success', title: 'Status Atualizado!', timer: 1500, showConfirmButton: false});
+                Swal.fire({icon: 'success', title: 'Status Atualizado!', timer: 1500, showConfirmButton: false, width: '300px'});
             });
         }
     });
