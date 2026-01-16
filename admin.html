@@ -16,7 +16,7 @@
 </head>
 <body>
 
-    <!-- TELA DE LOGIN -->
+    <!-- TELA DE LOGIN (Overlay Fixo) -->
     <div id="login-screen" class="login-wrapper">
         <div class="login-box">
             <div style="margin-bottom: 2rem; color: var(--primary);">
@@ -47,12 +47,11 @@
     </div>
 
     <!-- APLICAÇÃO PRINCIPAL (APP SHELL) -->
-    <!-- O ID "admin-panel" é usado pelo JS para mostrar/esconder após login -->
     <div id="admin-panel" class="hidden" style="width: 100%; height: 100%;">
         
         <div id="app-container">
             
-            <!-- COLUNA 1: SIDEBAR -->
+            <!-- COLUNA 1: SIDEBAR (Fixa à Esquerda) -->
             <aside class="sidebar">
                 <div class="brand">
                     <i class="fa-solid fa-graduation-cap"></i>
@@ -60,16 +59,16 @@
                 </div>
                 
                 <nav class="nav-menu">
-                    <button class="nav-item active" onclick="switchTab('tab-dashboard')">
+                    <button id="btn-dashboard" class="nav-item active" onclick="switchTab('tab-dashboard')">
                         <i class="fa-solid fa-gauge-high"></i> Dashboard
                     </button>
-                    <button class="nav-item" onclick="switchTab('tab-eventos')">
+                    <button id="btn-eventos" class="nav-item" onclick="switchTab('tab-eventos')">
                         <i class="fa-regular fa-calendar-days"></i> Eventos
                     </button>
-                    <button class="nav-item" onclick="switchTab('tab-inscricoes')">
+                    <button id="btn-inscricoes" class="nav-item" onclick="switchTab('tab-inscricoes')">
                         <i class="fa-solid fa-users-viewfinder"></i> Inscrições
                     </button>
-                    <button class="nav-item" onclick="switchTab('tab-config')">
+                    <button id="btn-config" class="nav-item" onclick="switchTab('tab-config')">
                         <i class="fa-solid fa-sliders"></i> Configurações
                     </button>
                 </nav>
@@ -81,20 +80,22 @@
                 </div>
             </aside>
 
-            <!-- COLUNA 2: CONTEÚDO PRINCIPAL -->
+            <!-- COLUNA 2: CONTEÚDO PRINCIPAL (Expansível) -->
             <main class="main-content">
                 
-                <!-- ÁREA DE ROLAGEM INTERNA -->
+                <!-- ÁREA DE ROLAGEM INTERNA (Onde as abas vivem) -->
                 <div class="scroll-area">
                     
+                    <!-- ========================================= -->
                     <!-- ABA 1: DASHBOARD -->
-                    <section id="tab-dashboard" class="tab-content active">
+                    <!-- ========================================= -->
+                    <section id="tab-dashboard" class="tab-content">
                         <div class="page-header">
                             <div class="page-title">
                                 <h1>Visão Geral</h1>
                                 <p>Monitoramento em tempo real do sistema.</p>
                             </div>
-                            <button onclick="carregarDashboard()" class="btn btn-secondary btn-icon" title="Atualizar">
+                            <button onclick="carregarDashboard()" class="btn btn-secondary btn-icon" title="Atualizar Dados">
                                 <i class="fa-solid fa-rotate-right" style="color: var(--text-main);"></i>
                             </button>
                         </div>
@@ -148,7 +149,9 @@
                         </div>
                     </section>
 
+                    <!-- ========================================= -->
                     <!-- ABA 2: EVENTOS -->
+                    <!-- ========================================= -->
                     <section id="tab-eventos" class="tab-content hidden">
                         <div class="page-header">
                             <div class="page-title">
@@ -180,7 +183,9 @@
                         </div>
                     </section>
 
-                    <!-- ABA 3: INSCRIÇÕES (Full Width Tabela) -->
+                    <!-- ========================================= -->
+                    <!-- ABA 3: INSCRIÇÕES -->
+                    <!-- ========================================= -->
                     <section id="tab-inscricoes" class="tab-content hidden">
                         <div class="page-header">
                             <div class="page-title">
@@ -241,7 +246,9 @@
                         </div>
                     </section>
 
+                    <!-- ========================================= -->
                     <!-- ABA 4: CONFIGURAÇÕES -->
+                    <!-- ========================================= -->
                     <section id="tab-config" class="tab-content hidden">
                         <div class="page-header">
                             <div class="page-title">
@@ -250,7 +257,7 @@
                             </div>
                         </div>
 
-                        <div class="swal-grid-2">
+                        <div class="dashboard-grid">
                             <!-- Card Instituições -->
                             <div class="card-widget">
                                 <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text-main);">Instituições de Ensino</h3>
@@ -278,7 +285,7 @@
                         </div>
                     </section>
 
-                </div> <!-- Fim Scroll Area -->
+                </div> <!-- Fim da Área de Scroll Interna -->
             </main>
         </div>
     </div>
