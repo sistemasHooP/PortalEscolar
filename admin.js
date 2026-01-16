@@ -582,14 +582,37 @@ function abrirEdicaoInscricao(chave) {
     let dados = {}; try { dados = JSON.parse(inscricao.dadosJson); } catch(e) {}
     let evento = cacheEventos[inscricao.eventoId] || {};
     let configEvento = {}; try { configEvento = JSON.parse(evento.config || '{}'); } catch(e) {}
-    let formHtml = '<div style="display:flex; flex-direction:column; gap:10px; text-align:left; max-height:400px; overflow-y:auto; padding:5px;">';
+    
+    // --- LAYOUT EM GRID (2 Colunas) ---
+    let formHtml = '<div class="modal-fields-grid" style="text-align:left;">';
+    
     const ignorar = ['linkFoto', 'linkDoc'];
-    for (const [key, val] of Object.entries(dados)) { if (!ignorar.includes(key)) { const labelAmigavel = CAMPOS_PADRAO.find(c => c.key === key)?.label || key; formHtml += `<div><label style="font-size:0.85rem; font-weight:600; color:#64748b;">${labelAmigavel}</label><input type="text" id="edit_aluno_${key}" value="${val}" class="swal-input" style="padding:8px;"></div>`; } }
+    for (const [key, val] of Object.entries(dados)) { 
+        if (!ignorar.includes(key)) { 
+            const labelAmigavel = CAMPOS_PADRAO.find(c => c.key === key)?.label || key; 
+            formHtml += `<div><label class="swal-label">${labelAmigavel}</label><input type="text" id="edit_aluno_${key}" value="${val}" class="swal-input"></div>`; 
+        } 
+    }
+    formHtml += '</div>'; // Fecha grid
+
     const pedeFoto = configEvento.arquivos && configEvento.arquivos.foto;
     const pedeDoc = configEvento.arquivos && configEvento.arquivos.doc;
-    if (pedeFoto || pedeDoc) { formHtml += `<hr style="margin:15px 0; border:0; border-top:1px solid #eee;"><h4 style="margin:0 0 10px 0; color:#1e40af; font-size:0.9rem;">Substituir Arquivos</h4><div style="background:#f8fafc; padding:10px; border-radius:8px;">`; if (pedeFoto) { formHtml += `<label style="font-size:0.85rem; font-weight:600; display:block;">Nova Foto 3x4:</label><input type="file" id="edit_upload_foto" accept="image/*" class="swal-input" style="font-size:0.8rem;">`; } if (pedeDoc) { formHtml += `<label style="font-size:0.85rem; font-weight:600; display:block; margin-top:10px;">Nova Declaração (PDF):</label><input type="file" id="edit_upload_doc" accept="application/pdf" class="swal-input" style="font-size:0.8rem;">`; } formHtml += `</div>`; } formHtml += '</div>';
+    if (pedeFoto || pedeDoc) { 
+        formHtml += `<hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
+                     <h4 style="margin:0 0 15px 0; color:#1e40af; font-size:1rem; text-align:left;">Substituir Arquivos</h4>
+                     <div class="modal-fields-grid" style="text-align:left;">`; 
+        if (pedeFoto) { 
+            formHtml += `<div><label class="swal-label">Nova Foto 3x4:</label><input type="file" id="edit_upload_foto" accept="image/*" class="swal-input" style="font-size:0.9rem;"></div>`; 
+        } 
+        if (pedeDoc) { 
+            formHtml += `<div><label class="swal-label">Nova Declaração (PDF):</label><input type="file" id="edit_upload_doc" accept="application/pdf" class="swal-input" style="font-size:0.9rem;"></div>`; 
+        } 
+        formHtml += `</div>`; 
+    }
+    
     Swal.fire({
-        title: 'Editar Dados do Aluno', html: formHtml, width: '800px', // Aumentado para 800px
+        title: 'Editar Dados do Aluno', html: formHtml, 
+        width: '900px', // Aumentado para 900px
         showCancelButton: true, confirmButtonText: 'Salvar', confirmButtonColor: '#2563eb',
         preConfirm: async () => {
             const novosDados = {}; for (const key of Object.keys(dados)) { if (!ignorar.includes(key)) { const el = document.getElementById(`edit_aluno_${key}`); if (el) novosDados[key] = el.value; } }
