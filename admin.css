@@ -29,21 +29,21 @@
 * { box-sizing: border-box; }
 
 body {
-    font-family: 'Inter', 'Poppins', sans-serif; /* Inter é excelente para dashboards */
+    font-family: 'Inter', 'Poppins', sans-serif;
     margin: 0;
     padding: 0;
     background-color: var(--bg-body);
     color: var(--text-main);
-    font-size: 14px; /* Fonte base levemente menor para caber mais dados */
+    font-size: 14px;
 }
 
-/* --- TELA DE LOGIN (Refinada) --- */
+/* --- TELA DE LOGIN --- */
 .login-container {
     height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(135deg, #1e293b, #0f172a); /* Fundo escuro elegante */
+    background: linear-gradient(135deg, #1e293b, #0f172a);
 }
 .login-card {
     width: 100%;
@@ -64,7 +64,7 @@ body {
 .btn-back-login { color: #64748b; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: color 0.2s; display: inline-flex; align-items: center; gap: 6px; }
 .btn-back-login:hover { color: var(--primary); }
 
-/* --- LAYOUT DO DASHBOARD (Otimizado) --- */
+/* --- LAYOUT DO DASHBOARD --- */
 #admin-panel {
     display: flex;
     flex-direction: column;
@@ -91,7 +91,7 @@ body {
     .admin-content { 
         margin-left: 250px; 
         width: calc(100% - 250px); 
-        padding: 1.5rem 2rem; /* Espaço otimizado */
+        padding: 1.5rem 2rem; 
     }
 }
 
@@ -139,7 +139,7 @@ body {
     } 
 }
 
-/* Botões da Navegação (Estilo Aba Moderna) */
+/* Botões da Navegação */
 .nav-btn {
     background: transparent;
     color: #94a3b8;
@@ -217,7 +217,7 @@ body {
     margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--text-main); 
 }
 
-/* --- CARDS ESTATÍSTICOS (Compactos e Diretos) --- */
+/* --- CARDS ESTATÍSTICOS --- */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -242,7 +242,7 @@ body {
 /* Gráficos */
 .charts-container {
     display: grid;
-    grid-template-columns: 2fr 1fr; /* Mais espaço para o gráfico de barras */
+    grid-template-columns: 2fr 1fr;
     gap: 15px;
     margin-bottom: 20px;
 }
@@ -250,7 +250,7 @@ body {
 .chart-box { background: white; padding: 20px; border-radius: var(--radius); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); }
 .chart-box h4 { margin: 0 0 15px 0; font-size: 1rem; color: var(--text-main); }
 
-/* --- TABELAS (Densidade Alta) --- */
+/* --- TABELAS (CORREÇÃO DE LARGURA) --- */
 .table-responsive {
     width: 100%;
     overflow-x: auto;
@@ -263,7 +263,8 @@ body {
 .data-table { 
     width: 100%; 
     border-collapse: collapse; 
-    font-size: 0.85rem; /* Fonte menor para caber mais */
+    font-size: 0.85rem;
+    table-layout: auto; /* Permite que o navegador ajuste conforme o conteúdo */
 }
 
 .data-table th { 
@@ -285,11 +286,12 @@ body {
 .data-table tr:hover td { background-color: #f8fafc; }
 .data-table tr:last-child td { border-bottom: none; }
 
-/* Larguras de Coluna Otimizadas */
+/* AJUSTE FINO DE COLUNAS: A coluna 4 (Aluno) agora força espaço */
 .data-table th:nth-child(1), .data-table td:nth-child(1) { width: 40px; text-align: center; } /* Check */
 .data-table th:nth-child(2), .data-table td:nth-child(2) { width: 90px; } /* Data */
 .data-table th:nth-child(3), .data-table td:nth-child(3) { width: 15%; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* Evento */
-.data-table th:nth-child(4), .data-table td:nth-child(4) { width: auto; font-weight: 500; } /* Aluno (Principal) */
+/* ALUNO: Min-width força a ocupar o vazio e evita quebra */
+.data-table th:nth-child(4), .data-table td:nth-child(4) { width: auto; min-width: 250px; font-weight: 500; white-space: nowrap; } 
 .data-table th:nth-child(5), .data-table td:nth-child(5) { width: 110px; } /* Status */
 .data-table th:nth-child(6), .data-table td:nth-child(6) { width: 140px; text-align: right; } /* Ações */
 
@@ -315,33 +317,36 @@ body {
 .filters select, .filters input { padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.9rem; background: white; flex: 1; min-width: 150px; outline: none; }
 .filters select:focus, .filters input:focus { border-color: var(--primary); }
 
-/* --- MODAIS (SweetAlert2) --- */
+/* --- MODAIS (SweetAlert2) - PREENCHENDO A TELA --- */
 .swal2-popup { font-family: 'Inter', sans-serif !important; padding: 0 !important; border-radius: 12px !important; }
 
-/* Modal Responsivo e Grande */
+/* MODAL VERDADEIRAMENTE LARGO E EXPANSIVO */
 @media(min-width: 992px) {
     div:where(.swal2-container) div:where(.swal2-popup) {
         width: auto !important;
-        max-width: 95vw !important;
+        min-width: 900px !important; 
+        max-width: 95vw !important; /* Quase a tela toda se precisar */
+        display: flex;
+        flex-direction: column;
     }
 }
 
-.swal2-html-container { margin: 0 !important; padding: 25px !important; text-align: left !important; max-height: 85vh !important; overflow-y: auto !important; }
-.swal2-title { padding: 20px 25px 0 !important; font-size: 1.3rem !important; color: #1e293b !important; text-align: left !important; }
-.swal2-actions { padding: 20px 25px !important; justify-content: flex-end !important; border-top: 1px solid #f1f5f9; background: #fafafa; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
+.swal2-html-container { margin: 0 !important; padding: 30px !important; text-align: left !important; max-height: 85vh !important; overflow-y: auto !important; }
+.swal2-title { padding: 20px 30px 0 !important; font-size: 1.4rem !important; color: #1e293b !important; text-align: left !important; }
+.swal2-actions { padding: 20px 30px !important; justify-content: flex-end !important; border-top: 1px solid #f1f5f9; background: #fafafa; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
 
 /* Grid do Modal */
-.modal-form-grid { display: grid; gap: 20px; }
-.modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.modal-form-grid { display: grid; gap: 25px; }
+.modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
 .modal-full { display: flex; flex-direction: column; gap: 6px; }
-.modal-fields-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+.modal-fields-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; } /* Campos mais largos */
 
-.swal-label { font-size: 0.85rem; font-weight: 600; color: #475569; display: block; margin-bottom: 4px; }
-.swal-input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem; background: #fff; transition: border 0.2s; box-sizing: border-box; }
+.swal-label { font-size: 0.9rem; font-weight: 600; color: #475569; display: block; margin-bottom: 5px; }
+.swal-input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; background: #fff; transition: border 0.2s; box-sizing: border-box; }
 .swal-input:focus { border-color: var(--primary); outline: none; }
 
 /* Cards de Checkbox */
-.checkbox-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 15px; margin-top: 10px; }
+.checkbox-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; margin-top: 10px; }
 .checkbox-card { background: #fff; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; display: flex; align-items: flex-start; gap: 12px; cursor: pointer; transition: all 0.2s; }
 .checkbox-card:hover { border-color: var(--primary); background: #f8fafc; }
 .checkbox-card input { margin-top: 3px; accent-color: var(--primary); transform: scale(1.1); }
@@ -390,6 +395,6 @@ body {
 @media(max-width: 992px) {
     .modal-row { grid-template-columns: 1fr; }
     .checkbox-grid { grid-template-columns: 1fr; }
-    .data-table th:nth-child(3), .data-table th:nth-child(5) { display: none; } /* Ocultar colunas menos importantes em mobile */
+    .data-table th:nth-child(3), .data-table th:nth-child(5) { display: none; } 
     .data-table td:nth-child(3), .data-table td:nth-child(5) { display: none; }
 }
