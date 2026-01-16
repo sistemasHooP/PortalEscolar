@@ -35,7 +35,8 @@ function showLoading(msg = 'Processando...') {
                 <style>@keyframes pulse-swal { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }</style>
             </div>
         `,
-        showConfirmButton: false, allowOutsideClick: false, width: '300px'
+        showConfirmButton: false, allowOutsideClick: false, width: '300px',
+        customClass: { popup: 'swal-small' } // Tenta forçar tamanho menor para loaders
     });
 }
 
@@ -121,16 +122,8 @@ function aplicarEstilosVisuais() {
     if (!document.getElementById(styleId)) {
         const style = document.createElement('style');
         style.id = styleId;
-        style.innerHTML = `
-            .container, .main-content { max-width: 98% !important; width: 98% !important; margin: 0 auto; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { padding: 12px 15px; text-align: left; }
-            .nav-tabs { justify-content: flex-start; gap: 10px; border-bottom: 2px solid #e2e8f0; margin-bottom: 20px; }
-            .nav-btn { flex: initial; padding: 10px 25px; border-radius: 8px 8px 0 0; }
-            .nav-btn.active { border-bottom: 3px solid #2563eb; color: #2563eb; background: #eff6ff; }
-            .filters-bar { display: flex; flex-wrap: wrap; gap: 15px; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
-            .search-box { flex: 1; min-width: 250px; }
-        `;
+        // Removido CSS injetado pois agora o admin.css cuida de tudo
+        style.innerHTML = ``; 
         document.head.appendChild(style);
     }
 }
@@ -305,7 +298,7 @@ function gerarRelatorioTransporte() {
             <p style="font-size:0.9rem; color:#64748b; margin-bottom:15px;">Selecione as colunas que deseja exibir:</p>
             ${htmlChecks}
         `,
-        width: '600px',
+        width: '600px', // Modal de seleção pode ser menor
         showCancelButton: true,
         confirmButtonText: 'Gerar PDF',
         confirmButtonColor: '#2563eb',
@@ -417,6 +410,8 @@ function abrirEdicaoEvento(evento) {
 
     Swal.fire({
         title: 'Editar Evento',
+        // IMPORTANTE: Classes para modal largo via CSS
+        customClass: { popup: 'swal-wide', container: 'swal-wide' }, 
         html: `
             <div class="modal-form-grid" style="text-align: left;">
                 <div class="modal-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
@@ -438,7 +433,6 @@ function abrirEdicaoEvento(evento) {
                     </div>
                 </div>
             </div>`,
-        width: '90%', // MODAL ESTICADO (90% da tela)
         showCancelButton: true, confirmButtonText: 'Salvar Alterações', confirmButtonColor: '#2563eb',
         preConfirm: () => { 
             const cidadesTexto = document.getElementById('edit_cidades').value;
@@ -470,7 +464,8 @@ function modalNovoEvento() {
     htmlCampos += '</div>';
 
     Swal.fire({
-        title: 'Criar Novo Evento', width: '800px',
+        title: 'Criar Novo Evento',
+        customClass: { popup: 'swal-wide', container: 'swal-wide' }, // CLASSE PARA MODAL LARGO
         html: `
             <div class="modal-form-grid">
                 <input id="swal-titulo" class="swal-input" placeholder="Título do Evento">
@@ -585,6 +580,7 @@ function abrirEdicaoInscricao(chave) {
     let configEvento = {}; try { configEvento = JSON.parse(evento.config || '{}'); } catch(e) {}
     
     // --- LAYOUT EM GRID (2 Colunas) ---
+    // A classe 'modal-fields-grid' vem do CSS e define as colunas
     let formHtml = '<div class="modal-fields-grid" style="text-align:left;">';
     
     const ignorar = ['linkFoto', 'linkDoc'];
@@ -612,8 +608,10 @@ function abrirEdicaoInscricao(chave) {
     }
     
     Swal.fire({
-        title: 'Editar Dados do Aluno', html: formHtml, 
-        width: '90%', // MODAL ESTICADO (90% da tela)
+        title: 'Editar Dados do Aluno', 
+        html: formHtml, 
+        // IMPORTANTE: Adiciona a classe que permite ao modal ocupar 95% da tela
+        customClass: { popup: 'swal-wide', container: 'swal-wide' }, 
         showCancelButton: true, confirmButtonText: 'Salvar', confirmButtonColor: '#2563eb',
         preConfirm: async () => {
             const novosDados = {}; for (const key of Object.keys(dados)) { if (!ignorar.includes(key)) { const el = document.getElementById(`edit_aluno_${key}`); if (el) novosDados[key] = el.value; } }
