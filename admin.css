@@ -189,15 +189,19 @@ body {
     gap: 8px;
 }
 
-/* --- CONTEÚDO --- */
+/* --- CONTEÚDO (AJUSTE PARA OCUPAR TELA TODA) --- */
 .admin-content {
-    padding: 3.5rem 2.5rem;
+    /* Padding reduzido nas laterais para aproveitar largura */
+    padding: 3.5rem 1.5rem; 
     padding-bottom: 120px;
+    /* Garante que o conteúdo estique */
+    width: 100%; 
+    box-sizing: border-box;
 }
 
 @media(max-width: 768px) {
     .admin-content {
-        padding: 2rem 1.5rem;
+        padding: 2rem 1rem;
     }
 }
 
@@ -240,13 +244,14 @@ body {
 @media(min-width: 900px) { .charts-container { grid-template-columns: 2fr 1fr; } }
 .chart-box { background: white; padding: 20px; border-radius: 16px; box-shadow: var(--shadow-sm); border: 1px solid #e2e8f0; }
 
-/* Tabelas (MODO EXPANDIDO) */
+/* Tabelas (MODO 100% WIDTH) */
 .table-responsive {
-    overflow-x: visible;
+    overflow-x: auto;
     background: white;
     border-radius: 12px;
     box-shadow: var(--shadow-sm);
     border: 1px solid #e2e8f0;
+    width: 100%; /* Força largura total */
 }
 
 .data-table { 
@@ -254,7 +259,6 @@ body {
     border-collapse: collapse; 
     font-size: 0.9rem; 
     white-space: normal; 
-    table-layout: fixed; 
 }
 
 .data-table th { 
@@ -264,14 +268,13 @@ body {
     font-weight: 600; 
     color: #64748b; 
     border-bottom: 2px solid #e2e8f0; 
-    word-wrap: break-word; 
+    white-space: nowrap; 
 }
 
 .data-table td { 
     padding: 15px; 
     border-bottom: 1px solid #e2e8f0; 
     vertical-align: middle; 
-    word-wrap: break-word; 
 }
 
 .data-table tr:last-child td { border-bottom: none; }
@@ -311,26 +314,27 @@ body {
 .swal2-popup {
     font-family: 'Poppins', sans-serif !important;
     padding: 0 !important;
+    /* REMOVIDO min-width fixo global para não estragar popups pequenos */
 }
 
-/* MODAL GIGANTE EM TELAS GRANDES */
+/* REGRA PARA MODAIS GRANDES (Usar no JS via width ou customClass) */
+/* O JS está passando width: '800px' ou '90%', o SweetAlert aplica isso inline.
+   Este media query garante que em desktop o CSS não limite isso. */
 @media(min-width: 992px) {
     div:where(.swal2-container) div:where(.swal2-popup) {
-        width: 90% !important; /* Ocupa 90% da tela */
-        max-width: 1400px !important; /* Permite ficar bem largo */
-        min-width: 800px !important;
+        max-width: 95vw !important;  
+        /* Sem min-width global aqui. O JS define a largura. */
     }
 }
 
 .swal2-html-container {
     margin: 0 !important;
     text-align: left !important;
-    padding: 30px !important;
+    padding: 25px !important;
     max-height: 85vh !important;
     overflow-y: auto !important;
 }
 
-/* Ajuste do Grid interno */
 .modal-form-grid { display: grid; gap: 20px; }
 .modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .modal-full { display: flex; flex-direction: column; gap: 8px; }
@@ -338,7 +342,7 @@ body {
 /* Grid de 3 colunas para campos em telas muito largas */
 .modal-fields-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsivo: cria colunas conforme cabe */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
     gap: 20px;
 }
 
@@ -378,7 +382,6 @@ body {
         background: white; z-index: 9999; padding: 0; margin: 0; 
     }
 
-    /* IMPRESSÃO VERTICAL */
     @page { size: A4 portrait; margin: 15mm; }
 
     /* Estilos da Ficha de Inscrição Impressa */
@@ -416,14 +419,9 @@ body {
     .report-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 15px; }
     .report-table th, .report-table td { border: 1px solid #000; padding: 4px; text-align: left; }
     .report-table th { background-color: #eee !important; font-weight: bold; -webkit-print-color-adjust: exact; }
-    
-    .group-header { background-color: #ddd !important; font-weight: bold; text-align: left; -webkit-print-color-adjust: exact; }
-
     .report-footer { display: flex; justify-content: space-around; margin-top: 40px; page-break-inside: avoid; }
-    .sign-box { text-align: center; width: 40%; }
     .sign-line { border-top: 1px solid #000; padding-top: 5px; font-size: 10px; font-weight: bold; }
     
-    /* Carteirinha */
     .carteirinha-container { page-break-inside: avoid; }
     .carteirinha-card { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-shadow: none !important; border: 1px solid #ccc; }
 }
