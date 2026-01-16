@@ -1,618 +1,375 @@
-/* --- Variáveis e Design System (Desktop Pro) --- */
+/* --- Variáveis e Design System (App Layout Full) --- */
 :root {
     /* Paleta Institucional */
-    --primary: #2563eb;       /* Azul Principal */
-    --primary-hover: #1d4ed8; /* Azul Escuro Hover */
-    --primary-light: #eff6ff; /* Fundo Azul Claro */
-    --secondary: #0ea5e9;     /* Cyan/Azul Secundário */
+    --primary: #2563eb;       
+    --primary-hover: #1d4ed8; 
+    --primary-light: #eff6ff; 
+    --secondary: #0ea5e9;     
     
     /* Cores de Interface */
-    --bg-app: #f8fafc;        /* Fundo da Aplicação (Cinza muito claro) */
-    --bg-surface: #ffffff;    /* Fundo de Cards/Modais */
-    --bg-sidebar: #1e293b;    /* Fundo Sidebar (Escuro) */
+    --bg-app: #f1f5f9;        /* Fundo base */
+    --bg-surface: #ffffff;    /* Superfícies (Cards) */
+    --bg-sidebar: #0f172a;    /* Menu Lateral Escuro */
     
     /* Texto */
-    --text-primary: #0f172a;  /* Texto Principal */
-    --text-secondary: #64748b;/* Texto Secundário */
-    --text-on-dark: #f1f5f9;  /* Texto sobre fundo escuro */
+    --text-primary: #1e293b;  
+    --text-secondary: #64748b;
+    --text-on-dark: #f8fafc;  
 
     /* Status */
-    --success: #16a34a;       /* Verde */
-    --success-bg: #dcfce7;
-    --warning: #ca8a04;       /* Amarelo/Laranja */
-    --warning-bg: #fef9c3;
-    --danger: #dc2626;        /* Vermelho */
-    --danger-bg: #fee2e2;
-    --info: #3b82f6;          /* Azul Info */
-    --info-bg: #dbeafe;
+    --success: #16a34a; --success-bg: #dcfce7;
+    --warning: #d97706; --warning-bg: #fef3c7;
+    --danger: #dc2626;  --danger-bg: #fee2e2;
+    --info: #3b82f6;    --info-bg: #dbeafe;
 
-    /* Dimensões e Espaçamentos */
-    --sidebar-width: 280px;
+    /* Dimensões Fixas */
+    --sidebar-width: 260px;
     --header-height: 70px;
+    
+    /* Bordas e Sombras */
     --radius-sm: 6px;
     --radius-md: 10px;
-    --radius-lg: 16px;
-    
-    /* Sombras Sutis (Estilo Clean) */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    --radius-lg: 12px;
+    --border-color: #e2e8f0;
+    --shadow-subtle: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     
     /* Transições */
     --transition: all 0.2s ease-in-out;
 }
 
-/* --- Reset e Base --- */
+/* --- Reset e Base "App-Like" --- */
 * { box-sizing: border-box; outline: none; }
 
-body {
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+/* TRAVA GERAL: O corpo não rola mais. Quem rola são os painéis internos. */
+html, body {
+    height: 100%;
+    width: 100%;
     margin: 0;
     padding: 0;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background-color: var(--bg-app);
     color: var(--text-primary);
-    font-size: 14px; /* Base levemente menor para alta densidade */
-    overflow-x: hidden; /* Evita scroll lateral indesejado */
+    font-size: 14px;
+    overflow: hidden; /* CRUCIAL: Remove scrollbar da janela inteira */
 }
 
-/* Scrollbar Customizada */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: #f1f1f1; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+/* Scrollbar Customizada (Fina e Discreta) */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-/* --- TELA DE LOGIN (Centralizada e Elegante) --- */
+/* --- TELA DE LOGIN (Mantida Centralizada) --- */
 .login-container {
     height: 100vh;
-    width: 100%;
+    width: 100vw;
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    position: fixed;
+    top: 0; left: 0;
+    z-index: 9999;
 }
 
 .login-card {
     width: 100%;
-    max-width: 420px;
+    max-width: 400px;
     background: var(--bg-surface);
-    padding: 3rem;
+    padding: 2.5rem;
     border-radius: var(--radius-lg);
-    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     text-align: center;
 }
 
-.input-wrapper {
-    position: relative;
-    margin-bottom: 1.5rem;
-}
-
-.input-wrapper i.icon-left {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-secondary);
-}
-
-.input-wrapper i.password-toggle {
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-secondary);
-    cursor: pointer;
-}
+.input-wrapper { position: relative; margin-bottom: 1.5rem; }
+.input-wrapper i.icon-left { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary); }
+.input-wrapper i.password-toggle { position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary); cursor: pointer; padding: 5px; }
 
 #admin-pass {
-    width: 100%;
-    padding: 12px 40px;
-    border: 1px solid #cbd5e1;
-    border-radius: 50px;
-    font-size: 1rem;
-    transition: var(--transition);
-    background: #f8fafc;
+    width: 100%; padding: 12px 40px; border: 1px solid var(--border-color); border-radius: 50px; font-size: 1rem; background: #f8fafc; transition: var(--transition);
 }
+#admin-pass:focus { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
 
-#admin-pass:focus {
-    background: #fff;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.btn-back-login {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--text-secondary);
-    font-weight: 500;
-    margin-top: 1rem;
-    transition: var(--transition);
-    font-size: 0.9rem;
-}
+.btn-back-login { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); font-weight: 500; margin-top: 1rem; transition: var(--transition); font-size: 0.9rem; }
 .btn-back-login:hover { color: var(--primary); }
 
-/* --- LAYOUT DO PAINEL (Full Width) --- */
+/* --- LAYOUT PRINCIPAL (GRID TOTAL) --- */
 #admin-panel {
     display: flex;
-    min-height: 100vh;
-    width: 100%;
+    height: 100vh; /* Ocupa 100% da altura */
+    width: 100vw;  /* Ocupa 100% da largura */
+    overflow: hidden;
 }
 
-/* Sidebar Fixa */
+/* Sidebar Fixa à Esquerda */
 .admin-nav {
     width: var(--sidebar-width);
+    min-width: var(--sidebar-width); /* Impede encolhimento */
     background: var(--bg-sidebar);
     color: var(--text-on-dark);
     display: flex;
     flex-direction: column;
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 50;
     padding: 1.5rem;
-    box-shadow: 4px 0 24px rgba(0,0,0,0.1);
+    border-right: 1px solid rgba(255,255,255,0.05);
+    z-index: 20;
 }
 
 .nav-brand {
-    font-size: 1.25rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding-bottom: 2rem;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    margin-bottom: 2rem;
-    color: #fff;
-    letter-spacing: 0.5px;
+    font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.75rem; padding-bottom: 2rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); color: #fff; letter-spacing: 0.5px;
 }
 
-.nav-links {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    flex: 1;
-}
+.nav-links { display: flex; flex-direction: column; gap: 0.5rem; flex: 1; overflow-y: auto; }
 
 .nav-btn {
-    background: transparent;
-    color: #94a3b8;
-    border: none;
-    padding: 12px 16px;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    font-size: 0.95rem;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    transition: var(--transition);
-    text-align: left;
-    width: 100%;
+    background: transparent; color: #94a3b8; border: none; padding: 12px 16px; border-radius: var(--radius-md); cursor: pointer; font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; gap: 12px; transition: var(--transition); text-align: left; width: 100%;
 }
-
-.nav-btn:hover {
-    background: rgba(255,255,255,0.05);
-    color: #fff;
-    transform: translateX(5px);
-}
-
-.nav-btn.active {
-    background: var(--primary);
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-}
+.nav-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
+.nav-btn.active { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
 
 .logout-btn {
-    margin-top: auto;
-    background: rgba(220, 38, 38, 0.1);
-    color: #fca5a5;
-    border: 1px solid rgba(220, 38, 38, 0.2);
-    padding: 12px;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    font-weight: 600;
-    transition: var(--transition);
+    margin-top: 1rem; background: rgba(220, 38, 38, 0.1); color: #fca5a5; border: 1px solid rgba(220, 38, 38, 0.2); padding: 12px; border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 600; transition: var(--transition);
 }
+.logout-btn:hover { background: rgba(220, 38, 38, 0.2); color: #fff; }
 
-.logout-btn:hover {
-    background: rgba(220, 38, 38, 0.2);
-    color: #fff;
-}
-
-/* --- CONTEÚDO PRINCIPAL (Fluido) --- */
+/* Área de Conteúdo (Expansiva) */
 .admin-content {
-    margin-left: var(--sidebar-width);
-    flex: 1; /* Ocupa todo o espaço restante */
-    padding: 2rem;
+    flex: 1; /* Ocupa TODO o espaço restante lateral */
+    height: 100%; /* Ocupa TODA a altura */
     background: var(--bg-app);
-    min-height: 100vh;
     display: flex;
     flex-direction: column;
-    /* Removemos max-width para usar 100% da tela */
+    overflow: hidden; /* Impede scroll no container pai */
+    position: relative;
 }
 
-/* Header da Seção */
+/* O Conteúdo das Abas é quem rola (Scroll Interno) */
+.tab-content {
+    flex: 1;
+    overflow-y: auto; /* Scroll vertical aqui */
+    padding: 2rem; /* Espaçamento interno */
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.tab-content.hidden { display: none !important; }
+
+/* Header da Seção (Fixo ou no topo do scroll) */
 .header-action {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
-    background: var(--bg-surface);
-    padding: 1.5rem;
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid #e2e8f0;
+    margin-bottom: 1.5rem;
+    flex-shrink: 0; /* Não encolhe */
 }
+.header-action h2 { font-size: 1.6rem; font-weight: 700; color: var(--text-primary); margin: 0; letter-spacing: -0.5px; }
+.header-action p { color: var(--text-secondary); margin: 0.2rem 0 0 0; font-size: 0.9rem; }
 
-.header-action h2 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0;
-}
+/* --- COMPONENTES DE INTERFACE --- */
 
-/* Botões Padrão */
-.btn-primary {
-    background: var(--primary);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: var(--radius-sm);
-    font-weight: 500;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: var(--transition);
-    font-size: 0.9rem;
-}
-
-.btn-primary:hover {
-    background: var(--primary-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
-}
-
-.btn-refresh {
-    background: #fff;
-    border: 1px solid #cbd5e1;
-    color: var(--text-secondary);
-    padding: 10px 14px;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: var(--transition);
-}
-.btn-refresh:hover { background: #f1f5f9; color: var(--primary); border-color: var(--primary); }
-
-/* --- GRID DE ESTATÍSTICAS (Dashboard) --- */
+/* Cards de Estatísticas (Grid Flexível) */
 .stats-grid {
     display: grid;
-    /* Grid inteligente: cria quantas colunas couberem, mín 240px */
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    /* Grid automático que preenche a largura total */
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2rem;
+    flex-shrink: 0;
 }
 
 .stat-card {
     background: var(--bg-surface);
     padding: 1.5rem;
     border-radius: var(--radius-md);
-    border: 1px solid #e2e8f0;
-    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-subtle);
     position: relative;
-    overflow: hidden;
-    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
 }
+.stat-card h3 { color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin: 0; }
+.stat-card p { font-size: 2.2rem; font-weight: 700; color: var(--text-primary); margin: 0.2rem 0 0 0; line-height: 1.1; }
+.stat-card i { position: absolute; right: 1.5rem; top: 50%; transform: translateY(-50%); font-size: 2.5rem; opacity: 0.1; color: var(--text-primary); }
 
-.stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--primary); }
-
-.stat-card h3 { color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin: 0; }
-.stat-card p { font-size: 2.5rem; font-weight: 800; color: var(--text-primary); margin: 0.5rem 0 0 0; line-height: 1; }
-.stat-card i { position: absolute; right: -10px; bottom: -10px; font-size: 5rem; color: var(--text-secondary); opacity: 0.05; transform: rotate(-15deg); }
-
-/* --- GRÁFICOS (Layout Lado a Lado) --- */
+/* Gráficos (Full Width se necessário) */
 .charts-container {
     display: grid;
-    grid-template-columns: 2fr 1fr; /* 2/3 para barra, 1/3 para pizza */
+    grid-template-columns: 2fr 1fr; /* 2/3 e 1/3 */
     gap: 1.5rem;
     margin-bottom: 2rem;
+    flex-shrink: 0;
 }
-
-@media (max-width: 1200px) { .charts-container { grid-template-columns: 1fr; } }
+@media (max-width: 1400px) { .charts-container { grid-template-columns: 1fr; } } /* Vira 1 coluna em telas médias */
 
 .chart-box {
     background: var(--bg-surface);
     padding: 1.5rem;
     border-radius: var(--radius-md);
-    border: 1px solid #e2e8f0;
-    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-subtle);
     min-height: 350px;
     display: flex;
     flex-direction: column;
 }
-.chart-box h4 { margin: 0 0 1.5rem 0; color: var(--text-primary); font-size: 1.1rem; font-weight: 600; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem; }
+.chart-box h4 { margin: 0 0 1rem 0; font-size: 1rem; color: var(--text-primary); font-weight: 600; }
 
-/* --- FILTROS AVANÇADOS (Toolbar) --- */
+/* Toolbar de Filtros (Barra Horizontal) */
 .filters {
     background: var(--bg-surface);
-    padding: 1rem;
+    padding: 0.8rem 1rem;
     border-radius: var(--radius-md);
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-color);
     display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
     align-items: center;
-    margin-bottom: 1.5rem;
-    box-shadow: var(--shadow-sm);
+    gap: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow-subtle);
+    flex-wrap: wrap; /* Permite quebrar linha se a tela for muito estreita */
 }
 
-.filters select, .filters input {
-    padding: 10px 14px;
-    border: 1px solid #cbd5e1;
+.filters input, .filters select {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     font-size: 0.9rem;
-    color: var(--text-primary);
-    min-width: 200px;
     background: #fff;
+    color: var(--text-primary);
 }
 .filters input:focus, .filters select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
 
-/* --- TABELAS DE DADOS (High Density) --- */
+/* --- TABELAS INTELIGENTES (Full Height/Width) --- */
 .table-responsive {
     background: var(--bg-surface);
     border-radius: var(--radius-md);
-    border: 1px solid #e2e8f0;
-    box-shadow: var(--shadow-sm);
-    overflow: hidden; /* Importante para o border-radius */
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-subtle);
     display: flex;
     flex-direction: column;
-    height: 100%; /* Ocupa altura disponível se necessário */
-    max-height: calc(100vh - 250px); /* Evita que a tabela empurre a página infinitamente */
+    flex: 1; /* A tabela tenta ocupar todo o espaço vertical restante */
+    min-height: 400px; /* Altura mínima garantida */
+    overflow: hidden; /* O scroll é interno */
 }
 
-/* Área de Rolagem da Tabela */
 .table-scroll-area {
-    overflow-y: auto;
-    width: 100%;
     flex: 1;
+    overflow: auto; /* Scroll vertical e horizontal aqui */
+    width: 100%;
 }
 
 .data-table {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
+    border-collapse: collapse;
     font-size: 0.9rem;
+    white-space: nowrap; /* Evita quebra de linha nas células para não "espremer" */
 }
 
-/* Cabeçalho Fixo (Sticky Header) */
+/* Cabeçalho Fixo (Sticky) */
 .data-table th {
     background: #f8fafc;
-    color: var(--text-secondary);
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 0.5px;
-    padding: 12px 16px;
-    text-align: left;
-    border-bottom: 1px solid #e2e8f0;
-    border-top: 1px solid #e2e8f0; /* Garante borda no topo ao rolar */
     position: sticky;
     top: 0;
-    z-index: 10; /* Fica acima das linhas */
-    white-space: nowrap;
+    z-index: 10;
+    padding: 14px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .data-table td {
-    padding: 10px 16px; /* Padding reduzido para densidade */
+    padding: 12px 16px;
     border-bottom: 1px solid #f1f5f9;
     color: var(--text-primary);
     vertical-align: middle;
 }
-
 .data-table tr:hover td { background-color: #f8fafc; }
-.data-table tr:last-child td { border-bottom: none; }
 
-/* Badges de Status */
-.badge {
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    display: inline-block;
-    letter-spacing: 0.3px;
+/* Botões da UI */
+.btn-primary {
+    background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: var(--radius-sm); font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: var(--transition);
 }
-.badge-Ativo, .badge-Aprovada, .badge-FichaEmitida { background: var(--success-bg); color: var(--success); border: 1px solid #bbf7d0; }
-.badge-Pendente { background: var(--warning-bg); color: var(--warning); border: 1px solid #fef08a; }
-.badge-Inativo, .badge-Rejeitada { background: var(--danger-bg); color: var(--danger); border: 1px solid #fecaca; }
+.btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
 
-/* Botões de Ação na Tabela */
+.btn-refresh {
+    background: #fff; border: 1px solid var(--border-color); color: var(--text-secondary); padding: 8px 12px; border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition);
+}
+.btn-refresh:hover { border-color: var(--primary); color: var(--primary); }
+
 .action-btn {
-    width: 32px; height: 32px;
-    border-radius: 6px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: 4px;
-    border: none;
-    cursor: pointer;
-    color: #fff;
-    font-size: 0.85rem;
-    transition: transform 0.1s;
+    width: 32px; height: 32px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; border: none; cursor: pointer; color: #fff; font-size: 0.85rem; transition: transform 0.1s;
 }
 .action-btn:hover { transform: scale(1.1); }
 .btn-edit { background: var(--primary); }
 .btn-view { background: var(--secondary); }
 .btn-delete { background: var(--danger); }
 
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; display: inline-block; }
+.badge-Ativo, .badge-Aprovada, .badge-FichaEmitida { background: var(--success-bg); color: var(--success); }
+.badge-Pendente { background: var(--warning-bg); color: var(--warning); }
+.badge-Inativo, .badge-Rejeitada { background: var(--danger-bg); color: var(--danger); }
+
 /* --- BARRA FLUTUANTE (Ações em Massa) --- */
 .bulk-actions-bar {
-    position: fixed;
+    position: absolute; /* Mudado para absolute dentro do admin-content */
     bottom: 30px;
     left: 50%;
     transform: translateX(-50%);
-    background: #0f172a;
+    background: var(--bg-sidebar);
     color: white;
-    padding: 12px 30px;
+    padding: 10px 25px;
     border-radius: 50px;
     display: flex;
-    gap: 20px;
+    gap: 15px;
     align-items: center;
-    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
-    z-index: 1000;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    z-index: 100;
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-.bulk-actions-bar.hidden-bar { transform: translate(-50%, 150%); } /* Animação suave */
+.bulk-actions-bar.hidden-bar { transform: translate(-50%, 150%); }
 
-/* --- CUSTOMIZAÇÃO DE MODAL (SweetAlert2 - Widescreen) --- */
-/* Base do Modal */
+/* --- MODAIS LARGOS & GRIDS (SweetAlert2 Custom) --- */
 div:where(.swal2-container) div:where(.swal2-popup) {
-    font-family: 'Poppins', sans-serif !important;
+    font-family: inherit !important;
     padding: 0 !important;
     border-radius: var(--radius-lg) !important;
-    overflow: hidden !important;
+    /* Removemos max-width padrão para permitir modais largos via JS */
 }
 
-/* Título */
 div:where(.swal2-container) h2:where(.swal2-title) {
-    padding: 1.5rem 2rem !important;
-    background: #f8fafc;
-    border-bottom: 1px solid #e2e8f0;
-    color: var(--text-primary) !important;
-    font-size: 1.4rem !important;
-    text-align: left !important;
-    margin: 0 !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
+    padding: 1.2rem 2rem !important; background: #f8fafc; border-bottom: 1px solid var(--border-color); color: var(--text-primary) !important; font-size: 1.2rem !important; text-align: left !important;
 }
 
-/* Conteúdo */
 div:where(.swal2-container) div:where(.swal2-html-container) {
-    margin: 0 !important;
-    padding: 2rem !important;
-    text-align: left !important;
-    overflow-x: hidden;
-    overflow-y: auto;
-    max-height: 70vh;
+    margin: 0 !important; padding: 2rem !important; text-align: left !important; overflow-y: auto; max-height: 75vh;
 }
 
-/* Actions (Botões) */
-div:where(.swal2-container) div:where(.swal2-actions) {
-    margin: 0 !important;
-    padding: 1.5rem !important;
-    background: #f8fafc;
-    border-top: 1px solid #e2e8f0;
-    justify-content: flex-end !important;
-    gap: 1rem;
-}
+/* Grid System para Formulários */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1rem; }
+.grid-sidebar { display: grid; grid-template-columns: 240px 1fr; gap: 2rem; align-items: start; }
 
-/* --- GRID SYSTEM PARA MODAIS (Novo!) --- */
-/* Grid de 2 Colunas */
-.grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-/* Grid de 3 Colunas (Ideal para telas largas) */
-.grid-3 {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-/* Grid Assimétrico (Sidebar interna no modal) */
-.grid-sidebar {
-    display: grid;
-    grid-template-columns: 250px 1fr;
-    gap: 2rem;
-    align-items: start;
-}
-
-/* Estilos de Campos dentro do Modal */
-.swal-label {
-    display: block;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-    margin-bottom: 0.4rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.swal-input {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #cbd5e1;
-    border-radius: var(--radius-sm);
-    font-size: 0.95rem;
-    color: var(--text-primary);
-    transition: var(--transition);
-    background: #fff;
-    box-sizing: border-box; /* Garante que padding não estoure width */
-}
+.swal-label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.4rem; text-transform: uppercase; }
+.swal-input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.95rem; box-sizing: border-box; }
 .swal-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
-.swal-input[readonly] { background: #f1f5f9; cursor: not-allowed; color: #94a3b8; }
 
-/* Upload Box Melhorado */
-.upload-box {
-    border: 2px dashed #cbd5e1;
-    border-radius: var(--radius-md);
-    padding: 1.5rem;
-    text-align: center;
-    background: #f8fafc;
-    cursor: pointer;
-    transition: var(--transition);
-}
-.upload-box:hover { border-color: var(--primary); background: #eff6ff; }
-.upload-box i { font-size: 2rem; color: #94a3b8; margin-bottom: 0.5rem; }
-.upload-box p { font-size: 0.85rem; color: var(--text-secondary); margin: 0; }
-
-/* Checkboxes Cards (Grid de Opções) */
-.checkbox-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 10px;
-    margin-top: 5px;
-}
-.checkbox-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    padding: 10px;
-    border-radius: var(--radius-sm);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: var(--transition);
-}
+/* Checkboxes Bonitos */
+.checkbox-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 5px; }
+.checkbox-card { background: #fff; border: 1px solid var(--border-color); padding: 10px; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s; }
 .checkbox-card:hover { border-color: var(--primary); background: #f8fafc; }
 .checkbox-card input { accent-color: var(--primary); transform: scale(1.1); }
 
-/* --- PRINT LAYER (Mantido e Protegido) --- */
+/* --- PRINT --- */
 #print-layer { display: none; }
 @media print {
     body > *:not(#print-layer) { display: none !important; }
     #print-layer { display: block !important; position: absolute; top: 0; left: 0; width: 100%; background: white; }
     @page { size: A4 landscape; margin: 5mm; }
-    /* Ajustes específicos de impressão aqui se necessário */
 }
 
-/* --- RESPONSIVIDADE BÁSICA (Ainda suporta telas menores) --- */
-@media (max-width: 900px) {
-    .admin-nav { width: 70px; padding: 1rem 0.5rem; align-items: center; }
-    .nav-brand span, .nav-btn span, .logout-btn span { display: none; }
-    .nav-brand { justify-content: center; }
-    .nav-btn { justify-content: center; padding: 12px; }
-    .admin-content { margin-left: 70px; padding: 1rem; }
-    .grid-3, .grid-sidebar { grid-template-columns: 1fr; } /* Colapsa grids em telas menores */
-    .table-responsive { max-height: none; overflow-x: auto; } /* Tabela com scroll horizontal em mobile */
+/* Responsividade Agressiva para não quebrar em telas menores que Full HD */
+@media (max-width: 1024px) {
+    .charts-container { grid-template-columns: 1fr; }
+    .grid-sidebar { grid-template-columns: 1fr; } /* Colapsa sidebar do modal */
 }
