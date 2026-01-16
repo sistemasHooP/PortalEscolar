@@ -24,18 +24,17 @@ let paginaAtual = 1;
 const ITENS_POR_PAGINA = 50;
 let selecionados = new Set(); 
 
-// --- LOADING COM LOGO PULSANDO ---
+// --- LOADING CUSTOMIZADO ---
 function showLoading(msg = 'Processando...') {
     Swal.fire({
         html: `
             <div style="display:flex; flex-direction:column; align-items:center; gap:15px; padding:20px;">
-                <img src="${URL_LOGO}" style="width:80px; height:auto; animation: pulse-swal 1.5s infinite ease-in-out;" onerror="this.style.display='none'">
+                <img src="${URL_LOGO}" style="width:60px; height:auto; animation: pulse-swal 1.5s infinite ease-in-out;" onerror="this.style.display='none'">
                 <h3 style="font-family:'Poppins', sans-serif; font-size:1.1rem; color:#1e293b; margin:0; font-weight:600;">${msg}</h3>
-                <p style="font-family:'Poppins', sans-serif; font-size:0.85rem; color:#64748b; margin:0;">Aguarde um momento...</p>
                 <style>@keyframes pulse-swal { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }</style>
             </div>
         `,
-        showConfirmButton: false, allowOutsideClick: false, width: '320px', background: '#fff'
+        showConfirmButton: false, allowOutsideClick: false, width: '300px', background: '#fff'
     });
 }
 
@@ -44,7 +43,7 @@ function safeDate(val) {
     try { const d = new Date(val); return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('pt-BR'); } catch(e) { return '-'; }
 }
 
-// --- AUTH & NAVEGAÇÃO ---
+// --- AUTENTICAÇÃO ---
 function toggleSenha() {
     const input = document.getElementById('admin-pass');
     const icon = document.querySelector('.password-toggle');
@@ -60,8 +59,8 @@ function realizarLogin(e) {
     .then(res => res.json()).then(json => {
         Swal.close();
         if(json.auth) {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('admin-panel').classList.remove('hidden');
+            document.getElementById('login-screen').style.display = 'none'; // Oculta login
+            document.getElementById('admin-panel').classList.remove('hidden'); // Exibe painel
             sessionStorage.setItem('admin_token', pass);
             carregarDashboard();
         } else { Swal.fire({icon: 'error', title: 'Acesso Negado', text: 'Senha administrativa incorreta.'}); }
@@ -70,18 +69,25 @@ function realizarLogin(e) {
 
 function logout() { 
     sessionStorage.removeItem('admin_token'); 
-    window.location.href = 'index.html'; 
+    window.location.reload(); // Recarrega para voltar ao login limpo
 }
 
+// --- NAVEGAÇÃO APP SHELL ---
 function switchTab(tabId) {
+    // Esconde todas as abas
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-    document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+    
+    // Remove active do menu lateral
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    
+    // Mostra aba atual
     document.getElementById(tabId).classList.remove('hidden');
     
-    // Atualiza botão ativo
-    const btn = document.querySelector(`.nav-btn[onclick="switchTab('${tabId}')"]`);
+    // Ativa botão no menu
+    const btn = document.querySelector(`.nav-item[onclick="switchTab('${tabId}')"]`);
     if(btn) btn.classList.add('active');
 
+    // Carrega dados específicos
     if(tabId === 'tab-dashboard') carregarDashboard();
     if(tabId === 'tab-eventos') carregarEventosAdmin();
     if(tabId === 'tab-inscricoes') carregarInscricoes();
@@ -104,7 +110,7 @@ function carregarConfigDrive() {
 
 function salvarConfigDrive() {
     const id = document.getElementById('config-drive-id').value;
-    showLoading('Salvando Configuração...');
+    showLoading('Salvando...');
     fetch(URL_API, { 
         method: 'POST', 
         body: JSON.stringify({ 
@@ -141,21 +147,10 @@ function carregarDashboard() {
             contagemStatus[i.status] = (contagemStatus[i.status] || 0) + 1;
         });
         renderizarGraficos(contagemEventos, contagemStatus);
-        
-        const selEvento = document.getElementById('relatorio-evento');
-        selEvento.onchange = () => {
-            const eventoId = selEvento.value;
-            if (eventoId) {
-                const dadosFiltrados = dashboardData.filter(i => String(i.eventoId) === String(eventoId));
-                atualizarEstatisticasDashboard(dadosFiltrados, mapaEventos[eventoId]);
-            } else {
-                atualizarEstatisticasDashboard(dashboardData, "Visão Geral");
-            }
-        };
     });
 }
 
-function atualizarEstatisticasDashboard(dados, titulo) {
+function atualizarEstatisticasDashboard(dados) {
     document.getElementById('stat-total').innerText = dados.length;
     document.getElementById('stat-aprovados').innerText = dados.filter(i => i.status.includes('Aprovada') || i.status.includes('Emitida')).length;
     document.getElementById('stat-pendentes').innerText = dados.filter(i => i.status === 'Pendente').length;
@@ -165,23 +160,21 @@ function renderizarGraficos(dadosEventos, dadosStatus) {
     if(chartEventosInstance) chartEventosInstance.destroy();
     chartEventosInstance = new Chart(document.getElementById('chartEventos').getContext('2d'), {
         type: 'bar', 
-        data: { labels: Object.keys(dadosEventos), datasets: [{ label: 'Inscritos', data: Object.values(dadosEventos), backgroundColor: '#2563eb', borderRadius: 6 }] },
+        data: { labels: Object.keys(dadosEventos), datasets: [{ label: 'Inscritos', data: Object.values(dadosEventos), backgroundColor: '#2563eb', borderRadius: 4 }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { borderDash: [2, 4] } }, x: { grid: { display: false } } } }
     });
     if(chartStatusInstance) chartStatusInstance.destroy();
     chartStatusInstance = new Chart(document.getElementById('chartStatus').getContext('2d'), {
         type: 'doughnut', 
         data: { labels: Object.keys(dadosStatus), datasets: [{ data: Object.values(dadosStatus), backgroundColor: ['#ca8a04', '#16a34a', '#dc2626', '#2563eb'], borderWidth: 0 }] },
-        options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8 } } } }
+        options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8 } } } }
     });
 }
 
 function atualizarSelectsRelatorio(eventos, inscricoes) {
     const selEvento = document.getElementById('relatorio-evento');
-    const atual = selEvento.value;
     selEvento.innerHTML = '<option value="">Todos os Eventos</option>';
     eventos.forEach(ev => selEvento.innerHTML += `<option value="${ev.id}">${ev.titulo}</option>`);
-    if(atual) selEvento.value = atual;
     
     let instituicoes = new Set();
     inscricoes.forEach(ins => { try { instituicoes.add(JSON.parse(ins.dadosJson).NomeInstituicao); } catch(e){} });
@@ -190,7 +183,7 @@ function atualizarSelectsRelatorio(eventos, inscricoes) {
     Array.from(instituicoes).sort().forEach(inst => { if(inst) selInst.innerHTML += `<option value="${inst}">${inst}</option>`; });
 }
 
-// --- RELATÓRIO DINÂMICO ---
+// --- RELATÓRIO PDF ---
 function gerarRelatorioTransporte() {
     const eventoId = document.getElementById('relatorio-evento').value;
     const instFiltro = document.getElementById('relatorio-inst').value;
@@ -240,7 +233,7 @@ function gerarRelatorioTransporte() {
     htmlChecks += `</div>`;
 
     Swal.fire({
-        title: 'Gerar Relatório Personalizado',
+        title: 'Personalizar Relatório',
         html: `<p style="font-size:0.9rem; color:#64748b; margin-bottom:15px;">Selecione as colunas para o PDF:</p>${htmlChecks}`,
         width: '700px',
         showCancelButton: true,
@@ -260,7 +253,7 @@ function gerarRelatorioTransporte() {
 }
 
 function construirRelatorioFinal(alunos, colunasKeys, eventoId) {
-    showLoading('Renderizando Relatório...');
+    showLoading('Preparando Impressão...');
 
     const tituloEvento = eventoId ? (mapaEventos[eventoId] || 'Evento') : "Relatório Geral";
     const dataHoje = new Date().toLocaleDateString('pt-BR');
@@ -351,13 +344,13 @@ function construirRelatorioFinal(alunos, colunasKeys, eventoId) {
     setTimeout(() => window.print(), 500);
 }
 
-// --- EVENTOS E MODAL (WIDESCREEN) ---
+// --- EVENTOS (WIDESCREEN MODAL) ---
 function carregarEventosAdmin() {
     fetch(`${URL_API}?action=getTodosEventos`).then(res => res.json()).then(json => {
         const tbody = document.getElementById('lista-eventos-admin'); 
         tbody.innerHTML = '';
         mapaEventos = {};
-        if(!json.data || json.data.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 2rem;">Nenhum evento criado.</td></tr>'; return; }
+        if(!json.data || json.data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem;">Nenhum evento criado.</td></tr>'; return; }
         
         json.data.forEach(ev => {
             mapaEventos[ev.id] = ev.titulo;
@@ -366,20 +359,18 @@ function carregarEventosAdmin() {
         
         json.data.sort((a,b) => b.id - a.id).forEach(ev => {
             let btnAction = ev.status === 'Ativo' ? 
-                `<button class="action-btn" style="background:#eab308;" onclick="toggleStatusEvento('${ev.id}','Inativo')" title="Pausar Inscrições"><i class="fa-solid fa-pause"></i></button>` : 
-                `<button class="action-btn" style="background:#22c55e;" onclick="toggleStatusEvento('${ev.id}','Ativo')" title="Ativar Inscrições"><i class="fa-solid fa-play"></i></button>`;
+                `<button class="btn-icon" style="background:#eab308;" onclick="toggleStatusEvento('${ev.id}','Inativo')" title="Pausar"><i class="fa-solid fa-pause"></i></button>` : 
+                `<button class="btn-icon" style="background:#22c55e;" onclick="toggleStatusEvento('${ev.id}','Ativo')" title="Ativar"><i class="fa-solid fa-play"></i></button>`;
             
             tbody.innerHTML += `
                 <tr>
                     <td><strong>#${ev.id}</strong></td>
-                    <td>
-                        <div style="font-weight:600; color:var(--primary); font-size:1rem;">${ev.titulo}</div>
-                        <div style="font-size:0.85rem; color:#64748b;">${safeDate(ev.inicio)} até ${safeDate(ev.fim)}</div>
-                    </td>
-                    <td><span class="badge badge-${ev.status}">${ev.status}</span></td>
+                    <td><div style="font-weight:600; color:var(--text-main); font-size:0.95rem;">${ev.titulo}</div></td>
+                    <td><div style="font-size:0.85rem; color:var(--text-secondary);">${safeDate(ev.inicio)} - ${safeDate(ev.fim)}</div></td>
+                    <td><span class="badge ${ev.status === 'Ativo' ? 'success' : 'danger'}">${ev.status}</span></td>
                     <td style="text-align:right;">
                         ${btnAction}
-                        <button class="action-btn btn-edit" onclick='abrirEdicaoEvento(${JSON.stringify(ev)})'><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn-icon bg-edit" onclick='abrirEdicaoEvento(${JSON.stringify(ev)})'><i class="fa-solid fa-pen"></i></button>
                     </td>
                 </tr>`;
         });
@@ -396,20 +387,20 @@ function abrirEdicaoEvento(evento) {
         title: 'Editar Evento',
         width: '800px',
         html: `
-            <div class="grid-2">
+            <div class="swal-grid-2">
                 <div>
                     <label class="swal-label">Data de Encerramento</label>
-                    <input type="date" id="edit_fim" class="swal-input" value="${evento.fim ? evento.fim.split('T')[0] : ''}">
+                    <input type="date" id="edit_fim" class="swal-input-custom" value="${evento.fim ? evento.fim.split('T')[0] : ''}">
                 </div>
                 <div>
                     <label class="swal-label">Restrição de Cidades</label>
-                    <input type="text" id="edit_cidades" class="swal-input" placeholder="Separe por vírgulas..." value="${cidades}">
+                    <input type="text" id="edit_cidades" class="swal-input-custom" placeholder="Separe por vírgulas..." value="${cidades}">
                 </div>
             </div>
             
-            <div style="margin-top: 15px;">
+            <div class="swal-full">
                 <label class="swal-label">Mensagem de Alerta (Topo do Formulário)</label>
-                <textarea id="edit_msg" class="swal-input" style="height:80px;">${config.mensagemAlerta || ''}</textarea>
+                <textarea id="edit_msg" class="swal-input-custom" style="height:80px;">${config.mensagemAlerta || ''}</textarea>
             </div>
             
             <div class="checkbox-grid" style="margin-top: 20px;">
@@ -473,36 +464,36 @@ function modalNovoEvento() {
         title: 'Criar Novo Evento', 
         width: '900px',
         html: `
-            <div class="grid-2">
+            <div class="swal-grid-2">
                 <div>
                     <label class="swal-label">Título do Evento</label>
-                    <input id="swal-titulo" class="swal-input" placeholder="Ex: Transporte 2025.1">
+                    <input id="swal-titulo" class="swal-input-custom" placeholder="Ex: Transporte 2025.1">
                 </div>
                 <div>
                     <label class="swal-label">Descrição Curta</label>
-                    <input id="swal-desc" class="swal-input" placeholder="Ex: Período letivo regular">
+                    <input id="swal-desc" class="swal-input-custom" placeholder="Ex: Período letivo regular">
                 </div>
             </div>
             
-            <div class="grid-2" style="margin-top: 15px;">
-                <div><label class="swal-label">Início das Inscrições</label><input type="date" id="swal-inicio" class="swal-input"></div>
-                <div><label class="swal-label">Fim das Inscrições</label><input type="date" id="swal-fim" class="swal-input"></div>
+            <div class="swal-grid-2">
+                <div><label class="swal-label">Início das Inscrições</label><input type="date" id="swal-inicio" class="swal-input-custom"></div>
+                <div><label class="swal-label">Fim das Inscrições</label><input type="date" id="swal-fim" class="swal-input-custom"></div>
             </div>
 
-            <div style="background: #f8fafc; padding: 20px; border-radius: 10px; margin-top: 20px; border: 1px solid #e2e8f0;">
-                <h4 style="margin: 0 0 15px 0; color: var(--primary);">Configuração do Formulário</h4>
+            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid #e2e8f0;">
+                <h4 style="margin: 0 0 15px 0; color: var(--primary); font-size:0.9rem; text-transform:uppercase;">Configuração do Formulário</h4>
                 
                 <label class="swal-label">Campos do Aluno</label>
                 ${htmlCampos}
                 
-                <div class="grid-2" style="margin-top: 15px;">
+                <div class="swal-grid-2" style="margin-top: 15px;">
                     <div>
                         <label class="swal-label">Restrição de Cidades</label>
-                        <input type="text" id="swal-cidades" class="swal-input" placeholder="Deixe vazio para todas">
+                        <input type="text" id="swal-cidades" class="swal-input-custom" placeholder="Deixe vazio para todas">
                     </div>
                     <div>
                         <label class="swal-label">Observações (Somente Leitura)</label>
-                        <textarea id="txt_obs_admin" class="swal-input" style="height:42px;" placeholder="Instruções para o aluno..."></textarea>
+                        <textarea id="txt_obs_admin" class="swal-input-custom" style="height:42px;" placeholder="Instruções para o aluno..."></textarea>
                     </div>
                 </div>
 
@@ -634,35 +625,31 @@ function renderizarProximaPagina() {
         let d = {}; try { d = JSON.parse(ins.dadosJson); } catch(e){}
         const checked = selecionados.has(ins.chave) ? 'checked' : '';
         
-        // Botões de Ação
         let btnFicha = ins.link_ficha ? 
-            `<a href="${ins.link_ficha}" target="_blank" class="action-btn btn-view" style="background:#059669;" title="Baixar Ficha PDF"><i class="fa-solid fa-file-pdf"></i></a>` : 
-            `<button class="action-btn" style="background:#6366f1;" onclick="gerarFicha('${ins.chave}')" title="Gerar Ficha"><i class="fa-solid fa-print"></i></button>`;
+            `<a href="${ins.link_ficha}" target="_blank" class="btn-icon bg-view" title="Baixar Ficha PDF"><i class="fa-solid fa-file-pdf"></i></a>` : 
+            `<button class="btn-icon bg-view" style="background:#6366f1;" onclick="gerarFicha('${ins.chave}')" title="Gerar Ficha"><i class="fa-solid fa-print"></i></button>`;
         
         let btnCartAdm = '';
         const evento = cacheEventos[ins.eventoId];
         if (evento) {
             let config = {}; try { config = JSON.parse(evento.config); } catch(e) {}
             if (config.emiteCarteirinha) {
-                btnCartAdm = `<button class="action-btn" style="background:#3b82f6;" onclick="imprimirCarteirinhaAdmin('${ins.chave}')" title="Carteirinha"><i class="fa-solid fa-id-card"></i></button>`;
+                btnCartAdm = `<button class="btn-icon bg-view" style="background:#3b82f6;" onclick="imprimirCarteirinhaAdmin('${ins.chave}')" title="Carteirinha"><i class="fa-solid fa-id-card"></i></button>`;
             }
         }
         
         tbody.innerHTML += `<tr>
             <td style="text-align:center;"><input type="checkbox" class="bulk-check" value="${ins.chave}" ${checked} onclick="toggleCheck('${ins.chave}')"></td>
             <td>${safeDate(ins.data)}</td>
+            <td><div style="font-weight:600; font-size:0.9rem; color:var(--text-main);">${d.NomeCompleto||'Sem Nome'}</div><small style="color:var(--text-secondary);">${d.CPF||'-'}</small></td>
             <td><div class="badge" style="background:#f1f5f9; color:#475569; font-weight:500;">${mapaEventos[ins.eventoId]||ins.eventoId}</div></td>
-            <td>
-                <div style="font-weight:600; font-size:0.95rem;">${d.NomeCompleto||'Sem Nome'}</div>
-                <div style="font-size:0.8rem; color:#64748b; font-family:monospace;">${ins.chave}</div>
-            </td>
-            <td><span class="badge badge-${ins.status.replace(/\s/g, '')}">${ins.status}</span></td>
+            <td><span class="badge ${ins.status.replace(/\s/g, '')}">${ins.status}</span></td>
             <td style="text-align:right;">
                 <div style="display:flex; gap:4px; justify-content:flex-end;">
-                    <button class="action-btn" style="background:#f59e0b;" onclick="abrirEdicaoInscricao('${ins.chave}')" title="Detalhes & Edição"><i class="fa-solid fa-user-pen"></i></button>
+                    <button class="btn-icon bg-edit" style="background:#f59e0b;" onclick="abrirEdicaoInscricao('${ins.chave}')" title="Detalhes"><i class="fa-solid fa-pen-to-square"></i></button>
                     ${btnCartAdm}
                     ${btnFicha}
-                    ${ins.doc ? `<a href="${ins.doc}" target="_blank" class="action-btn btn-view" title="Ver Documento"><i class="fa-solid fa-paperclip"></i></a>` : ''}
+                    ${ins.doc ? `<a href="${ins.doc}" target="_blank" class="btn-icon bg-view" title="Ver Documento"><i class="fa-solid fa-paperclip"></i></a>` : ''}
                 </div>
             </td>
         </tr>`;
@@ -671,7 +658,7 @@ function renderizarProximaPagina() {
     document.getElementById('btn-load-more').style.display = (paginaAtual * ITENS_POR_PAGINA < inscricoesFiltradas.length + ITENS_POR_PAGINA) ? 'block' : 'none';
 }
 
-// --- EDIÇÃO DE INSCRIÇÃO (WIDESCREEN MODAL) ---
+// --- EDIÇÃO DE INSCRIÇÃO (WIDESCREEN MODAL - NOVA GRID) ---
 function abrirEdicaoInscricao(chave) {
     const inscricao = todasInscricoes.find(i => i.chave === chave);
     if (!inscricao) return;
@@ -691,7 +678,7 @@ function abrirEdicaoInscricao(chave) {
         }
     }
 
-    // Construção dos Campos em 2 Colunas
+    // Construção dos Campos em 2 Colunas usando classes swal-grid-2
     let htmlCamposEsquerda = ''; // Dados Pessoais
     let htmlCamposDireita = '';  // Dados Acadêmicos
 
@@ -701,7 +688,7 @@ function abrirEdicaoInscricao(chave) {
     for (const [key, val] of Object.entries(dados)) {
         if (!ignorar.includes(key)) {
             const label = CAMPOS_PADRAO.find(c => c.key === key)?.label || key;
-            const inputHtml = `<div><label class="swal-label">${label}</label><input type="text" id="edit_aluno_${key}" value="${val}" class="swal-input"></div>`;
+            const inputHtml = `<div style="margin-bottom:8px;"><label class="swal-label">${label}</label><input type="text" id="edit_aluno_${key}" value="${val}" class="swal-input-custom"></div>`;
             
             if (camposAcad.includes(key) || key.startsWith('Inst') || key.includes('Curso')) {
                 htmlCamposDireita += inputHtml;
@@ -717,9 +704,9 @@ function abrirEdicaoInscricao(chave) {
     const pedeDoc = configEvento.arquivos && configEvento.arquivos.doc;
 
     if (pedeFoto || pedeDoc) {
-        htmlUploads = `<div class="grid-2" style="margin-top:20px; border-top:1px solid #e2e8f0; padding-top:15px;">`;
-        if (pedeFoto) htmlUploads += `<div><label class="swal-label">Nova Foto 3x4</label><input type="file" id="edit_upload_foto" accept="image/*" class="swal-input"></div>`;
-        if (pedeDoc) htmlUploads += `<div><label class="swal-label">Novo Comprovante</label><input type="file" id="edit_upload_doc" accept="application/pdf" class="swal-input"></div>`;
+        htmlUploads = `<div class="swal-grid-2" style="margin-top:20px; border-top:1px solid #e2e8f0; padding-top:15px;">`;
+        if (pedeFoto) htmlUploads += `<div><label class="swal-label">Nova Foto 3x4</label><input type="file" id="edit_upload_foto" accept="image/*" class="swal-input-custom"></div>`;
+        if (pedeDoc) htmlUploads += `<div><label class="swal-label">Novo Comprovante</label><input type="file" id="edit_upload_doc" accept="application/pdf" class="swal-input-custom"></div>`;
         htmlUploads += `</div>`;
     }
 
@@ -735,8 +722,8 @@ function abrirEdicaoInscricao(chave) {
                     <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px;">${dados.CPF || ''}</p>
                     
                     <div style="text-align: left;">
-                        <label class="swal-label">Alterar Status</label>
-                        <select id="novo_status_modal" class="swal-input" style="font-weight:600;">
+                        <label class="swal-label">Status da Inscrição</label>
+                        <select id="novo_status_modal" class="swal-input-custom" style="font-weight:600;">
                             <option value="Pendente" ${inscricao.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
                             <option value="Aprovada" ${inscricao.status === 'Aprovada' ? 'selected' : ''}>Aprovada</option>
                             <option value="Rejeitada" ${inscricao.status === 'Rejeitada' ? 'selected' : ''}>Rejeitada</option>
@@ -745,17 +732,17 @@ function abrirEdicaoInscricao(chave) {
                     </div>
 
                     <div style="margin-top: 20px; display: grid; gap: 10px;">
-                        ${inscricao.doc ? `<a href="${inscricao.doc}" target="_blank" class="action-btn btn-view" style="width:100%; border-radius:6px; text-decoration:none;"><i class="fa-solid fa-eye"></i> Visualizar Comprovante</a>` : ''}
+                        ${inscricao.doc ? `<a href="${inscricao.doc}" target="_blank" class="btn btn-secondary" style="width:100%; justify-content:center;"><i class="fa-solid fa-eye"></i> Visualizar Comprovante</a>` : ''}
                     </div>
                 </div>
 
                 <!-- COLUNA PRINCIPAL (FORMULÁRIO) -->
                 <div>
-                    <h3 style="margin: 0 0 20px 0; color: var(--text-primary); border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Dados Cadastrais</h3>
+                    <h3 style="margin: 0 0 20px 0; color: var(--text-main); border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; font-size:1.1rem;">Dados Cadastrais</h3>
                     
-                    <div class="grid-2" style="align-items: start;">
-                        <div style="display:grid; gap:10px;">${htmlCamposEsquerda}</div>
-                        <div style="display:grid; gap:10px;">${htmlCamposDireita}</div>
+                    <div class="swal-grid-2" style="align-items: start; margin-bottom:0;">
+                        <div>${htmlCamposEsquerda}</div>
+                        <div>${htmlCamposDireita}</div>
                     </div>
 
                     ${htmlUploads}
@@ -791,7 +778,6 @@ function abrirEdicaoInscricao(chave) {
         if (result.isConfirmed) {
             showLoading('Salvando...');
             
-            // Atualiza status primeiro se mudou
             const promiseStatus = (result.value.status !== inscricao.status) ? 
                 fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'atualizarStatus', senha: sessionStorage.getItem('admin_token'), chave, novoStatus: result.value.status }) }) : 
                 Promise.resolve();
@@ -809,7 +795,6 @@ function abrirEdicaoInscricao(chave) {
                 });
             }).then(() => {
                 Swal.fire({icon: 'success', title: 'Dados Atualizados!'});
-                // Atualiza Cache Local
                 inscricao.status = result.value.status;
                 inscricao.dadosJson = JSON.stringify({ ...dados, ...result.value.novosDados });
                 resetEFiltrar();
@@ -818,9 +803,10 @@ function abrirEdicaoInscricao(chave) {
     });
 }
 
+// --- FUNÇÕES AUXILIARES ---
 function toggleCheck(k) { if(selecionados.has(k)) selecionados.delete(k); else selecionados.add(k); atualizarBarraBulk(); }
 function toggleAllChecks() { const m = document.getElementById('check-all').checked; document.querySelectorAll('.bulk-check').forEach(c => { c.checked = m; if(m) selecionados.add(c.value); else selecionados.delete(c.value); }); atualizarBarraBulk(); }
-function atualizarBarraBulk() { const b = document.getElementById('bulk-bar'); document.getElementById('bulk-count').innerText = selecionados.size; if(selecionados.size > 0) b.classList.remove('hidden-bar'); else b.classList.add('hidden-bar'); }
+function atualizarBarraBulk() { const b = document.getElementById('bulk-bar'); document.getElementById('bulk-count').innerText = selecionados.size; if(selecionados.size > 0) b.classList.remove('hidden'); else b.classList.add('hidden'); }
 function desmarcarTudo() { selecionados.clear(); document.getElementById('check-all').checked = false; document.querySelectorAll('.bulk-check').forEach(c => c.checked = false); atualizarBarraBulk(); }
 
 function acaoEmMassa(s) {
@@ -846,7 +832,6 @@ function gerarFicha(chave) {
     });
 }
 
-// --- IMPRESSÃO CARTEIRINHA ADM ---
 function imprimirCarteirinhaAdmin(chave) {
     showLoading('Carregando Dados...');
     fetch(`${URL_API}?action=consultarInscricao&chave=${chave}`)
@@ -897,8 +882,7 @@ function imprimirCarteirinhaAdmin(chave) {
     });
 }
 
-// --- CONFIGURAÇÃO INSTITUIÇÕES ---
-function carregarInstituicoes() { fetch(`${URL_API}?action=getInstituicoes`).then(r => r.json()).then(json => { const d = document.getElementById('lista-instituicoes'); d.innerHTML = ''; if(json.data) json.data.forEach(n => d.innerHTML += `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;"><span>${n}</span> <button onclick="removerInst('${n}')" class="action-btn btn-delete" style="width:24px; height:24px;"><i class="fa-solid fa-times"></i></button></div>`); }); }
+function carregarInstituicoes() { fetch(`${URL_API}?action=getInstituicoes`).then(r => r.json()).then(json => { const d = document.getElementById('lista-instituicoes'); d.innerHTML = ''; if(json.data) json.data.forEach(n => d.innerHTML += `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;"><span>${n}</span> <button onclick="removerInst('${n}')" class="btn-icon bg-delete" style="width:24px; height:24px;"><i class="fa-solid fa-times"></i></button></div>`); }); }
 function addInstituicao() { const n = document.getElementById('nova-inst').value; if(n) fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'adicionarInstituicao', nome: n, senha: sessionStorage.getItem('admin_token') }) }).then(() => { document.getElementById('nova-inst').value = ''; carregarInstituicoes(); }); }
 function removerInst(n) { fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'removerInstituicao', nome: n, senha: sessionStorage.getItem('admin_token') }) }).then(() => carregarInstituicoes()); }
 
