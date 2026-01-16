@@ -240,9 +240,9 @@ body {
 @media(min-width: 900px) { .charts-container { grid-template-columns: 2fr 1fr; } }
 .chart-box { background: white; padding: 20px; border-radius: 16px; box-shadow: var(--shadow-sm); border: 1px solid #e2e8f0; }
 
-/* Tabelas */
+/* Tabelas (MODO EXPANDIDO) */
 .table-responsive {
-    overflow-x: auto; /* Garante scroll se necessário */
+    overflow-x: visible;
     background: white;
     border-radius: 12px;
     box-shadow: var(--shadow-sm);
@@ -254,7 +254,7 @@ body {
     border-collapse: collapse; 
     font-size: 0.9rem; 
     white-space: normal; 
-    /* Removemos table-layout: fixed para permitir que colunas se ajustem melhor */
+    table-layout: fixed; 
 }
 
 .data-table th { 
@@ -264,24 +264,25 @@ body {
     font-weight: 600; 
     color: #64748b; 
     border-bottom: 2px solid #e2e8f0; 
-    white-space: nowrap; /* Títulos não quebram */
+    word-wrap: break-word; 
 }
 
 .data-table td { 
     padding: 15px; 
     border-bottom: 1px solid #e2e8f0; 
     vertical-align: middle; 
+    word-wrap: break-word; 
 }
 
 .data-table tr:last-child td { border-bottom: none; }
 
-/* AJUSTE DAS LARGURAS PARA EVITAR SOBREPOSIÇÃO */
-.data-table th:nth-child(1), .data-table td:nth-child(1) { width: 40px; text-align: center; } /* Check */
-.data-table th:nth-child(2), .data-table td:nth-child(2) { width: 100px; } /* Data */
-.data-table th:nth-child(3), .data-table td:nth-child(3) { min-width: 150px; } /* Evento */
-.data-table th:nth-child(4), .data-table td:nth-child(4) { width: auto; } /* Aluno/Chave (Fluido) */
-.data-table th:nth-child(5), .data-table td:nth-child(5) { min-width: 130px; text-align: center; } /* Status */
-.data-table th:nth-child(6), .data-table td:nth-child(6) { width: 180px; text-align: right; min-width: 180px; } /* Ações (Mais largo) */
+/* LARGURAS INTELIGENTES */
+.data-table th:nth-child(1), .data-table td:nth-child(1) { width: 50px; text-align: center; } 
+.data-table th:nth-child(2), .data-table td:nth-child(2) { width: 100px; } 
+.data-table th:nth-child(3), .data-table td:nth-child(3) { width: 18%; } 
+.data-table th:nth-child(4), .data-table td:nth-child(4) { width: auto; } /* ESTICA PARA PREENCHER */
+.data-table th:nth-child(5), .data-table td:nth-child(5) { width: 130px; } 
+.data-table th:nth-child(6), .data-table td:nth-child(6) { width: 180px; text-align: right; }
 
 /* Badges e Botões */
 .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; display: inline-block; text-align: center; }
@@ -312,39 +313,37 @@ body {
     padding: 0 !important;
 }
 
-/* LARGURA DO MODAL AUMENTADA PARA 900px EM DESKTOP */
+/* MODAL GIGANTE EM TELAS GRANDES */
 @media(min-width: 992px) {
     div:where(.swal2-container) div:where(.swal2-popup) {
-        width: auto !important;
-        min-width: 900px !important; /* Aproveita melhor a tela */
-        max-width: 95vw !important;  
+        width: 90% !important; /* Ocupa 90% da tela */
+        max-width: 1400px !important; /* Permite ficar bem largo */
+        min-width: 800px !important;
     }
 }
 
 .swal2-html-container {
     margin: 0 !important;
     text-align: left !important;
-    padding: 25px !important;
+    padding: 30px !important;
     max-height: 85vh !important;
     overflow-y: auto !important;
 }
 
-/* GRID MAIS ESPAÇOSO */
+/* Ajuste do Grid interno */
 .modal-form-grid { display: grid; gap: 20px; }
 .modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .modal-full { display: flex; flex-direction: column; gap: 8px; }
 
-/* Grid de 2 colunas para campos gerais (Nome, CPF, etc) */
+/* Grid de 3 colunas para campos em telas muito largas */
 .modal-fields-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* 2 Colunas */
-    gap: 15px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsivo: cria colunas conforme cabe */
+    gap: 20px;
 }
 
 .swal-label { font-size: 0.9rem; font-weight: 600; color: #64748b; }
-.swal-input {
-    width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; box-sizing: border-box;
-}
+.swal-input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
 
 .checkbox-grid {
     display: grid;
@@ -379,6 +378,7 @@ body {
         background: white; z-index: 9999; padding: 0; margin: 0; 
     }
 
+    /* IMPRESSÃO VERTICAL */
     @page { size: A4 portrait; margin: 15mm; }
 
     /* Estilos da Ficha de Inscrição Impressa */
@@ -404,18 +404,26 @@ body {
     .ficha-line { border-top: 1px solid #000; width: 60%; margin: 0 auto 5px; }
     .ficha-footer { margin-top: 40px; font-size: 9px; text-align: center; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px; }
 
-    /* Relatório Geral e Carteirinha */
+    /* Relatório Geral */
     .report-container { font-family: Arial, sans-serif; width: 100%; color: #000; }
     .report-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
     .report-logo { height: 50px; margin-right: 15px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .header-left { display: flex; align-items: center; }
     .header-titles h1 { margin: 0; font-size: 16px; text-transform: uppercase; }
+    .header-titles p { margin: 0; font-size: 12px; }
+    .header-right { text-align: right; font-size: 10px; }
+    
     .report-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 15px; }
     .report-table th, .report-table td { border: 1px solid #000; padding: 4px; text-align: left; }
     .report-table th { background-color: #eee !important; font-weight: bold; -webkit-print-color-adjust: exact; }
+    
+    .group-header { background-color: #ddd !important; font-weight: bold; text-align: left; -webkit-print-color-adjust: exact; }
+
     .report-footer { display: flex; justify-content: space-around; margin-top: 40px; page-break-inside: avoid; }
+    .sign-box { text-align: center; width: 40%; }
     .sign-line { border-top: 1px solid #000; padding-top: 5px; font-size: 10px; font-weight: bold; }
     
+    /* Carteirinha */
     .carteirinha-container { page-break-inside: avoid; }
     .carteirinha-card { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-shadow: none !important; border: 1px solid #ccc; }
 }
@@ -424,6 +432,5 @@ body {
     .modal-row { grid-template-columns: 1fr; }
     .checkbox-grid { grid-template-columns: 1fr 1fr; }
     .data-table th, .data-table td { padding: 10px; font-size: 0.8rem; }
-    /* Ajuste para tabela em mobile */
     .data-table th:nth-child(6), .data-table td:nth-child(6) { width: auto; text-align: center; }
 }
