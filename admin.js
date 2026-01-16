@@ -438,7 +438,8 @@ function abrirEdicaoEvento(evento) {
                     </div>
                 </div>
             </div>`,
-        width: '800px', showCancelButton: true, confirmButtonText: 'Salvar Alterações', confirmButtonColor: '#2563eb',
+        width: '90%', // MODAL ESTICADO (90% da tela)
+        showCancelButton: true, confirmButtonText: 'Salvar Alterações', confirmButtonColor: '#2563eb',
         preConfirm: () => { 
             const cidadesTexto = document.getElementById('edit_cidades').value;
             const cidadesArr = cidadesTexto ? cidadesTexto.split(',').map(s => s.trim()).filter(s => s) : [];
@@ -612,7 +613,7 @@ function abrirEdicaoInscricao(chave) {
     
     Swal.fire({
         title: 'Editar Dados do Aluno', html: formHtml, 
-        width: '900px', // Aumentado para 900px
+        width: '90%', // MODAL ESTICADO (90% da tela)
         showCancelButton: true, confirmButtonText: 'Salvar', confirmButtonColor: '#2563eb',
         preConfirm: async () => {
             const novosDados = {}; for (const key of Object.keys(dados)) { if (!ignorar.includes(key)) { const el = document.getElementById(`edit_aluno_${key}`); if (el) novosDados[key] = el.value; } }
