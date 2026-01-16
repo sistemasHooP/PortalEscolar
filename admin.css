@@ -240,7 +240,7 @@ body {
 @media(min-width: 900px) { .charts-container { grid-template-columns: 2fr 1fr; } }
 .chart-box { background: white; padding: 20px; border-radius: 16px; box-shadow: var(--shadow-sm); border: 1px solid #e2e8f0; }
 
-/* Tabelas */
+/* Tabelas (AJUSTADO PARA REMOVER SCROLL HORIZONTAL) */
 .table-responsive {
     overflow-x: visible;
     background: white;
@@ -312,10 +312,12 @@ body {
     padding: 0 !important;
 }
 
+/* CORREÇÃO: Largura mínima para evitar sobreposição de informações */
 @media(min-width: 992px) {
     div:where(.swal2-container) div:where(.swal2-popup) {
         width: auto !important;
-        /* REMOVIDO O MAX-WIDTH FIXO PARA PERMITIR EXPANSÃO QUANDO SOLICITADO PELO JS */
+        min-width: 800px !important; 
+        max-width: 90vw !important;  
     }
 }
 
@@ -323,27 +325,27 @@ body {
     margin: 0 !important;
     text-align: left !important;
     padding: 25px !important;
-    max-height: 75vh !important;
+    max-height: 85vh !important;
     overflow-y: auto !important;
 }
 
-.modal-form-grid { display: grid; gap: 15px; }
-.modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-.modal-full { display: flex; flex-direction: column; gap: 5px; }
+.modal-form-grid { display: grid; gap: 20px; }
+.modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.modal-full { display: flex; flex-direction: column; gap: 8px; }
 
-.swal-label { font-size: 0.85rem; font-weight: 600; color: #64748b; }
+.swal-label { font-size: 0.9rem; font-weight: 600; color: #64748b; }
 .swal-input {
-    width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; box-sizing: border-box;
+    width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; box-sizing: border-box;
 }
 
 .checkbox-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 10px;
+    gap: 15px;
     margin-top: 5px;
 }
 .checkbox-card {
-    background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 0.95rem;
+    background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 0.95rem;
 }
 .checkbox-card:hover { border-color: var(--primary); background: #eff6ff; }
 .checkbox-card input { cursor: pointer; accent-color: var(--primary); transform: scale(1.2); }
@@ -369,13 +371,13 @@ body {
         background: white; z-index: 9999; padding: 0; margin: 0; 
     }
 
-    /* AUMENTADO A MARGEM DA PÁGINA PARA 15mm */
-    @page { size: A4 landscape; margin: 15mm; }
+    /* CORREÇÃO: MUDANÇA PARA VERTICAL (PORTRAIT) */
+    @page { size: A4 portrait; margin: 15mm; }
 
-    /* Estilos da Ficha de Inscrição Impressa - MARGENS E PADDING AUMENTADOS */
+    /* Estilos da Ficha de Inscrição Impressa - MARGENS E PADDING AJUSTADOS */
     .ficha-container {
         font-family: 'Helvetica', Arial, sans-serif; 
-        padding: 40px; /* Mais espaço interno */
+        padding: 40px; 
         color: #1e293b; font-size: 13px; line-height: 1.4;
         max-width: 100%;
         box-sizing: border-box;
@@ -395,7 +397,7 @@ body {
     .ficha-line { border-top: 1px solid #000; width: 60%; margin: 0 auto 5px; }
     .ficha-footer { margin-top: 40px; font-size: 9px; text-align: center; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px; }
 
-    /* Relatório Geral e Carteirinha (Mantidos) */
+    /* Relatório Geral e Carteirinha */
     .report-container { font-family: Arial, sans-serif; width: 100%; color: #000; }
     .report-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
     .report-logo { height: 50px; margin-right: 15px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -414,6 +416,5 @@ body {
 @media(max-width: 768px) {
     .modal-row { grid-template-columns: 1fr; }
     .checkbox-grid { grid-template-columns: 1fr 1fr; }
-    /* Ajuste para tabela mobile se necessário */
     .data-table th, .data-table td { padding: 10px; font-size: 0.8rem; }
 }
