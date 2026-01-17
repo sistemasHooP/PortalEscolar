@@ -1,6 +1,5 @@
 const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
-// ATENÇÃO: NÃO PRECISAMOS MAIS DA URL_VALIDACAO do GitHub.
-// O QR Code agora aponta direto para a API com action=validate
+// ATENÇÃO: A URL de validação agora é direta no Script, eliminando a dependência do GitHub para essa função.
 
 // --- CONFIGURAÇÃO GERAL ---
 const URL_LOGO_FALLBACK = './logo.png'; 
