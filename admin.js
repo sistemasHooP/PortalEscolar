@@ -156,8 +156,11 @@ function carregarDashboard() {
         mapaEventos = {}; 
         cacheEventos = {}; 
         if(jsonEventos.data) jsonEventos.data.forEach(ev => {
-            mapaEventos[ev.id] = ev.titulo;
-            cacheEventos[ev.id] = ev; 
+            // CORREÇÃO: Filtra eventos vazios/fantasmas da planilha
+            if (ev.id && ev.titulo) {
+                mapaEventos[ev.id] = ev.titulo;
+                cacheEventos[ev.id] = ev; 
+            }
         });
         
         dashboardData = jsonInscricoes.data || [];
@@ -205,7 +208,12 @@ function atualizarSelectsRelatorio(eventos, inscricoes) {
     const selEvento = document.getElementById('relatorio-evento');
     if(selEvento) {
         selEvento.innerHTML = '<option value="">Todos os Eventos</option>';
-        eventos.forEach(ev => selEvento.innerHTML += `<option value="${ev.id}">${ev.titulo}</option>`);
+        eventos.forEach(ev => {
+            // CORREÇÃO: Só adiciona se tiver ID e Título
+            if(ev.id && ev.titulo) {
+                selEvento.innerHTML += `<option value="${ev.id}">${ev.titulo}</option>`;
+            }
+        });
     }
     
     const selInst = document.getElementById('relatorio-inst');
@@ -387,11 +395,17 @@ function carregarEventosAdmin() {
         if(!json.data || json.data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem;">Nenhum evento criado.</td></tr>'; return; }
         
         json.data.forEach(ev => {
-            mapaEventos[ev.id] = ev.titulo;
-            cacheEventos[ev.id] = ev; 
+            // CORREÇÃO: Ignora eventos fantasmas (linhas vazias da planilha)
+            if (ev.id && ev.titulo) {
+                mapaEventos[ev.id] = ev.titulo;
+                cacheEventos[ev.id] = ev; 
+            }
         });
         
-        json.data.sort((a,b) => b.id - a.id).forEach(ev => {
+        // Filtra apenas eventos válidos para a lista
+        const eventosValidos = json.data.filter(ev => ev.id && ev.titulo);
+
+        eventosValidos.sort((a,b) => b.id - a.id).forEach(ev => {
             let btnAction = ev.status === 'Ativo' ? 
                 `<button class="btn-icon" style="background:#eab308;" onclick="toggleStatusEvento('${ev.id}','Inativo')" title="Pausar"><i class="fa-solid fa-pause"></i></button>` : 
                 `<button class="btn-icon" style="background:#22c55e;" onclick="toggleStatusEvento('${ev.id}','Ativo')" title="Ativar"><i class="fa-solid fa-play"></i></button>`;
@@ -615,8 +629,11 @@ function carregarInscricoes() {
     .then(jsonEventos => {
         if(jsonEventos.data) {
              jsonEventos.data.forEach(ev => { 
-                 mapaEventos[ev.id] = ev.titulo; 
-                 cacheEventos[ev.id] = ev; 
+                 // Proteção extra para garantir que só carregue eventos válidos
+                 if(ev.id && ev.titulo) {
+                     mapaEventos[ev.id] = ev.titulo; 
+                     cacheEventos[ev.id] = ev; 
+                 }
              });
              const select = document.getElementById('filtro-evento');
              if(select && select.options.length <= 1) {
