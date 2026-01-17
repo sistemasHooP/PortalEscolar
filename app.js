@@ -17,7 +17,7 @@ const CAMPO_DEFS = {
 };
 
 let listaInstituicoesCache = [];
-let configSistemaCache = null; // Cache para guardar nome, logo, etc.
+let configSistemaCache = null; // Cache para guardar nome, logo, cores, etc.
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', () => { 
@@ -25,12 +25,13 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarEventos(); 
 });
 
-// --- NOVO: CARREGAR CONFIGURAÇÕES VISUAIS (CAPA, LOGO, NOME) ---
+// --- CARREGAR CONFIGURAÇÕES VISUAIS (CAPA, LOGO, NOME, CORES) ---
 function carregarConfiguracoesVisuais() {
     // Tenta pegar do SessionStorage primeiro para não piscar
     const cached = sessionStorage.getItem('sys_config');
     if(cached) {
-        aplicarConfiguracoes(JSON.parse(cached));
+        configSistemaCache = JSON.parse(cached);
+        aplicarConfiguracoes(configSistemaCache);
     }
 
     fetch(`${URL_API}?action=getPublicConfig`)
@@ -63,11 +64,9 @@ function aplicarConfiguracoes(config) {
         document.getElementById('sys-phrase').innerText = config.fraseMotivacional;
     }
 
-    // 2. Logo (Hero e Carteirinha APENAS - Loader mantido original)
+    // 2. Logo (Hero e Carteirinha)
     if(config.urlLogo && config.urlLogo.trim() !== "") {
-        const logoUrl = formatarUrlDrive(config.urlLogo); // Helper para garantir link direto
-        
-        // LISTA ATUALIZADA: Removi 'loader-img-tag' para preservar a logo do repositório
+        const logoUrl = formatarUrlDrive(config.urlLogo);
         const logoEls = ['sys-logo', 'cart-logo-img'];
         logoEls.forEach(id => {
             const el = document.getElementById(id);
@@ -82,6 +81,11 @@ function aplicarConfiguracoes(config) {
     if(config.urlCapa && config.urlCapa.trim() !== "") {
         const capaUrl = formatarUrlDrive(config.urlCapa);
         document.getElementById('hero-section').style.backgroundImage = `url('${capaUrl}')`;
+    }
+
+    // 4. Cor da Carteirinha (NOVO)
+    if(config.corCarteirinha) {
+        document.documentElement.style.setProperty('--card-color', config.corCarteirinha);
     }
 }
 
@@ -171,8 +175,7 @@ function ativarMascaras() {
     }
 }
 
-// --- UPLOAD PREVIEW (NOVO) ---
-// Altera o ícone e cor do label quando um arquivo é selecionado
+// --- UPLOAD PREVIEW ---
 function previewArquivo(input) {
     const label = input.parentElement.querySelector('label');
     const statusIcon = label.querySelector('.status-icon');
@@ -211,7 +214,7 @@ async function comprimirImagem(file, maxWidth = 1000, quality = 0.7) {
     });
 }
 
-// --- LÓGICA PRINCIPAL ---
+// --- LÓGICA DE EVENTOS ---
 function carregarEventos() {
     toggleLoader(true, "Carregando eventos...");
     fetch(`${URL_API}?action=getEventosAtivos`)
@@ -230,7 +233,6 @@ function carregarEventos() {
                 return; 
             }
             
-            // RENDERIZAÇÃO NOVO DESIGN (ACTION CARDS)
             json.data.forEach(ev => {
                 c.innerHTML += `
                     <div class="card-event fade-in">
@@ -260,7 +262,7 @@ function carregarEventos() {
 async function abrirInscricao(evento) {
     document.getElementById('lista-eventos').classList.add('hidden'); 
     document.getElementById('fab-consulta').classList.add('hidden'); 
-    document.getElementById('hero-section').classList.add('hidden'); // Oculta Hero para focar no form
+    document.getElementById('hero-section').classList.add('hidden'); 
     document.getElementById('area-inscricao').classList.remove('hidden');
     
     document.getElementById('titulo-evento').innerText = evento.titulo; 
@@ -276,24 +278,20 @@ async function abrirInscricao(evento) {
     const areaAvisos = document.getElementById('area-avisos');
     areaAvisos.innerHTML = '';
     
-    // Alerta de topo (Nova Estilização)
     if(config.mensagemAlerta) {
         areaAvisos.innerHTML += `
-            <div class="info-banner" style="background-color:#fff7ed; border-left-color:#f97316; color:#9a3412;">
+            <div class="info-banner" style="background-color:#fff7ed; border-left-color:#f97316; color:#9a3412; padding: 15px; border-left-width: 4px; margin-bottom: 20px;">
                 <i class="fa-solid fa-triangle-exclamation"></i> 
-                <div><strong>Atenção:</strong> ${config.mensagemAlerta}</div>
+                <strong>Atenção:</strong> ${config.mensagemAlerta}
             </div>`;
     }
     
-    // Observações
     if(config.observacoesTexto) {
         areaAvisos.innerHTML += `
-            <div class="info-banner" style="background-color:#eff6ff; border-left-color:#2563eb; color:#1e40af;">
+            <div class="info-banner" style="background-color:#eff6ff; border-left-color:#2563eb; color:#1e40af; padding: 15px; border-left-width: 4px; margin-bottom: 20px;">
                 <i class="fa-solid fa-circle-info"></i>
-                <div>
-                    <strong>Instruções:</strong><br>
-                    ${config.observacoesTexto.replace(/\n/g, '<br>')}
-                </div>
+                <strong>Instruções:</strong><br>
+                ${config.observacoesTexto.replace(/\n/g, '<br>')}
             </div>
         `;
     }
@@ -315,14 +313,12 @@ async function abrirInscricao(evento) {
                 const def = CAMPO_DEFS[key];
                 const labelHTML = `<label>${def.label} <span style="color:red">*</span></label>`;
                 
-                // LÓGICA DE INSTITUIÇÃO
                 if (key === 'NomeInstituicao' && listaInstituicoesCache.length > 0) {
                     let opt = '<option value="">Selecione...</option>'; 
                     listaInstituicoesCache.forEach(i => opt += `<option value="${i}">${i}</option>`); 
                     opt += `<option value="Outra">Outra (Digitar nome)</option>`;
                     areaCampos.innerHTML += `<div>${labelHTML}<select name="${key}" required onchange="verificarOutraInst(this)">${opt}</select><input type="text" id="input_outra_inst" placeholder="Digite o nome da instituição" style="display:none; margin-top:10px;"></div>`;
                 }
-                // LÓGICA DE CIDADE
                 else if (key === 'Cidade') {
                     if (config.cidadesPermitidas && config.cidadesPermitidas.length > 0) {
                         let optCidade = '<option value="">Selecione sua cidade...</option>';
@@ -332,13 +328,11 @@ async function abrirInscricao(evento) {
                         areaCampos.innerHTML += `<div>${labelHTML}<input type="text" name="${key}" placeholder="${def.placeholder}" required></div>`;
                     }
                 }
-                // LÓGICA DE ESTADO
                 else if (key === 'Estado' && def.options) {
                     let optUF = `<option value="">UF</option>`;
                     def.options.forEach(uf => optUF += `<option value="${uf}">${uf}</option>`);
                     areaCampos.innerHTML += `<div>${labelHTML}<select name="${key}" required>${optUF}</select></div>`;
                 }
-                // OUTROS CAMPOS
                 else {
                     areaCampos.innerHTML += `<div>${labelHTML}<input type="${def.type}" name="${key}" placeholder="${def.placeholder||''}" required></div>`;
                 }
@@ -427,7 +421,7 @@ async function enviarInscricao(e) {
     }
 }
 
-// --- CONSULTA E CARTEIRINHA ---
+// --- CONSULTA E CARTEIRINHA DIGITAL ---
 function consultarChave() {
     const c = document.getElementById('busca-chave').value.trim();
     if(!c) return showError('Atenção', 'Digite a chave de acesso.');
@@ -448,6 +442,8 @@ function consultarChave() {
                 
                 let btnCarteirinha = '';
                 if (aprovado && j.data.emiteCarteirinha) {
+                    // Passa o objeto aluno completo + chave para o modal
+                    j.data.aluno.chave = j.data.chave;
                     btnCarteirinha = `<button class="btn-ver-cart" onclick='abrirCarteirinha(${JSON.stringify(j.data.aluno)})'><i class="fa-solid fa-id-card"></i> Ver Carteirinha Digital</button>`;
                 } else if (aprovado) {
                     btnCarteirinha = `<div style="margin-top:10px; font-size:0.8rem; color:#64748b;">* Carteirinha indisponível para este evento.</div>`;
@@ -467,28 +463,52 @@ function consultarChave() {
 }
 
 function abrirCarteirinha(aluno) {
+    // 1. Dados Pessoais e Acadêmicos (Frente)
     document.getElementById('cart-nome').innerText = aluno.nome || 'Aluno';
     document.getElementById('cart-inst').innerText = aluno.instituicao || 'Instituição';
-    document.getElementById('cart-curso').innerText = aluno.curso || '';
+    document.getElementById('cart-course').innerText = aluno.curso || 'Curso não informado';
+    document.getElementById('cart-cpf').innerText = aluno.cpf || '---';
     document.getElementById('cart-mat').innerText = aluno.matricula || '-';
-    document.getElementById('cart-validade').innerText = aluno.validade;
     
-    // Atualiza nome do sistema na carteirinha se disponível
-    if(configSistemaCache && configSistemaCache.nomeSistema) {
-        document.getElementById('cart-sys-name').innerText = configSistemaCache.nomeSistema.toUpperCase();
-    }
-    
+    // Tratamento Data Nascimento
+    let nasc = aluno.nascimento || '--/--/----';
+    if(nasc.includes('-')) { const p = nasc.split('-'); nasc = `${p[2]}/${p[1]}/${p[0]}`; }
+    document.getElementById('cart-nasc').innerText = nasc;
+
+    // 2. Foto do Aluno
     const img = document.getElementById('cart-img');
-    img.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNlMmU4ZjAiLz48L3N2Zz4='; // Placeholder
-    
+    // Placeholder transparente
+    img.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNlMmU4ZjAiLz48L3N2Zz4='; 
     if (aluno.foto) {
         if (aluno.foto.startsWith('data:image') || aluno.foto.startsWith('http')) {
              img.src = formatarUrlDrive(aluno.foto);
         }
-        img.onerror = function() { this.src = 'https://via.placeholder.com/150?text=FOTO'; };
     }
+    img.onerror = function() { this.src = 'https://via.placeholder.com/150?text=FOTO'; };
 
+    // 3. Dados Institucionais (Verso)
+    if(configSistemaCache) {
+        if(configSistemaCache.nomeSistema) document.getElementById('cart-sys-name').innerText = configSistemaCache.nomeSistema.toUpperCase();
+        if(configSistemaCache.nomeSecretaria) {
+             const els = document.querySelectorAll('#cart-sec-name, .cart-org-info small');
+             // Ajusta no verso e na frente (small)
+             document.getElementById('cart-sec-name').innerText = configSistemaCache.nomeSecretario || "Responsável";
+             document.querySelector('.cart-org-info small').innerText = configSistemaCache.nomeSecretaria;
+        }
+    }
+    
+    // 4. Validade e QR Code
+    document.getElementById('cart-validade-ano').innerText = aluno.ano_vigencia || new Date().getFullYear();
+
+    const linkValidacao = `${URL_API}?action=validar&chave=${aluno.chave}`;
+    // Usando API do Google Charts para gerar QR Code (Simples e Eficiente)
+    const qrUrl = `https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=${encodeURIComponent(linkValidacao)}`;
+    document.getElementById('cart-qrcode-img').src = qrUrl;
+
+    // 5. Exibir Modal
     document.getElementById('modal-carteirinha').classList.remove('hidden');
+    // Garante que comece exibindo a frente
+    document.getElementById('cart-flip-container').classList.remove('is-flipped');
     fecharModalConsulta();
 }
 
@@ -505,7 +525,7 @@ function formatarUrlDrive(url) {
 function voltarHome() { 
     document.getElementById('area-inscricao').classList.add('hidden'); 
     document.getElementById('fab-consulta').classList.remove('hidden'); 
-    document.getElementById('hero-section').classList.remove('hidden'); // Exibe Hero novamente
+    document.getElementById('hero-section').classList.remove('hidden'); 
     document.getElementById('lista-eventos').classList.remove('hidden'); 
 }
 
