@@ -240,9 +240,11 @@
         const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Tenta obter a chave de forma robusta
+            // CORREÇÃO AQUI: Renomeei para chamar a função com o nome correto
             const chave = getChaveFromUrl();
 
-            // Configuração Visual Inicial
+            // Configuração Visual Inicial (Logo)
             carregarConfiguracaoVisual();
 
             if (!chave) {
@@ -280,8 +282,8 @@
                 });
         });
 
-        // --- SUPER PARSER DE URL ---
-        function obterChaveRobusta() {
+        // --- SUPER PARSER DE URL (Renomeada para bater com a chamada) ---
+        function getChaveFromUrl() {
             const url = window.location.href;
             console.log("URL Completa:", url);
 
