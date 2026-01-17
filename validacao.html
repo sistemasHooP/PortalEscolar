@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Validação Digital</title>
+    <title>Validação Digital Oficial</title>
     
     <!-- Fontes (Poppins) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -16,9 +16,9 @@
     <style>
         :root {
             --primary: #2563eb;
-            --success: #16a34a; 
-            --danger: #dc2626;
-            --bg-body: #f3f4f6;
+            --success: #16a34a; --success-light: #dcfce7;
+            --danger: #dc2626;  --danger-light: #fee2e2;
+            --bg-body: #f0f2f5;
             --text-main: #1f2937;
             --text-muted: #6b7280;
         }
@@ -37,263 +37,317 @@
             min-height: 100vh;
         }
 
-        .card {
+        .card-official {
             background: white;
             width: 100%;
-            max-width: 380px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             overflow: hidden;
-            text-align: center;
             position: relative;
-            display: flex;
-            flex-direction: column;
+            border: 1px solid #e5e7eb;
+            animation: fadeIn 0.5s ease-out;
         }
 
-        /* HEADER DE STATUS */
-        .status-bar {
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* HEADER OFICIAL */
+        .header-official {
             padding: 20px;
+            text-align: center;
+            background: var(--primary);
             color: white;
+        }
+        
+        .header-official img {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 50%;
+            padding: 4px;
+            object-fit: contain;
+            margin-bottom: 10px;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .header-titles h3 { margin: 0; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; opacity: 0.9; }
+        .header-titles h2 { margin: 0; font-size: 0.9rem; font-weight: 800; text-transform: uppercase; }
+
+        /* BARRA DE STATUS */
+        .status-bar {
+            padding: 12px;
+            text-align: center;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            min-height: 80px;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+            color: white;
         }
-        .bg-valid { background-color: var(--success); }
-        .bg-invalid { background-color: var(--danger); }
-        .bg-loading { background-color: var(--text-main); }
+        .status-valid { background: var(--success); }
+        .status-invalid { background: var(--danger); }
+        .status-loading { background: var(--text-muted); }
 
-        /* FOTO */
-        .photo-wrapper {
-            margin-top: -40px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: center;
-        }
-        .photo-circle {
-            width: 130px;
-            height: 130px;
+        /* CORPO */
+        .card-body { padding: 0 25px 30px; position: relative; }
+
+        .photo-frame {
+            width: 130px; height: 130px;
+            margin: -65px auto 15px;
             border-radius: 50%;
             border: 5px solid white;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             background: #e5e7eb;
             overflow: hidden;
+            position: relative; z-index: 10;
         }
-        .photo-circle img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        .photo-frame img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* DADOS */
-        .content { padding: 0 25px 30px; }
-        
-        h2 { margin: 0 0 5px; font-size: 1.3rem; line-height: 1.2; color: var(--primary); }
-        .cpf { font-family: monospace; background: #f3f4f6; padding: 2px 8px; border-radius: 4px; font-size: 0.9rem; display: inline-block; margin-bottom: 20px; color: var(--text-muted); }
+        .student-info { text-align: center; margin-bottom: 25px; }
+        .student-name { margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--primary); line-height: 1.2; }
+        .student-cpf { font-family: monospace; font-size: 0.9rem; color: var(--text-muted); background: #f3f4f6; padding: 2px 10px; border-radius: 4px; margin-top: 5px; display: inline-block; }
 
+        /* GRID DE DADOS */
         .info-grid {
             display: grid;
-            gap: 12px;
+            gap: 15px;
             text-align: left;
             background: #f9fafb;
-            padding: 15px;
+            padding: 20px;
             border-radius: 12px;
             border: 1px solid #e5e7eb;
         }
-        .info-item label { font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block; }
-        .info-item span { font-size: 1rem; font-weight: 600; color: var(--text-main); line-height: 1.2; }
+        .info-row { display: flex; flex-direction: column; }
+        .info-label { font-size: 0.7rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); margin-bottom: 2px; }
+        .info-value { font-size: 1rem; font-weight: 600; color: var(--text-main); line-height: 1.2; }
 
-        .validity-tag {
+        .validity-container {
             margin-top: 20px;
-            display: inline-block;
-            padding: 8px 20px;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 0.9rem;
+            text-align: center;
+        }
+        .validity-pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 20px; border-radius: 50px;
+            font-weight: 700; font-size: 0.9rem;
             border: 2px solid;
         }
-        .tag-valid { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
-        .tag-invalid { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+        .pill-valid { background: var(--success-light); color: var(--success); border-color: var(--success); }
+        .pill-invalid { background: var(--danger-light); color: var(--danger); border-color: var(--danger); }
 
-        .footer {
-            margin-top: 25px;
-            padding-top: 15px;
-            border-top: 1px solid #e5e7eb;
-            font-size: 0.75rem;
-            color: var(--text-muted);
+        .footer-check {
+            margin-top: 25px; border-top: 1px solid #e5e7eb; padding-top: 15px;
+            text-align: center; font-size: 0.75rem; color: var(--text-muted);
         }
 
         /* LOADER */
-        .loader {
-            border: 3px solid rgba(255,255,255,0.3);
-            border-top: 3px solid white;
-            border-radius: 50%;
-            width: 30px; height: 30px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
+        .spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 10px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <!-- TELA DE CARREGAMENTO -->
-        <div id="loading-view">
-            <div class="status-bar bg-loading" style="flex-direction: column; padding: 40px 20px;">
-                <div class="loader"></div>
-                <span style="font-size: 0.9rem; margin-top: 10px; font-weight: 400;">Consultando Base de Dados...</span>
+    <div class="card-official">
+        
+        <!-- HEADER FIXO -->
+        <div id="header-dynamic" class="header-official">
+            <img id="org-logo" src="logo.png" onerror="this.style.display='none'">
+            <div class="header-titles">
+                <h3>PREFEITURA MUNICIPAL</h3>
+                <h2 id="sec-name-header">SECRETARIA DE EDUCAÇÃO</h2>
             </div>
         </div>
 
-        <!-- TELA DE RESULTADO (Escondida Inicialmente) -->
-        <div id="result-view" class="hidden">
-            <div id="status-header" class="status-bar">
-                <!-- Ícone e Texto injetados via JS -->
+        <!-- BARRA DE STATUS -->
+        <div id="status-bar" class="status-bar status-loading">
+            <div id="loader-content">
+                <div class="spinner"></div>
+                <span style="font-size: 0.8rem; font-weight: 500;">VERIFICANDO...</span>
             </div>
+            <span id="status-text" class="hidden"></span>
+        </div>
+
+        <!-- CONTEÚDO (INICIALMENTE OCULTO) -->
+        <div id="result-content" class="card-body hidden">
             
-            <div class="photo-wrapper">
-                <div class="photo-circle">
-                    <img id="student-photo" src="" onerror="this.src='https://via.placeholder.com/150?text=Foto'">
+            <div class="photo-frame">
+                <img id="student-photo" src="" onerror="this.src='https://via.placeholder.com/150?text=Foto'">
+            </div>
+
+            <div class="student-info">
+                <h2 id="student-name" class="student-name"></h2>
+                <span id="student-cpf" class="student-cpf"></span>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-row">
+                    <span class="info-label">Instituição de Ensino</span>
+                    <span id="student-inst" class="info-value"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Curso</span>
+                    <span id="student-course" class="info-value"></span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="info-row">
+                        <span class="info-label">Matrícula</span>
+                        <span id="student-mat" class="info-value"></span>
+                    </div>
+                    <div class="info-row" style="text-align: right;">
+                        <span class="info-label">Nascimento</span>
+                        <span id="student-nasc" class="info-value"></span>
+                    </div>
                 </div>
             </div>
 
-            <div class="content">
-                <h2 id="student-name">Nome do Estudante</h2>
-                <div id="student-cpf" class="cpf">000.***.***-**</div>
+            <div class="validity-container">
+                <div id="validity-pill" class="validity-pill"></div>
+                <p id="validity-text" style="margin: 5px 0 0; font-size: 0.8rem; color: #666; font-weight: 600;"></p>
+            </div>
 
-                <div class="info-grid">
-                    <div class="info-item">
-                        <label>Instituição</label>
-                        <span id="student-inst">-</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Curso</label>
-                        <span id="student-course">-</span>
-                    </div>
-                    <div class="info-item" style="display: flex; justify-content: space-between;">
-                        <div>
-                            <label>Matrícula</label>
-                            <span id="student-mat">-</span>
-                        </div>
-                        <div style="text-align: right;">
-                             <label>Vencimento</label>
-                             <span id="student-validity" style="color: var(--primary);">-</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="badge-container"></div>
-
-                <div class="footer">
-                    <p id="org-name" style="font-weight: 600;">Secretaria de Educação</p>
-                    Sistema de Validação Digital
-                </div>
+            <div class="footer-check">
+                Documento validado digitalmente<br>
+                <span id="validation-date"></span>
             </div>
         </div>
+
+        <!-- TELA DE ERRO (OCULTA) -->
+        <div id="error-view" class="card-body hidden" style="text-align: center; padding-top: 40px;">
+            <i class="fa-solid fa-circle-xmark" style="font-size: 4rem; color: var(--danger); margin-bottom: 20px;"></i>
+            <h3 style="color: var(--text-main); margin: 0;">Falha na Verificação</h3>
+            <p id="error-msg" style="color: var(--text-muted); font-size: 0.9rem; margin-top: 10px;"></p>
+            <a href="index.html" style="display: inline-block; margin-top: 20px; text-decoration: none; color: var(--primary); font-weight: 600;">Voltar ao Início</a>
+        </div>
+
     </div>
 
     <script>
-        // URL DA API (Verifique se é a mesma do admin.js)
+        // URL DA API (Certifique-se que está atualizada)
         const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
 
         document.addEventListener('DOMContentLoaded', () => {
-            const params = new URLSearchParams(window.location.search);
-            const chave = params.get('c');
+            const chave = getChaveFromUrl();
+
+            // Configuração Visual Inicial (Logo)
+            carregarConfiguracaoVisual();
 
             if (!chave) {
-                mostrarErro("Código QR inválido (Sem chave).");
+                mostrarErro("Código inválido. A URL deve conter ?c=CHAVE");
                 return;
             }
 
-            // Chama a API
+            // Consulta API
             fetch(`${URL_API}?action=apiValidarCarteirinha&c=${chave}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.status === 'valid' || data.status === 'invalid') {
-                        preencherDados(data);
-                    } else if (data.status === 'error' && data.message === 'Ação inválida') {
-                        mostrarErro("Sistema Desatualizado: O Backend precisa de nova implantação.");
+                        renderizarResultado(data);
+                    } else if(data.status === 'error' && data.message === 'Ação inválida') {
+                        mostrarErro("Erro de Versão: O sistema (Backend) precisa ser atualizado (Nova Implantação).");
                     } else {
-                        mostrarErro(data.message || "Documento não encontrado.");
+                        mostrarErro(data.message || "Documento não encontrado na base de dados.");
                     }
                 })
                 .catch(err => {
                     console.error(err);
-                    mostrarErro("Falha de conexão com o servidor.");
+                    mostrarErro("Erro de conexão com o servidor.");
                 });
         });
 
-        function preencherDados(data) {
-            document.getElementById('loading-view').classList.add('hidden');
-            document.getElementById('result-view').classList.remove('hidden');
+        // Função "Trator" para achar a chave em qualquer lugar da URL
+        function getChaveFromUrl() {
+            const url = window.location.href;
+            
+            // 1. Tenta padrão ?c=
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('c')) return params.get('c');
+
+            // 2. Tenta hash #c= (comum em alguns roteadores)
+            if (window.location.hash.includes('c=')) {
+                const hashParams = new URLSearchParams(window.location.hash.substring(1)); // Remove #
+                if (hashParams.get('c')) return hashParams.get('c');
+            }
+
+            // 3. Busca bruta por regex na string completa (Último recurso)
+            const match = url.match(/[?&]c=([^&]+)/);
+            if (match && match[1]) return match[1];
+
+            return null;
+        }
+
+        function carregarConfiguracaoVisual() {
+            fetch(`${URL_API}?action=getPublicConfig`)
+            .then(r => r.json())
+            .then(json => {
+                if(json.status === 'success' && json.config) {
+                    const c = json.config;
+                    if(c.nomeSecretaria) document.getElementById('sec-name-header').innerText = c.nomeSecretaria.toUpperCase();
+                    if(c.urlLogo) {
+                        let url = c.urlLogo;
+                        if(url.includes('drive.google.com')) url = `https://lh3.googleusercontent.com/d/${url.split(/\/d\/|id=/)[1].split(/\/|&/)[0]}`;
+                        const img = document.getElementById('org-logo');
+                        img.src = url;
+                        img.style.display = 'inline-block';
+                    }
+                    if(c.corCarteirinha) {
+                        document.getElementById('header-dynamic').style.backgroundColor = c.corCarteirinha;
+                    }
+                }
+            }).catch(e => console.log('Erro config visual:', e));
+        }
+
+        function renderizarResultado(data) {
+            // Esconde Loader
+            document.getElementById('loader-content').classList.add('hidden');
+            const statusBar = document.getElementById('status-bar');
+            const statusText = document.getElementById('status-text');
+            statusText.classList.remove('hidden');
 
             const d = data.dados;
             const c = data.config;
-            
-            // Textos
+
+            // Preenche Dados
             document.getElementById('student-name').innerText = d.nome;
-            document.getElementById('student-cpf').innerText = mascararCPF(d.cpf);
+            document.getElementById('student-name').style.color = c.cor || '#2563eb'; // Cor da Secretaria
+            document.getElementById('student-cpf').innerText = formatarCPF(d.cpf);
             document.getElementById('student-inst').innerText = d.instituicao;
             document.getElementById('student-course').innerText = d.curso;
             document.getElementById('student-mat').innerText = d.matricula;
-            document.getElementById('student-validity').innerText = d.validade;
-            document.getElementById('org-name').innerText = c.secretaria || 'Secretaria de Educação';
+            document.getElementById('student-nasc').innerText = d.nascimento;
+            document.getElementById('validity-text').innerText = `Válido até: ${d.validade}`;
+            document.getElementById('validation-date').innerText = new Date().toLocaleString('pt-BR');
 
-            // Foto
-            if(d.foto) document.getElementById('student-photo').src = d.foto;
+            if (d.foto) document.getElementById('student-photo').src = d.foto;
 
-            // Status Visual
-            const header = document.getElementById('status-header');
-            const badgeBox = document.getElementById('badge-container');
+            const pill = document.getElementById('validity-pill');
 
             if (data.status === 'valid') {
-                header.className = 'status-bar bg-valid';
-                header.innerHTML = '<i class="fa-solid fa-circle-check"></i> DOCUMENTO VÁLIDO';
+                statusBar.classList.remove('status-loading');
+                statusBar.classList.add('status-valid');
+                statusText.innerHTML = '<i class="fa-solid fa-circle-check"></i> DOCUMENTO VÁLIDO';
                 
-                badgeBox.innerHTML = `
-                    <div class="validity-tag tag-valid">
-                        <i class="fa-solid fa-check"></i> Situação Regular
-                    </div>`;
-                
-                document.getElementById('student-name').style.color = c.cor || '#2563eb';
+                pill.className = 'validity-pill pill-valid';
+                pill.innerHTML = '<i class="fa-solid fa-check"></i> Situação Regular';
             } else {
-                header.className = 'status-bar bg-invalid';
-                header.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> DOCUMENTO INVÁLIDO';
+                statusBar.classList.remove('status-loading');
+                statusBar.classList.add('status-invalid');
+                statusText.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> INVÁLIDO';
                 
-                badgeBox.innerHTML = `
-                    <div class="validity-tag tag-invalid">
-                        <i class="fa-solid fa-ban"></i> ${data.razao || 'Vencido ou Cancelado'}
-                    </div>`;
+                pill.className = 'validity-pill pill-invalid';
+                pill.innerHTML = `<i class="fa-solid fa-ban"></i> ${data.razao || 'Irregular'}`;
             }
+
+            document.getElementById('result-content').classList.remove('hidden');
         }
 
         function mostrarErro(msg) {
-            document.getElementById('loading-view').classList.add('hidden');
-            document.getElementById('result-view').classList.remove('hidden');
-            
-            const header = document.getElementById('status-header');
-            header.className = 'status-bar bg-invalid';
-            header.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> ERRO';
-
-            document.querySelector('.content').innerHTML = `
-                <div style="padding: 40px 20px;">
-                    <i class="fa-solid fa-file-circle-question" style="font-size: 4rem; color: #dc2626; margin-bottom: 20px; display:block;"></i>
-                    <h3 style="margin: 0; color: #1f2937;">Não foi possível validar</h3>
-                    <p style="color: #6b7280; margin-top: 10px;">${msg}</p>
-                    <a href="index.html" style="display: inline-block; margin-top: 20px; text-decoration: none; color: #2563eb; font-weight: 600;">Ir para o Início</a>
-                </div>
-            `;
-            document.querySelector('.photo-wrapper').style.display = 'none';
+            document.getElementById('loader-content').classList.add('hidden');
+            document.getElementById('status-bar').style.display = 'none'; // Some barra de status
+            document.getElementById('error-view').classList.remove('hidden');
+            document.getElementById('error-msg').innerText = msg;
         }
 
-        function mascararCPF(cpf) {
+        function formatarCPF(cpf) {
             if(!cpf) return '---';
             const v = cpf.replace(/\D/g, '');
             if(v.length !== 11) return cpf;
