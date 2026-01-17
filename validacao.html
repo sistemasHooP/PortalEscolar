@@ -149,8 +149,8 @@
 
         .hidden { display: none !important; }
         
-        /* Debug Info (Pequeno no rodapé) */
-        #debug-info { font-size: 10px; color: #ccc; margin-top: 20px; text-align: center; font-family: monospace; word-break: break-all; }
+        /* Debug Info */
+        #debug-info { margin-top: 15px; padding: 10px; background: #fff3cd; color: #856404; font-size: 0.7rem; border-radius: 5px; text-align: left; word-break: break-all; }
     </style>
 </head>
 <body>
@@ -225,7 +225,8 @@
             <h3 style="color: var(--text-main); margin: 0;">Falha na Validação</h3>
             <p id="error-msg" style="color: var(--text-muted); font-size: 0.9rem; margin-top: 10px;"></p>
             
-            <div id="debug-area" style="margin-top:20px; padding:10px; background:#fdf2f2; border-radius:8px; font-size:0.75rem; color:#991b1b; display:none;"></div>
+            <!-- DEBUG INFO PARA AJUDAR NA CORREÇÃO -->
+            <div id="debug-info" class="hidden"></div>
             
             <a href="index.html" style="display: inline-block; margin-top: 25px; text-decoration: none; color: var(--primary); font-weight: 600; border: 2px solid var(--primary); padding: 10px 20px; border-radius: 50px;">
                 Ir para o Portal
@@ -239,25 +240,23 @@
         const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
 
         document.addEventListener('DOMContentLoaded', () => {
-            // 1. Extração da Chave da URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const chave = urlParams.get('c');
+            // Tenta obter a chave de forma robusta
+            const chave = obterChaveRobusta();
 
-            // Atualiza status visual
-            const loadText = document.getElementById('loading-text');
-            
+            // Configuração Visual Inicial (Logo)
+            carregarConfiguracaoVisual();
+
             if (!chave) {
-                mostrarErro("Chave de identificação não encontrada no QR Code.");
+                mostrarErro("Chave não encontrada na URL.", true);
                 return;
             }
 
-            loadText.innerText = "CONSULTANDO BANCO DE DADOS...";
+            const loadText = document.getElementById('loading-text');
+            loadText.innerText = "CONSULTANDO DADOS...";
             
-            // 2. Consulta API
-            // Usamos redirect: 'follow' para garantir que o redirecionamento do Google Script seja seguido
+            // Chama API
             fetch(`${URL_API}?action=apiValidarCarteirinha&c=${chave}`)
                 .then(response => {
-                    // Verifica se a resposta é válida
                     if (!response.ok) throw new Error("Erro HTTP: " + response.status);
                     return response.json();
                 })
@@ -265,24 +264,41 @@
                     if (data.status === 'valid' || data.status === 'invalid') {
                         renderizarResultado(data);
                     } else if (data.status === 'error' && data.message === 'Ação inválida') {
-                        mostrarErro("ERRO DE VERSÃO: O sistema precisa ser atualizado (Backend Deploy).", true);
+                        mostrarErro("Backend Desatualizado: É necessário reimplantar o script.", true);
                     } else {
-                        mostrarErro(data.message || "Documento não encontrado no sistema.");
+                        mostrarErro(data.message || "Documento não encontrado.", false);
                     }
                 })
                 .catch(err => {
                     console.error("Erro Fetch:", err);
-                    let msg = "Erro de conexão com o servidor.";
-                    // Dica para erro de CORS/Permissão
-                    if(err.message.includes('Failed to fetch') || err.name === 'TypeError') {
-                        msg += "<br><br><b>Dica para o Admin:</b> Verifique se a implantação do Script está como 'Qualquer pessoa'.";
-                    }
-                    mostrarErro(msg, true);
+                    mostrarErro("Erro de conexão com o servidor.", true);
                 });
-
-            // Carrega config visual em paralelo (não bloqueante)
-            carregarConfiguracaoVisual();
         });
+
+        // --- SUPER PARSER DE URL ---
+        // Procura a chave (8 caracteres alfanuméricos) em qualquer lugar da URL
+        function obterChaveRobusta() {
+            const url = window.location.href;
+            console.log("URL Completa:", url);
+
+            // 1. Método Padrão (Query Param)
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('c')) return params.get('c');
+
+            // 2. Método Hash (Para Single Page Apps ou Roteadores)
+            if (url.includes('#')) {
+                const hashPart = url.split('#')[1];
+                const hashParams = new URLSearchParams(hashPart.includes('?') ? hashPart.split('?')[1] : hashPart);
+                if (hashParams.get('c')) return hashParams.get('c');
+            }
+
+            // 3. Método Regex (Força Bruta) - Procura padrão ?c=XXXX ou &c=XXXX
+            // Aceita chave alfanumérica de tamanho variável
+            const match = url.match(/[?&]c=([A-Za-z0-9]+)/);
+            if (match && match[1]) return match[1];
+
+            return null;
+        }
 
         function carregarConfiguracaoVisual() {
             fetch(`${URL_API}?action=getPublicConfig`)
@@ -300,7 +316,6 @@
                     }
                     if(c.corCarteirinha) {
                         document.getElementById('header-dynamic').style.backgroundColor = c.corCarteirinha;
-                        // Salva cor para uso no JS
                         window.corPrincipal = c.corCarteirinha; 
                     }
                 }
@@ -357,12 +372,12 @@
         function mostrarErro(msg, showDebug = false) {
             document.getElementById('status-bar').style.display = 'none';
             document.getElementById('error-view').classList.remove('hidden');
-            document.getElementById('error-msg').innerHTML = msg; // InnerHTML para permitir bold/br
+            document.getElementById('error-msg').innerHTML = msg; 
             
             if(showDebug) {
-                const dbg = document.getElementById('debug-area');
-                dbg.style.display = 'block';
-                dbg.innerText = "Debug: Verifique se o 'Web App' está implantado como 'Qualquer pessoa' (Anyone).";
+                const dbg = document.getElementById('debug-info');
+                dbg.classList.remove('hidden');
+                dbg.innerHTML = `<strong>Diagnóstico Técnico:</strong><br>URL Lida: ${window.location.href}`;
             }
         }
 
@@ -370,7 +385,6 @@
             if(!cpf) return '---';
             const v = cpf.replace(/\D/g, '');
             if(v.length !== 11) return cpf;
-            // Ofusca CPF para segurança pública
             return `***.${v.substr(3,3)}.${v.substr(6,3)}-**`;
         }
     </script>
