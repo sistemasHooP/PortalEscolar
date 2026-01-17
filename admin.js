@@ -730,7 +730,13 @@ function renderizarProximaPagina() {
         tbody.innerHTML += `<tr>
             <td style="text-align:center;"><input type="checkbox" class="bulk-check" value="${ins.chave}" ${checked} onclick="toggleCheck('${ins.chave}')"></td>
             <td>${safeDate(ins.data)}</td>
-            <td><div style="font-weight:600; font-size:0.9rem; color:var(--text-main);">${d.NomeCompleto||'Sem Nome'}</div><small style="color:var(--text-secondary);">${d.CPF||'-'}</small></td>
+            <td>
+                <div style="font-weight:600; font-size:0.9rem; color:var(--text-main);">${d.NomeCompleto||'Sem Nome'}</div>
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                    <small style="color:var(--text-secondary);">${d.CPF||'-'}</small>
+                    <small style="color:var(--primary); font-family:monospace; font-weight:600; background:var(--primary-light); padding:2px 6px; border-radius:4px; width:fit-content;">${ins.chave}</small>
+                </div>
+            </td>
             <td><div class="badge" style="background:#f1f5f9; color:#334155; font-weight:600; font-size:0.85rem; padding: 6px 12px; border: 1px solid #cbd5e1;">${mapaEventos[ins.eventoId]||ins.eventoId}</div></td>
             <td><span class="badge ${ins.status.replace(/\s/g, '')}">${ins.status}</span></td>
             <td style="text-align:right;">
@@ -845,7 +851,10 @@ function abrirEdicaoInscricao(chave) {
                     </div>
 
                     <h3 style="font-size: 1.2rem; margin: 0; color: var(--primary); font-weight:700;">${dados.NomeCompleto || 'Estudante'}</h3>
-                    <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 25px; font-family: monospace;">${dados.CPF || ''}</p>
+                    <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 10px; font-family: monospace;">${dados.CPF || ''}</p>
+                    <div style="background: #e2e8f0; color: #475569; padding: 5px 10px; border-radius: 4px; font-family: monospace; font-weight: bold; margin-bottom: 25px; display: inline-block;">
+                        <i class="fa-solid fa-key"></i> ${inscricao.chave}
+                    </div>
                     
                     <div style="text-align: left; margin-bottom: 20px;">
                         <label class="swal-label">Status Atual</label>
@@ -919,7 +928,7 @@ function abrirEdicaoInscricao(chave) {
             showLoading('Salvando...');
             
             const promiseStatus = (result.value.status !== inscricao.status) ? 
-                fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'atualizarStatus', senha: sessionStorage.getItem('admin_token'), chave, novoStatus: result.value.status }) }) : 
+                fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'atualizarStatus', senha: sessionStorage.getItem('admin_token'), chave: chave, novoStatus: result.value.status }) }) : 
                 Promise.resolve();
 
             promiseStatus.then(() => {
@@ -987,7 +996,14 @@ function gerarFicha(chave) {
     let htmlPessoais = '';
     camposPessoais.forEach(key => {
         const label = LABELS_TODOS_CAMPOS[key] || key;
-        const val = dados[key] || '-';
+        let val = dados[key] || '-';
+        
+        // CORREÇÃO: Formatar Data de Nascimento
+        if(key === 'DataNascimento' && val !== '-') {
+            const parts = val.split('-');
+            if(parts.length === 3) val = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
         htmlPessoais += `<div class="ficha-row"><span class="ficha-label">${label}:</span> <span class="ficha-value">${val}</span></div>`;
     });
 
