@@ -425,6 +425,7 @@ function abrirEdicaoEvento(evento) {
     const checkCart = config.emiteCarteirinha ? 'checked' : '';
     const cidades = config.cidadesPermitidas ? config.cidadesPermitidas.join(', ') : '';
     
+    // Lógica para carregar campos personalizados existentes
     const camposExtras = config.camposPersonalizados || [];
     let htmlExtras = '';
     camposExtras.forEach((campo, index) => {
@@ -527,12 +528,13 @@ function modalNovoEvento() {
             </div>
 
             <div class="swal-grid-2">
-                <div><label class="swal-label">Título</label><input id="swal-titulo" class="swal-input-custom" placeholder="Ex: Transporte 2025.1"></div>
-                <div><label class="swal-label">Descrição</label><input id="swal-desc" class="swal-input-custom" placeholder="Ex: Período letivo regular"></div>
+                <div><label class="swal-label">Título do Evento</label><input id="swal-titulo" class="swal-input-custom" placeholder="Ex: Transporte 2025.1"></div>
+                <div><label class="swal-label">Descrição Curta</label><input id="swal-desc" class="swal-input-custom" placeholder="Ex: Período letivo regular"></div>
             </div>
+            
             <div class="swal-grid-2">
-                <div><label class="swal-label">Início</label><input type="date" id="swal-inicio" class="swal-input-custom"></div>
-                <div><label class="swal-label">Fim</label><input type="date" id="swal-fim" class="swal-input-custom"></div>
+                <div><label class="swal-label">Início das Inscrições</label><input type="date" id="swal-inicio" class="swal-input-custom"></div>
+                <div><label class="swal-label">Fim das Inscrições</label><input type="date" id="swal-fim" class="swal-input-custom"></div>
             </div>
 
             <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid #e2e8f0;">
@@ -857,18 +859,21 @@ function abrirEdicaoInscricao(chave) {
                         <h3 style="margin: 0; color: var(--text-main); font-size:1.1rem; font-weight: 700;">Editar Informações</h3>
                     </div>
                     
-                    <div class="swal-grid-2" style="align-items: start; margin-bottom:0;">
-                        <div>
-                            <label class="swal-label" style="color: var(--primary); border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 10px;"><i class="fa-regular fa-id-card"></i> Dados Pessoais</label>
-                            ${htmlCamposEsquerda}
+                    <!-- WRAPPER COM SCROLLBAR DEDICADA -->
+                    <div style="max-height: 60vh; overflow-y: auto; padding-right: 10px;">
+                        <div class="swal-grid-2" style="align-items: start; margin-bottom:0;">
+                            <div>
+                                <label class="swal-label" style="color: var(--primary); border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 10px;"><i class="fa-regular fa-id-card"></i> Dados Pessoais</label>
+                                ${htmlCamposEsquerda}
+                            </div>
+                            <div>
+                                <label class="swal-label" style="color: var(--primary); border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 10px;"><i class="fa-solid fa-graduation-cap"></i> Dados Acadêmicos</label>
+                                ${htmlCamposDireita}
+                            </div>
                         </div>
-                        <div>
-                            <label class="swal-label" style="color: var(--primary); border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 10px;"><i class="fa-solid fa-graduation-cap"></i> Dados Acadêmicos</label>
-                            ${htmlCamposDireita}
-                        </div>
-                    </div>
 
-                    ${htmlUploads}
+                        ${htmlUploads}
+                    </div>
                 </div>
             </div>
         `,
@@ -884,15 +889,18 @@ function abrirEdicaoInscricao(chave) {
             
             const novoStatus = document.getElementById('novo_status_modal').value;
             
-            // Coleta Arquivos
+            // Coleta Arquivos (Correção: Verifica diretamente se o input existe e tem arquivo)
             const arqs = {};
-            if (pedeFoto) {
-                const f = document.getElementById('edit_upload_foto').files[0];
-                if(f) arqs.foto = { data: await toBase64(f), mime: 'image/jpeg' };
+            const inputFoto = document.getElementById('edit_upload_foto');
+            const inputDoc = document.getElementById('edit_upload_doc');
+
+            if (inputFoto && inputFoto.files.length > 0) {
+                const f = inputFoto.files[0];
+                arqs.foto = { data: await toBase64(f), mime: 'image/jpeg' };
             }
-            if (pedeDoc) {
-                const f = document.getElementById('edit_upload_doc').files[0];
-                if(f) arqs.doc = { data: await toBase64(f), mime: 'application/pdf' };
+            if (inputDoc && inputDoc.files.length > 0) {
+                const f = inputDoc.files[0];
+                arqs.doc = { data: await toBase64(f), mime: 'application/pdf' };
             }
 
             return { novosDados, status: novoStatus, arquivos: Object.keys(arqs).length > 0 ? arqs : null };
@@ -917,10 +925,9 @@ function abrirEdicaoInscricao(chave) {
                     }) 
                 });
             }).then(() => {
-                Swal.fire({icon: 'success', title: 'Dados Atualizados!'});
-                inscricao.status = result.value.status;
-                inscricao.dadosJson = JSON.stringify({ ...dados, ...result.value.novosDados });
-                resetEFiltrar();
+                // CORREÇÃO CRÍTICA: Recarregar TUDO para atualizar cache de imagem/docs
+                Swal.fire({icon: 'success', title: 'Dados Atualizados!', timer: 1500, showConfirmButton: false});
+                carregarInscricoes(); // Força reload completo
             });
         }
     });
