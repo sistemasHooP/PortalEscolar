@@ -3,20 +3,18 @@ const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo
 // --- CONFIGURAÇÃO GERAL ---
 const URL_LOGO = './logo.png'; 
 
-// Definição dos campos opcionais (CPF e Email removidos pois são obrigatórios e fixos no app.js)
+// Campos padrão (CPF e Email são fixos no sistema e não precisam estar aqui)
 const CAMPOS_PADRAO = [
     { key: 'NomeCompleto', label: 'Nome Completo' }, 
     { key: 'DataNascimento', label: 'Nascimento' }, 
     { key: 'Telefone', label: 'Celular' }, 
     { key: 'Endereco', label: 'Endereço' },
-    // Cidade e Estado são tratados separadamente na lógica, mas opcionais na visualização
     { key: 'NomeInstituicao', label: 'Instituição' }, 
     { key: 'NomeCurso', label: 'Curso' }, 
     { key: 'PeriodoCurso', label: 'Período' }, 
     { key: 'Matricula', label: 'Matrícula' }, 
 ];
 
-// Mapeamento completo para exibição em tabelas/modais
 const LABELS_TODOS_CAMPOS = {
     'NomeCompleto': 'Nome Completo',
     'CPF': 'CPF',
@@ -43,7 +41,7 @@ let paginaAtual = 1;
 const ITENS_POR_PAGINA = 50;
 let selecionados = new Set(); 
 
-// --- LOADING CUSTOMIZADO ---
+// --- LOADING ---
 function showLoading(msg = 'Processando...') {
     Swal.fire({
         html: `
@@ -62,7 +60,7 @@ function safeDate(val) {
     try { const d = new Date(val); return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('pt-BR'); } catch(e) { return '-'; }
 }
 
-// --- AUTENTICAÇÃO ---
+// --- AUTH ---
 function toggleSenha() {
     const input = document.getElementById('admin-pass');
     const icon = document.querySelector('.password-toggle');
@@ -82,7 +80,7 @@ function realizarLogin(e) {
             document.getElementById('admin-panel').classList.remove('hidden');
             sessionStorage.setItem('admin_token', pass);
             carregarDashboard();
-        } else { Swal.fire({icon: 'error', title: 'Acesso Negado', text: 'Senha administrativa incorreta.'}); }
+        } else { Swal.fire({icon: 'error', title: 'Acesso Negado', text: 'Senha incorreta.'}); }
     }).catch(() => Swal.fire('Erro de Conexão', 'Verifique sua internet.', 'error'));
 }
 
@@ -91,7 +89,7 @@ function logout() {
     window.location.reload(); 
 }
 
-// --- NAVEGAÇÃO APP SHELL ---
+// --- NAVEGAÇÃO ---
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -142,11 +140,11 @@ function salvarConfigDrive() {
             idPasta: id 
         }) 
     }).then(() => {
-        Swal.fire({icon: 'success', title: 'Configuração Salva!', timer: 1500, showConfirmButton: false});
+        Swal.fire({icon: 'success', title: 'Salvo!', timer: 1500, showConfirmButton: false});
     });
 }
 
-// --- DASHBOARD E DADOS GERAIS ---
+// --- DASHBOARD ---
 function carregarDashboard() {
     const token = sessionStorage.getItem('admin_token');
     Promise.all([
@@ -156,7 +154,6 @@ function carregarDashboard() {
         mapaEventos = {}; 
         cacheEventos = {}; 
         if(jsonEventos.data) jsonEventos.data.forEach(ev => {
-            // CORREÇÃO: Filtra eventos vazios/fantasmas da planilha
             if (ev.id && ev.titulo) {
                 mapaEventos[ev.id] = ev.titulo;
                 cacheEventos[ev.id] = ev; 
@@ -209,7 +206,6 @@ function atualizarSelectsRelatorio(eventos, inscricoes) {
     if(selEvento) {
         selEvento.innerHTML = '<option value="">Todos os Eventos</option>';
         eventos.forEach(ev => {
-            // CORREÇÃO: Só adiciona se tiver ID e Título
             if(ev.id && ev.titulo) {
                 selEvento.innerHTML += `<option value="${ev.id}">${ev.titulo}</option>`;
             }
@@ -395,14 +391,12 @@ function carregarEventosAdmin() {
         if(!json.data || json.data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem;">Nenhum evento criado.</td></tr>'; return; }
         
         json.data.forEach(ev => {
-            // CORREÇÃO: Ignora eventos fantasmas (linhas vazias da planilha)
             if (ev.id && ev.titulo) {
                 mapaEventos[ev.id] = ev.titulo;
                 cacheEventos[ev.id] = ev; 
             }
         });
         
-        // Filtra apenas eventos válidos para a lista
         const eventosValidos = json.data.filter(ev => ev.id && ev.titulo);
 
         eventosValidos.sort((a,b) => b.id - a.id).forEach(ev => {
@@ -430,65 +424,72 @@ function abrirEdicaoEvento(evento) {
     const checkFicha = config.exigeFicha ? 'checked' : '';
     const checkCart = config.emiteCarteirinha ? 'checked' : '';
     const cidades = config.cidadesPermitidas ? config.cidadesPermitidas.join(', ') : '';
+    
+    // Lógica para carregar campos personalizados existentes
+    const camposExtras = config.camposPersonalizados || [];
+    let htmlExtras = '';
+    camposExtras.forEach((campo, index) => {
+        htmlExtras += `<div class="extra-field-item" style="display:flex; gap:10px; margin-bottom:5px;">
+            <input type="text" class="swal-input-custom extra-input" value="${campo}" readonly>
+            <button type="button" class="btn-icon bg-delete" onclick="this.parentElement.remove()" style="width:30px;"><i class="fa-solid fa-trash"></i></button>
+        </div>`;
+    });
 
     Swal.fire({
         title: 'Editar Evento',
-        width: '800px',
+        width: '900px',
         html: `
             <div class="swal-grid-2">
-                <div>
-                    <label class="swal-label">Data de Encerramento</label>
-                    <input type="date" id="edit_fim" class="swal-input-custom" value="${evento.fim ? evento.fim.split('T')[0] : ''}">
-                </div>
-                <div>
-                    <label class="swal-label">Restrição de Cidades</label>
-                    <input type="text" id="edit_cidades" class="swal-input-custom" placeholder="Separe por vírgulas..." value="${cidades}">
-                </div>
+                <div><label class="swal-label">Data de Encerramento</label><input type="date" id="edit_fim" class="swal-input-custom" value="${evento.fim ? evento.fim.split('T')[0] : ''}"></div>
+                <div><label class="swal-label">Restrição de Cidades</label><input type="text" id="edit_cidades" class="swal-input-custom" placeholder="Separe por vírgulas..." value="${cidades}"></div>
             </div>
+            <div class="swal-full"><label class="swal-label">Mensagem de Alerta (Topo)</label><textarea id="edit_msg" class="swal-input-custom" style="height:60px;">${config.mensagemAlerta || ''}</textarea></div>
             
-            <div class="swal-full">
-                <label class="swal-label">Mensagem de Alerta (Topo do Formulário)</label>
-                <textarea id="edit_msg" class="swal-input-custom" style="height:80px;">${config.mensagemAlerta || ''}</textarea>
+            <div style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:15px;">
+                <label class="swal-label" style="color:var(--primary);">Perguntas Personalizadas (Opcional)</label>
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <input type="text" id="new-extra-edit" class="swal-input-custom" placeholder="Digite uma nova pergunta (ex: Tamanho da Camiseta)">
+                    <button type="button" id="btn-add-extra-edit" class="btn btn-primary" style="width:auto;"><i class="fa-solid fa-plus"></i></button>
+                </div>
+                <div id="container-extras-edit">${htmlExtras}</div>
             </div>
-            
-            <div class="checkbox-grid" style="margin-top: 20px;">
-                <label class="checkbox-card">
-                    <input type="checkbox" id="edit_req_ficha" ${checkFicha}> 
-                    <div><strong>Exigir Ficha Presencial</strong><br><small style="color:#64748b;">Aluno deve levar assinado</small></div>
-                </label>
-                <label class="checkbox-card">
-                    <input type="checkbox" id="edit_emitir_carteirinha" ${checkCart}> 
-                    <div><strong>Carteirinha Digital</strong><br><small style="color:#64748b;">Liberar após aprovação</small></div>
-                </label>
-            </div>
+
+            <div class="checkbox-grid"><label class="checkbox-card"><input type="checkbox" id="edit_req_ficha" ${checkFicha}> Exigir Ficha Presencial</label><label class="checkbox-card"><input type="checkbox" id="edit_emitir_carteirinha" ${checkCart}> Carteirinha Digital</label></div>
         `,
-        showCancelButton: true, confirmButtonText: 'Salvar Alterações', confirmButtonColor: '#2563eb',
+        showCancelButton: true, confirmButtonText: 'Salvar', confirmButtonColor: '#2563eb',
+        didOpen: () => {
+            document.getElementById('btn-add-extra-edit').addEventListener('click', () => {
+                const val = document.getElementById('new-extra-edit').value;
+                if(val) {
+                    const div = document.createElement('div');
+                    div.className = 'extra-field-item';
+                    div.style.cssText = 'display:flex; gap:10px; margin-bottom:5px;';
+                    div.innerHTML = `<input type="text" class="swal-input-custom extra-input" value="${val}" readonly><button type="button" class="btn-icon bg-delete" onclick="this.parentElement.remove()" style="width:30px;"><i class="fa-solid fa-trash"></i></button>`;
+                    document.getElementById('container-extras-edit').appendChild(div);
+                    document.getElementById('new-extra-edit').value = '';
+                }
+            });
+        },
         preConfirm: () => { 
             const cidadesTexto = document.getElementById('edit_cidades').value;
             const cidadesArr = cidadesTexto ? cidadesTexto.split(',').map(s => s.trim()).filter(s => s) : [];
+            const extras = [];
+            document.querySelectorAll('#container-extras-edit .extra-input').forEach(el => extras.push(el.value));
+            
             return { 
                 fim: document.getElementById('edit_fim').value, 
                 msg: document.getElementById('edit_msg').value,
                 exigeFicha: document.getElementById('edit_req_ficha').checked,
                 emiteCarteirinha: document.getElementById('edit_emitir_carteirinha').checked,
-                cidadesPermitidas: cidadesArr
+                cidadesPermitidas: cidadesArr,
+                camposPersonalizados: extras
             }; 
         }
     }).then((res) => {
         if(res.isConfirmed) {
             showLoading('Salvando...');
-            fetch(URL_API, { 
-                method: 'POST', 
-                body: JSON.stringify({ 
-                    action: 'editarEvento', 
-                    senha: sessionStorage.getItem('admin_token'), 
-                    id: evento.id, 
-                    ...res.value 
-                }) 
-            }).then(() => { 
-                Swal.fire({icon: 'success', title: 'Evento Atualizado!'}); 
-                carregarEventosAdmin(); 
-            }); 
+            fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'editarEvento', senha: sessionStorage.getItem('admin_token'), id: evento.id, ...res.value }) })
+            .then(() => { Swal.fire({icon: 'success', title: 'Salvo!'}); carregarEventosAdmin(); }); 
         }
     });
 }
@@ -501,7 +502,6 @@ function toggleStatusEvento(id, status) {
 
 function modalNovoEvento() {
     let htmlCampos = '<div class="checkbox-grid">';
-    // GERAÇÃO DE CAMPOS OPCIONAIS (CPF e Email já foram excluídos de CAMPOS_PADRAO)
     CAMPOS_PADRAO.forEach(c => {
         if(c.key !== 'Cidade' && c.key !== 'Estado') { 
              htmlCampos += `<label class="checkbox-card"><input type="checkbox" id="check_${c.key}" value="${c.key}" checked> ${c.label}</label>`;
@@ -514,92 +514,84 @@ function modalNovoEvento() {
         width: '900px',
         html: `
             <div style="background:#eff6ff; color:#1e40af; padding:10px; border-radius:6px; font-size:0.85rem; margin-bottom:15px; border:1px solid #dbeafe;">
-                <i class="fa-solid fa-info-circle"></i> <strong>Nota:</strong> CPF e E-mail são campos fixos obrigatórios.
+                <i class="fa-solid fa-info-circle"></i> <strong>Nota:</strong> CPF e E-mail são obrigatórios.
             </div>
-
             <div class="swal-grid-2">
-                <div>
-                    <label class="swal-label">Título do Evento</label>
-                    <input id="swal-titulo" class="swal-input-custom" placeholder="Ex: Transporte 2025.1">
-                </div>
-                <div>
-                    <label class="swal-label">Descrição Curta</label>
-                    <input id="swal-desc" class="swal-input-custom" placeholder="Ex: Período letivo regular">
-                </div>
+                <div><label class="swal-label">Título</label><input id="swal-titulo" class="swal-input-custom" placeholder="Ex: Transporte 2025.1"></div>
+                <div><label class="swal-label">Descrição</label><input id="swal-desc" class="swal-input-custom" placeholder="Ex: Período letivo regular"></div>
             </div>
-            
             <div class="swal-grid-2">
-                <div><label class="swal-label">Início das Inscrições</label><input type="date" id="swal-inicio" class="swal-input-custom"></div>
-                <div><label class="swal-label">Fim das Inscrições</label><input type="date" id="swal-fim" class="swal-input-custom"></div>
+                <div><label class="swal-label">Início</label><input type="date" id="swal-inicio" class="swal-input-custom"></div>
+                <div><label class="swal-label">Fim</label><input type="date" id="swal-fim" class="swal-input-custom"></div>
             </div>
 
             <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid #e2e8f0;">
-                <h4 style="margin: 0 0 15px 0; color: var(--primary); font-size:0.9rem; text-transform:uppercase;">Configuração do Formulário</h4>
-                
-                <label class="swal-label">Campos Adicionais do Aluno</label>
+                <label class="swal-label">Campos Padrão do Aluno</label>
                 ${htmlCampos}
                 
-                <div class="swal-grid-2" style="margin-top: 15px;">
-                    <div>
-                        <label class="swal-label">Restrição de Cidades</label>
-                        <input type="text" id="swal-cidades" class="swal-input-custom" placeholder="Deixe vazio para todas">
+                <div style="margin-top:20px; border-top:1px dashed #cbd5e1; padding-top:15px;">
+                    <label class="swal-label" style="color:var(--primary);">Perguntas Personalizadas (Opcional)</label>
+                    <div style="display:flex; gap:10px; margin-bottom:10px;">
+                        <input type="text" id="new-extra" class="swal-input-custom" placeholder="Digite uma pergunta extra...">
+                        <button type="button" id="btn-add-extra" class="btn btn-primary" style="width:auto;"><i class="fa-solid fa-plus"></i></button>
                     </div>
-                    <div>
-                        <label class="swal-label">Observações (Somente Leitura)</label>
-                        <textarea id="txt_obs_admin" class="swal-input-custom" style="height:42px;" placeholder="Instruções para o aluno..."></textarea>
-                    </div>
+                    <div id="container-extras"></div>
                 </div>
 
-                <label class="swal-label" style="margin-top: 15px;">Documentos Obrigatórios</label>
+                <div class="swal-grid-2" style="margin-top: 15px;">
+                    <div><label class="swal-label">Restrição de Cidades</label><input type="text" id="swal-cidades" class="swal-input-custom" placeholder="Deixe vazio para todas"></div>
+                    <div><label class="swal-label">Obs (Leitura)</label><textarea id="txt_obs_admin" class="swal-input-custom" style="height:42px;"></textarea></div>
+                </div>
+                <label class="swal-label" style="margin-top: 15px;">Uploads</label>
                 <div class="checkbox-grid">
                     <label class="checkbox-card"><input type="checkbox" id="req_foto" checked> Foto 3x4</label>
-                    <label class="checkbox-card"><input type="checkbox" id="req_doc" checked> Declaração/Comprovante</label>
+                    <label class="checkbox-card"><input type="checkbox" id="req_doc" checked> Declaração</label>
                 </div>
-
-                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed #cbd5e1;">
-                     <label class="swal-label">Regras de Negócio</label>
-                     <div class="checkbox-grid">
-                        <label class="checkbox-card" style="background: #fffbeb; border-color: #f59e0b;">
-                            <input type="checkbox" id="req_ficha" checked> 
-                            <strong>Exigir Assinatura Presencial</strong>
-                        </label>
-                        <label class="checkbox-card" style="background: #eff6ff; border-color: #3b82f6;">
-                            <input type="checkbox" id="emitir_carteirinha"> 
-                            <strong>Emitir Carteirinha Digital</strong>
-                        </label>
-                     </div>
+                <div class="checkbox-grid" style="margin-top: 15px;">
+                    <label class="checkbox-card" style="background:#fffbeb; border-color:#f59e0b;"><input type="checkbox" id="req_ficha" checked> Exigir Ficha Presencial</label>
+                    <label class="checkbox-card" style="background:#eff6ff; border-color:#3b82f6;"><input type="checkbox" id="emitir_carteirinha"> Carteirinha Digital</label>
                 </div>
             </div>
         `,
         showCancelButton: true, confirmButtonText: 'Publicar Evento', confirmButtonColor: '#2563eb',
+        didOpen: () => {
+            document.getElementById('btn-add-extra').addEventListener('click', () => {
+                const val = document.getElementById('new-extra').value;
+                if(val) {
+                    const div = document.createElement('div');
+                    div.className = 'extra-field-item';
+                    div.style.cssText = 'display:flex; gap:10px; margin-bottom:5px;';
+                    div.innerHTML = `<input type="text" class="swal-input-custom extra-input" value="${val}" readonly><button type="button" class="btn-icon bg-delete" onclick="this.parentElement.remove()" style="width:30px;"><i class="fa-solid fa-trash"></i></button>`;
+                    document.getElementById('container-extras').appendChild(div);
+                    document.getElementById('new-extra').value = '';
+                }
+            });
+        },
         preConfirm: () => {
-            const titulo = document.getElementById('swal-titulo').value;
-            const inicio = document.getElementById('swal-inicio').value;
-            const fim = document.getElementById('swal-fim').value;
+            const t = document.getElementById('swal-titulo').value;
+            const i = document.getElementById('swal-inicio').value;
+            const f = document.getElementById('swal-fim').value;
 
-            if(!titulo || !inicio || !fim) {
-                Swal.showValidationMessage('Preencha Título e Datas.');
-                return false;
-            }
+            if(!t || !i || !f) { Swal.showValidationMessage('Preencha dados básicos.'); return false; }
 
-            // CORREÇÃO: Removemos CPF e Email daqui para não duplicar no formulário público
             const sels = ['Cidade', 'Estado']; 
-            
-            // Adiciona campos selecionados pelo usuário
             CAMPOS_PADRAO.forEach(c => { 
                 const el = document.getElementById(`check_${c.key}`);
                 if(el && el.checked) sels.push(c.key); 
             });
             
+            const extras = [];
+            document.querySelectorAll('#container-extras .extra-input').forEach(el => extras.push(el.value));
+            
             const cidadesTexto = document.getElementById('swal-cidades').value;
             const cidadesArr = cidadesTexto ? cidadesTexto.split(',').map(s => s.trim()).filter(s => s) : [];
 
             return {
-                titulo: titulo, descricao: document.getElementById('swal-desc').value,
-                inicio: inicio, fim: fim,
+                titulo: t, descricao: document.getElementById('swal-desc').value,
+                inicio: i, fim: f,
                 config: { 
                     camposTexto: sels, 
-                    camposPersonalizados: [], 
+                    camposPersonalizados: extras, 
                     observacoesTexto: document.getElementById('txt_obs_admin').value,
                     arquivos: { foto: document.getElementById('req_foto').checked, doc: document.getElementById('req_doc').checked },
                     exigeFicha: document.getElementById('req_ficha').checked,
@@ -629,7 +621,6 @@ function carregarInscricoes() {
     .then(jsonEventos => {
         if(jsonEventos.data) {
              jsonEventos.data.forEach(ev => { 
-                 // Proteção extra para garantir que só carregue eventos válidos
                  if(ev.id && ev.titulo) {
                      mapaEventos[ev.id] = ev.titulo; 
                      cacheEventos[ev.id] = ev; 
