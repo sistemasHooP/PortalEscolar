@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Validação de Documento Estudantil</title>
+    
+    <!-- Fontes (Poppins) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #16a34a; --success-bg: #dcfce7;
+            --danger: #dc2626;  --danger-bg: #fee2e2;
+            --bg-body: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        * { box-sizing: border-box; outline: none; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .validation-card {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 400px;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            text-align: center;
+            position: relative;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* HEADER DE STATUS */
+        .status-header {
+            padding: 20px;
+            color: white;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .status-valid { background-color: var(--success); }
+        .status-invalid { background-color: var(--danger); }
+        .status-loading { background-color: var(--text-muted); }
+
+        /* FOTO DO ALUNO */
+        .photo-container {
+            width: 140px;
+            height: 140px;
+            margin: -70px auto 0;
+            position: relative;
+            border-radius: 50%;
+            border: 5px solid white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: #e5e7eb;
+            overflow: hidden;
+            z-index: 10;
+        }
+        .photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* CONTEÚDO */
+        .card-content {
+            padding: 15px 25px 30px;
+        }
+
+        .student-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 15px 0 5px;
+            color: var(--primary);
+            line-height: 1.3;
+        }
+
+        .student-cpf {
+            font-family: monospace;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            background: #f9fafb;
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            text-align: left;
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .data-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .data-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        .data-value {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .validity-badge {
+            margin-top: 20px;
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .valid-badge { background: var(--success-bg); color: var(--success); border: 1px solid #bbf7d0; }
+        .invalid-badge { background: var(--danger-bg); color: var(--danger); border: 1px solid #fecaca; }
+
+        .footer-official {
+            margin-top: 25px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            border-top: 1px solid #e5e7eb;
+            padding-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        /* LOGO DA INSTITUIÇÃO (NOVO) */
+        .org-logo-circle {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 3px solid #e5e7eb; /* Borda cinza suave */
+            padding: 4px;
+            background: white;
+            object-fit: contain;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        /* LOADERS */
+        .spinner {
+            width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid white; border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="app" class="validation-card">
+        <!-- ESTADO: CARREGANDO -->
+        <div id="loading-state">
+            <div class="status-header status-loading" style="height: 120px; flex-direction: column;">
+                <div class="spinner"></div>
+                <span style="font-size: 0.9rem; margin-top: 10px;">Verificando Autenticidade...</span>
+            </div>
+            <div class="card-content">
+                <p style="color: var(--text-muted);">Aguarde um momento.</p>
+            </div>
+        </div>
+
+        <!-- ESTADO: RESULTADO (Injetado via JS) -->
+        <div id="result-container" class="hidden">
+            <!-- Header Dinâmico -->
+            <div id="status-header-result" class="status-header"></div>
+            
+            <div class="photo-container">
+                <img id="student-photo" src="" alt="Foto do Estudante" onerror="this.src='https://via.placeholder.com/150?text=FOTO'">
+            </div>
+
+            <div class="card-content">
+                <h2 id="student-name" class="student-name"></h2>
+                <div id="student-cpf" class="student-cpf"></div>
+
+                <div class="data-grid">
+                    <div class="data-item">
+                        <span class="data-label">Instituição de Ensino</span>
+                        <span id="student-inst" class="data-value"></span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">Curso</span>
+                        <span id="student-course" class="data-value"></span>
+                    </div>
+                    <div class="data-item" style="flex-direction: row; justify-content: space-between;">
+                        <div>
+                            <span class="data-label">Matrícula</span><br>
+                            <span id="student-mat" class="data-value"></span>
+                        </div>
+                        <div style="text-align: right;">
+                             <span class="data-label">Vencimento</span><br>
+                             <span id="student-validity" class="data-value" style="color: var(--primary);"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="validity-badge-container"></div>
+
+                <div class="footer-official">
+                    <!-- LOGO OFICIAL (Redonda com Borda) -->
+                    <img id="org-logo" src="logo.png" class="org-logo-circle" alt="Logo Instituição" onerror="this.style.display='none'">
+                    
+                    <p id="sec-name">Secretaria de Educação</p>
+                    <small>Validação Oficial do Sistema de Transporte</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURAÇÃO DA API (MESMA DO ADMIN/APP)
+        const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Carrega Logo Oficial (Configuração Pública)
+            fetch(`${URL_API}?action=getPublicConfig`)
+                .then(res => res.json())
+                .then(json => {
+                    if(json.status === 'success' && json.config.urlLogo) {
+                        // Formata URL do Drive se necessário
+                        let logoUrl = json.config.urlLogo;
+                        if (logoUrl.includes('drive.google.com')) {
+                            const id = logoUrl.split(/\/d\/|id=/)[1].split(/\/|&/)[0];
+                            logoUrl = `https://lh3.googleusercontent.com/d/${id}`;
+                        }
+                        const img = document.getElementById('org-logo');
+                        img.src = logoUrl;
+                        img.style.display = 'block';
+                    }
+                })
+                .catch(err => console.log("Logo não carregada:", err));
+
+            // 2. Captura parâmetros da URL (?c=CHAVE)
+            const params = new URLSearchParams(window.location.search);
+            const chave = params.get('c');
+            const cpfParcial = params.get('d'); 
+
+            if (!chave) {
+                renderError("Código QR inválido ou incompleto.");
+                return;
+            }
+
+            // 3. Chama a API de Validação
+            fetch(`${URL_API}?action=apiValidarCarteirinha&c=${chave}`)
+                .then(response => response.json())
+                .then(json => {
+                    if (json.status === 'valid' || json.status === 'invalid') {
+                        renderResult(json);
+                    } else {
+                        renderError(json.message || "Documento não encontrado.");
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    renderError("Erro de conexão. Tente novamente.");
+                });
+        });
+
+        function renderResult(data) {
+            document.getElementById('loading-state').classList.add('hidden');
+            document.getElementById('result-container').classList.remove('hidden');
+
+            const header = document.getElementById('status-header-result');
+            const dados = data.dados;
+            const config = data.config;
+
+            // Configurações Visuais
+            document.getElementById('sec-name').innerText = config.secretaria || 'Secretaria de Educação';
+
+            // Preenche Dados
+            document.getElementById('student-name').innerText = dados.nome;
+            // Ofusca o CPF visualmente para privacidade pública
+            document.getElementById('student-cpf').innerText = formatarCPFOfuscado(dados.cpf);
+            document.getElementById('student-inst').innerText = dados.instituicao;
+            document.getElementById('student-course').innerText = dados.curso;
+            document.getElementById('student-mat').innerText = dados.matricula;
+            document.getElementById('student-validity').innerText = dados.validade;
+            document.getElementById('student-photo').src = dados.foto || 'https://via.placeholder.com/150?text=FOTO';
+
+            // Lógica de Status (Verde ou Vermelho)
+            if (data.status === 'valid') {
+                header.className = 'status-header status-valid';
+                header.innerHTML = '<i class="fa-solid fa-circle-check"></i> DOCUMENTO VÁLIDO';
+                
+                document.getElementById('validity-badge-container').innerHTML = `
+                    <div class="validity-badge valid-badge">
+                        <i class="fa-solid fa-check"></i> Regular
+                    </div>
+                `;
+                
+                // Aplica cor personalizada da secretaria no nome
+                document.querySelector('.student-name').style.color = config.cor || '#2563eb';
+            } else {
+                header.className = 'status-header status-invalid';
+                header.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> INVÁLIDO / VENCIDO';
+                
+                document.getElementById('validity-badge-container').innerHTML = `
+                    <div class="validity-badge invalid-badge">
+                        <i class="fa-solid fa-ban"></i> ${data.razao || 'Não Autorizado'}
+                    </div>
+                `;
+            }
+        }
+
+        function renderError(msg) {
+            document.getElementById('loading-state').classList.add('hidden');
+            document.getElementById('result-container').classList.remove('hidden');
+            
+            // Renderiza estado de erro crítico (Não encontrado)
+            const header = document.getElementById('status-header-result');
+            header.className = 'status-header status-invalid';
+            header.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> ERRO DE VALIDAÇÃO';
+            
+            document.querySelector('.card-content').innerHTML = `
+                <div style="padding: 40px 20px; text-align: center;">
+                    <i class="fa-solid fa-file-circle-question" style="font-size: 4rem; color: #dc2626; margin-bottom: 20px;"></i>
+                    <h3 style="margin: 0; color: #1f2937;">Registro Não Encontrado</h3>
+                    <p style="color: #6b7280; margin-top: 10px;">${msg}</p>
+                    <a href="index.html" style="display: inline-block; margin-top: 20px; text-decoration: none; color: #2563eb; font-weight: 600;">Ir para o Portal</a>
+                </div>
+            `;
+            
+            document.querySelector('.photo-container').style.display = 'none';
+        }
+
+        function formatarCPFOfuscado(cpf) {
+            if(!cpf) return '---';
+            const limp = cpf.replace(/\D/g, '');
+            if(limp.length !== 11) return cpf;
+            return `***.${limp.substr(3,3)}.${limp.substr(6,3)}-**`;
+        }
+    </script>
+</body>
+</html>
