@@ -41,7 +41,7 @@ let paginaAtual = 1;
 const ITENS_POR_PAGINA = 50;
 let selecionados = new Set(); 
 
-// --- LOADING ---
+// --- LOADING CUSTOMIZADO ---
 function showLoading(msg = 'Processando...') {
     Swal.fire({
         html: `
@@ -60,7 +60,7 @@ function safeDate(val) {
     try { const d = new Date(val); return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('pt-BR'); } catch(e) { return '-'; }
 }
 
-// --- AUTH ---
+// --- AUTENTICAÇÃO ---
 function toggleSenha() {
     const input = document.getElementById('admin-pass');
     const icon = document.querySelector('.password-toggle');
@@ -89,7 +89,7 @@ function logout() {
     window.location.reload(); 
 }
 
-// --- NAVEGAÇÃO ---
+// --- NAVEGAÇÃO APP SHELL ---
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -144,7 +144,7 @@ function salvarConfigDrive() {
     });
 }
 
-// --- DASHBOARD ---
+// --- DASHBOARD E DADOS GERAIS ---
 function carregarDashboard() {
     const token = sessionStorage.getItem('admin_token');
     Promise.all([
@@ -221,7 +221,7 @@ function atualizarSelectsRelatorio(eventos, inscricoes) {
     }
 }
 
-// --- RELATÓRIO PDF ---
+// --- RELATÓRIO PDF LISTA (Geral) ---
 function gerarRelatorioTransporte() {
     const eventoId = document.getElementById('relatorio-evento').value;
     const instFiltro = document.getElementById('relatorio-inst').value;
@@ -514,8 +514,9 @@ function modalNovoEvento() {
         width: '900px',
         html: `
             <div style="background:#eff6ff; color:#1e40af; padding:10px; border-radius:6px; font-size:0.85rem; margin-bottom:15px; border:1px solid #dbeafe;">
-                <i class="fa-solid fa-info-circle"></i> <strong>Nota:</strong> CPF e E-mail são obrigatórios.
+                <i class="fa-solid fa-info-circle"></i> <strong>Nota:</strong> CPF e E-mail são campos fixos obrigatórios.
             </div>
+
             <div class="swal-grid-2">
                 <div><label class="swal-label">Título</label><input id="swal-titulo" class="swal-input-custom" placeholder="Ex: Transporte 2025.1"></div>
                 <div><label class="swal-label">Descrição</label><input id="swal-desc" class="swal-input-custom" placeholder="Ex: Período letivo regular"></div>
@@ -574,7 +575,7 @@ function modalNovoEvento() {
 
             if(!t || !i || !f) { Swal.showValidationMessage('Preencha dados básicos.'); return false; }
 
-            const sels = ['Cidade', 'Estado']; 
+            const sels = ['Cidade', 'Estado']; // CPF e Email são fixos
             CAMPOS_PADRAO.forEach(c => { 
                 const el = document.getElementById(`check_${c.key}`);
                 if(el && el.checked) sels.push(c.key); 
@@ -675,9 +676,8 @@ function renderizarProximaPagina() {
         let d = {}; try { d = JSON.parse(ins.dadosJson); } catch(e){}
         const checked = selecionados.has(ins.chave) ? 'checked' : '';
         
-        let btnFicha = ins.link_ficha ? 
-            `<a href="${ins.link_ficha}" target="_blank" class="btn-icon bg-view" title="Baixar Ficha PDF"><i class="fa-solid fa-file-pdf"></i></a>` : 
-            `<button class="btn-icon bg-view" style="background:#6366f1;" onclick="gerarFicha('${ins.chave}')" title="Gerar Ficha"><i class="fa-solid fa-print"></i></button>`;
+        // Botão de Ficha: Agora chama a nova função LOCAL
+        let btnFicha = `<button class="btn-icon bg-view" style="background:#6366f1;" onclick="gerarFicha('${ins.chave}')" title="Gerar Ficha"><i class="fa-solid fa-print"></i></button>`;
         
         let btnCartAdm = '';
         const evento = cacheEventos[ins.eventoId];
@@ -869,18 +869,118 @@ function acaoEmMassa(s) {
     });
 }
 
+// --- NOVA FUNÇÃO GERAR FICHA (LOCAL / FRONT-END) ---
 function gerarFicha(chave) {
-    Swal.fire({ title: 'Emitir Ficha Oficial', text: "O status do aluno mudará para 'Ficha Emitida'.", icon: 'info', showCancelButton: true, confirmButtonText: 'Confirmar Emissão' }).then((r) => {
-        if(r.isConfirmed) {
-            showLoading('Gerando PDF...');
-            fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'gerarFichaPDF', senha: sessionStorage.getItem('admin_token'), chave: chave }) })
-            .then(res => res.json()).then(json => {
-                Swal.close();
-                if(json.status === 'success') { Swal.fire('Sucesso', 'Ficha gerada!', 'success'); const item = todasInscricoes.find(i => i.chave === chave); if(item) { item.status = 'Ficha Emitida'; item.link_ficha = json.link; } resetEFiltrar(); } 
-                else { Swal.fire('Erro', json.message, 'error'); }
-            });
+    const inscricao = todasInscricoes.find(i => i.chave === chave);
+    if (!inscricao) return Swal.fire('Erro', 'Inscrição não encontrada na memória.', 'error');
+
+    let dados = {};
+    try { dados = JSON.parse(inscricao.dadosJson); } catch(e) {}
+
+    let evento = cacheEventos[inscricao.eventoId] || { titulo: 'Documento Oficial' };
+
+    // Tenta obter a URL da foto corrigida para exibição direta
+    let fotoUrl = '';
+    if(dados.linkFoto) {
+        if(dados.linkFoto.includes('drive.google.com')) {
+             let id = dados.linkFoto.split(/\/d\/|id=/)[1].split(/\/|&/)[0];
+             fotoUrl = `https://lh3.googleusercontent.com/d/${id}`;
+        } else {
+             fotoUrl = dados.linkFoto;
         }
+    }
+
+    // HTML da Foto (ou Placeholder)
+    const imgTag = fotoUrl 
+        ? `<div class="ficha-photo-box" style="border:none;"><img src="${fotoUrl}" style="width:100px; height:130px; object-fit:cover; border:1px solid #000;"></div>`
+        : `<div class="ficha-photo-box">SEM FOTO</div>`;
+
+    // Montagem das Seções de Dados
+    // Dados Pessoais
+    const camposPessoais = ['NomeCompleto', 'CPF', 'DataNascimento', 'Telefone', 'Endereco', 'Cidade', 'Estado', 'Email'];
+    let htmlPessoais = '';
+    camposPessoais.forEach(key => {
+        const label = LABELS_TODOS_CAMPOS[key] || key;
+        const val = dados[key] || '-';
+        htmlPessoais += `<div class="ficha-row"><span class="ficha-label">${label}:</span> <span class="ficha-value">${val}</span></div>`;
     });
+
+    // Dados Acadêmicos
+    const camposAcad = ['NomeInstituicao', 'NomeCurso', 'PeriodoCurso', 'Matricula'];
+    let htmlAcad = '';
+    camposAcad.forEach(key => {
+        const label = LABELS_TODOS_CAMPOS[key] || key;
+        const val = dados[key] || '-';
+        htmlAcad += `<div class="ficha-row"><span class="ficha-label">${label}:</span> <span class="ficha-value">${val}</span></div>`;
+    });
+
+    // Outros Campos (Personalizados e Extras)
+    let htmlOutros = '';
+    const ignorar = [...camposPessoais, ...camposAcad, 'linkFoto', 'linkDoc', 'Assinatura', 'Observacoes'];
+    for (const [key, val] of Object.entries(dados)) {
+        if (!ignorar.includes(key)) {
+            htmlOutros += `<div class="ficha-row"><span class="ficha-label">${key}:</span> <span class="ficha-value">${val}</span></div>`;
+        }
+    }
+    if(htmlOutros === '') htmlOutros = '<div style="font-style:italic; color:#666; padding:5px;">Nenhuma informação adicional.</div>';
+
+    // Montagem Final do HTML
+    const htmlFicha = `
+        <div class="ficha-container">
+            <div class="ficha-header">
+                <img src="${URL_LOGO}" alt="Logo" class="ficha-logo" onerror="this.style.opacity='0'">
+                <div class="ficha-title">FICHA DE INSCRIÇÃO</div>
+                <div class="ficha-subtitle">${evento.titulo}</div>
+                <div class="ficha-key-box">CHAVE: ${chave}</div>
+            </div>
+
+            <div class="ficha-top-row">
+                <div style="flex:1;">
+                    <div class="ficha-section">
+                        <div class="ficha-section-header">DADOS PESSOAIS</div>
+                        <div class="ficha-section-body">${htmlPessoais}</div>
+                    </div>
+                </div>
+                ${imgTag}
+            </div>
+
+            <div class="ficha-section">
+                <div class="ficha-section-header">DADOS ACADÊMICOS</div>
+                <div class="ficha-section-body">${htmlAcad}</div>
+            </div>
+
+            <div class="ficha-section">
+                <div class="ficha-section-header">OUTRAS INFORMAÇÕES</div>
+                <div class="ficha-section-body">${htmlOutros}</div>
+            </div>
+
+            <div class="ficha-sign-area">
+                <div class="ficha-sign-line"></div>
+                <div style="font-weight:bold; font-size:12px;">ASSINATURA DO ALUNO(A)</div>
+                <div style="font-size:11px; margin-top:3px;">${dados.NomeCompleto || ''}</div>
+            </div>
+
+            <div class="ficha-footer">
+                Documento oficial gerado em ${new Date().toLocaleString('pt-BR')} - Secretaria de Educação
+            </div>
+        </div>
+    `;
+
+    // Injeta no Print Layer e Imprime
+    const pl = document.getElementById('print-layer') || document.createElement('div');
+    pl.id = 'print-layer';
+    if(!pl.parentElement) document.body.appendChild(pl);
+    
+    pl.innerHTML = htmlFicha;
+    
+    // Atualiza status silenciosamente se ainda não foi emitida
+    if(inscricao.status !== 'Ficha Emitida') {
+        fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'atualizarStatus', senha: sessionStorage.getItem('admin_token'), chave: chave, novoStatus: 'Ficha Emitida' }) });
+        inscricao.status = 'Ficha Emitida'; // Atualiza local
+        // Não chamamos resetEFiltrar para não pular a tela do usuário antes da impressão
+    }
+
+    setTimeout(() => window.print(), 500);
 }
 
 function imprimirCarteirinhaAdmin(chave) {
