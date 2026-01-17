@@ -27,12 +27,14 @@ const LABELS_TODOS_CAMPOS = {
     'NomeCurso': 'Curso',
     'PeriodoCurso': 'Período',
     'Matricula': 'Matrícula',
-    'Email': 'E-mail'
+    'Email': 'E-mail',
+    'RG': 'RG'
 };
 
 // Estado da Aplicação
 let mapaEventos = {}; 
 let cacheEventos = {}; 
+let cacheConfigGeral = null; // Cache para configs da carteirinha
 let chartEventosInstance = null; let chartStatusInstance = null;
 let todasInscricoes = [];       
 let inscricoesFiltradas = []; 
@@ -80,6 +82,7 @@ function realizarLogin(e) {
             document.getElementById('admin-panel').classList.remove('hidden');
             sessionStorage.setItem('admin_token', pass);
             carregarDashboard();
+            carregarConfigGeral(true); // Carrega config em background
         } else { Swal.fire({icon: 'error', title: 'Acesso Negado', text: 'Senha incorreta.'}); }
     }).catch(() => Swal.fire('Erro de Conexão', 'Verifique sua internet.', 'error'));
 }
@@ -114,33 +117,50 @@ function switchTab(tabId) {
     if(tabId === 'tab-inscricoes') carregarInscricoes();
     if(tabId === 'tab-config') {
         carregarInstituicoes();
-        carregarConfigDrive(); 
+        carregarConfigGeral(); 
     }
 }
 
-// --- CONFIGURAÇÃO DRIVE ---
-function carregarConfigDrive() {
-    fetch(`${URL_API}?action=getConfigDrive&token=${sessionStorage.getItem('admin_token')}`)
+// --- CONFIGURAÇÃO GERAL (DRIVE + CARTEIRINHA) ---
+function carregarConfigGeral(silent = false) {
+    fetch(`${URL_API}?action=getConfigGeral&token=${sessionStorage.getItem('admin_token')}`)
     .then(r => r.json())
     .then(json => {
         if(json.status === 'success') {
-            document.getElementById('config-drive-id').value = json.idPasta || '';
+            cacheConfigGeral = json; // Salva em cache para uso na impressão
+            
+            // Preenche campos se estiver na aba config
+            const elDrive = document.getElementById('config-drive-id');
+            if(elDrive) elDrive.value = json.idPasta || '';
+            
+            const elCor = document.getElementById('config-cor-cart');
+            if(elCor) elCor.value = json.corCart || '#2563eb';
+            
+            const elSec = document.getElementById('config-nome-sec');
+            if(elSec) elSec.value = json.nomeSec || '';
+            
+            const elResp = document.getElementById('config-nome-resp');
+            if(elResp) elResp.value = json.nomeSecretario || '';
         }
     });
 }
 
-function salvarConfigDrive() {
-    const id = document.getElementById('config-drive-id').value;
-    showLoading('Salvando...');
-    fetch(URL_API, { 
-        method: 'POST', 
-        body: JSON.stringify({ 
-            action: 'salvarConfigDrive', 
-            senha: sessionStorage.getItem('admin_token'),
-            idPasta: id 
-        }) 
-    }).then(() => {
-        Swal.fire({icon: 'success', title: 'Configuração Salva!', timer: 1500, showConfirmButton: false});
+function salvarConfigGeral() {
+    showLoading('Salvando Configurações...');
+    
+    const dados = {
+        action: 'salvarConfigGeral', 
+        senha: sessionStorage.getItem('admin_token'),
+        idPasta: document.getElementById('config-drive-id').value,
+        corCart: document.getElementById('config-cor-cart').value,
+        nomeSec: document.getElementById('config-nome-sec').value,
+        nomeSecretario: document.getElementById('config-nome-resp').value
+    };
+
+    fetch(URL_API, { method: 'POST', body: JSON.stringify(dados) })
+    .then(() => {
+        carregarConfigGeral(true); // Atualiza cache
+        Swal.fire({icon: 'success', title: 'Configurações Salvas!', timer: 1500, showConfirmButton: false});
     });
 }
 
@@ -382,7 +402,7 @@ function construirRelatorioFinal(alunos, colunasKeys, eventoId) {
     setTimeout(() => window.print(), 500);
 }
 
-// --- EVENTOS (WIDESCREEN MODAL) ---
+// --- EVENTOS ---
 function carregarEventosAdmin() {
     fetch(`${URL_API}?action=getTodosEventos`).then(res => res.json()).then(json => {
         const tbody = document.getElementById('lista-eventos-admin'); 
@@ -527,19 +547,12 @@ function modalNovoEvento() {
             </div>
 
             <div class="swal-grid-2">
-                <div>
-                    <label class="swal-label">Título do Evento</label>
-                    <input id="swal-titulo" class="swal-input-custom" placeholder="Ex: Transporte 2025.1">
-                </div>
-                <div>
-                    <label class="swal-label">Descrição Curta</label>
-                    <input id="swal-desc" class="swal-input-custom" placeholder="Ex: Período letivo regular">
-                </div>
+                <div><label class="swal-label">Título do Evento</label><input id="swal-titulo" class="swal-input-custom" placeholder="Ex: Transporte 2025.1"></div>
+                <div><label class="swal-label">Descrição Curta</label><input id="swal-desc" class="swal-input-custom" placeholder="Ex: Período letivo regular"></div>
             </div>
-            
             <div class="swal-grid-2">
-                <div><label class="swal-label">Início das Inscrições</label><input type="date" id="swal-inicio" class="swal-input-custom"></div>
-                <div><label class="swal-label">Fim das Inscrições</label><input type="date" id="swal-fim" class="swal-input-custom"></div>
+                <div><label class="swal-label">Início</label><input type="date" id="swal-inicio" class="swal-input-custom"></div>
+                <div><label class="swal-label">Fim</label><input type="date" id="swal-fim" class="swal-input-custom"></div>
             </div>
 
             <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid #e2e8f0;">
@@ -730,13 +743,7 @@ function renderizarProximaPagina() {
         tbody.innerHTML += `<tr>
             <td style="text-align:center;"><input type="checkbox" class="bulk-check" value="${ins.chave}" ${checked} onclick="toggleCheck('${ins.chave}')"></td>
             <td>${safeDate(ins.data)}</td>
-            <td>
-                <div style="font-weight:600; font-size:0.9rem; color:var(--text-main);">${d.NomeCompleto||'Sem Nome'}</div>
-                <div style="display:flex; flex-direction:column; gap:2px;">
-                    <small style="color:var(--text-secondary);">${d.CPF||'-'}</small>
-                    <small style="color:var(--primary); font-family:monospace; font-weight:600; background:var(--primary-light); padding:2px 6px; border-radius:4px; width:fit-content;">${ins.chave}</small>
-                </div>
-            </td>
+            <td><div style="font-weight:600; font-size:0.9rem; color:var(--text-main);">${d.NomeCompleto||'Sem Nome'}</div><small style="color:var(--text-secondary);">${d.CPF||'-'}</small></td>
             <td><div class="badge" style="background:#f1f5f9; color:#334155; font-weight:600; font-size:0.85rem; padding: 6px 12px; border: 1px solid #cbd5e1;">${mapaEventos[ins.eventoId]||ins.eventoId}</div></td>
             <td><span class="badge ${ins.status.replace(/\s/g, '')}">${ins.status}</span></td>
             <td style="text-align:right;">
@@ -851,10 +858,7 @@ function abrirEdicaoInscricao(chave) {
                     </div>
 
                     <h3 style="font-size: 1.2rem; margin: 0; color: var(--primary); font-weight:700;">${dados.NomeCompleto || 'Estudante'}</h3>
-                    <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 10px; font-family: monospace;">${dados.CPF || ''}</p>
-                    <div style="background: #e2e8f0; color: #475569; padding: 5px 10px; border-radius: 4px; font-family: monospace; font-weight: bold; margin-bottom: 25px; display: inline-block;">
-                        <i class="fa-solid fa-key"></i> ${inscricao.chave}
-                    </div>
+                    <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 25px; font-family: monospace;">${dados.CPF || ''}</p>
                     
                     <div style="text-align: left; margin-bottom: 20px;">
                         <label class="swal-label">Status Atual</label>
@@ -928,7 +932,7 @@ function abrirEdicaoInscricao(chave) {
             showLoading('Salvando...');
             
             const promiseStatus = (result.value.status !== inscricao.status) ? 
-                fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'atualizarStatus', senha: sessionStorage.getItem('admin_token'), chave: chave, novoStatus: result.value.status }) }) : 
+                fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'atualizarStatus', senha: sessionStorage.getItem('admin_token'), chave, novoStatus: result.value.status }) }) : 
                 Promise.resolve();
 
             promiseStatus.then(() => {
@@ -996,14 +1000,7 @@ function gerarFicha(chave) {
     let htmlPessoais = '';
     camposPessoais.forEach(key => {
         const label = LABELS_TODOS_CAMPOS[key] || key;
-        let val = dados[key] || '-';
-        
-        // CORREÇÃO: Formatar Data de Nascimento
-        if(key === 'DataNascimento' && val !== '-') {
-            const parts = val.split('-');
-            if(parts.length === 3) val = `${parts[2]}/${parts[1]}/${parts[0]}`;
-        }
-
+        const val = dados[key] || '-';
         htmlPessoais += `<div class="ficha-row"><span class="ficha-label">${label}:</span> <span class="ficha-value">${val}</span></div>`;
     });
 
@@ -1104,15 +1101,25 @@ function gerarFicha(chave) {
     }
 }
 
+// --- IMPRIMIR CARTEIRINHA PRO (COM QR CODE) ---
 function imprimirCarteirinhaAdmin(chave) {
-    showLoading('Carregando Dados...');
+    showLoading('Gerando Carteirinha...');
+    
     fetch(`${URL_API}?action=consultarInscricao&chave=${chave}`)
     .then(r => r.json())
     .then(j => {
-        Swal.close();
-        if(j.status !== 'success') return Swal.fire('Erro', 'Dados não encontrados.', 'error');
+        if(j.status !== 'success') { Swal.fire('Erro', 'Dados não encontrados.', 'error'); return; }
+        
+        // Garante que o cache de config foi carregado
+        if(!cacheConfigGeral) {
+            // Se por algum motivo não tiver cache, usa padrão
+            cacheConfigGeral = { corCart: "#2563eb", nomeSec: "Secretaria de Educação", nomeSecretario: "Responsável" };
+        }
         
         const aluno = j.data.aluno;
+        const config = cacheConfigGeral;
+        
+        // Tratamento da Foto
         let imgSrc = 'https://via.placeholder.com/150?text=FOTO';
         if (aluno.foto) {
             if (aluno.foto.startsWith('data:image') || aluno.foto.startsWith('http')) {
@@ -1124,33 +1131,117 @@ function imprimirCarteirinhaAdmin(chave) {
             }
         }
 
-        const htmlCarteirinha = `
-            <div class="carteirinha-container" style="page-break-inside: avoid; margin: 20px auto;">
-                <div class="carteirinha-card" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
-                    <div class="cart-header">
-                        <img src="${URL_LOGO}" alt="Logo" class="cart-logo" style="background:white; border-radius:50%;">
-                        <div><h3>TRANSPORTE ESCOLAR</h3><small>Secretaria de Educação</small></div>
-                    </div>
-                    <div class="cart-body">
-                        <div class="cart-photo"><img src="${imgSrc}" alt="Foto" style="width:100%; height:100%; object-fit:cover;"></div>
-                        <div class="cart-info">
-                            <h2 style="font-size:16px; margin:0 0 5px 0;">${aluno.nome}</h2>
-                            <p style="font-size:11px; margin:0;">${aluno.instituicao}</p>
-                            <p style="font-size:11px; margin:0;">${aluno.curso}</p>
-                            <div class="cart-meta">
-                                <span>Mat: <b>${aluno.matricula}</b></span>
-                                <span>Validade: <b>${aluno.validade}</b></span>
-                            </div>
+        // Gera QR Code
+        const qrCanvas = document.createElement('canvas');
+        const qr = new QRious({
+            element: qrCanvas,
+            value: `VALID:${chave}|${aluno.cpf}`, // Dados para validação
+            size: 200
+        });
+        const qrDataUrl = qrCanvas.toDataURL();
+
+        // Template HTML (Frente e Verso)
+        // Usamos CSS Grid para colocar lado a lado na impressão paisagem
+        const htmlCart = `
+            <div class="print-page-landscape" style="display:flex; justify-content:center; align-items:center; height:100vh; gap:20px;">
+                
+                <!-- FRENTE -->
+                <div class="cart-pro-card" style="border: 2px solid ${config.corCart};">
+                    <div class="cart-pro-header" style="background:${config.corCart};">
+                        <img src="${URL_LOGO}" class="cart-pro-logo">
+                        <div class="cart-pro-header-text">
+                            <h3>CARTEIRA DE ESTUDANTIL</h3>
+                            <small>${config.nomeSec}</small>
                         </div>
                     </div>
-                    <div class="cart-footer"><span>Uso Pessoal e Intransferível</span></div>
+                    <div class="cart-pro-body">
+                        <div class="cart-pro-photo-frame" style="border-color:${config.corCart};">
+                            <img src="${imgSrc}">
+                        </div>
+                        <div class="cart-pro-info">
+                            <h2 style="color:${config.corCart};">${aluno.nome}</h2>
+                            <p><strong>CURSO:</strong> ${aluno.curso}</p>
+                            <p><strong>INSTITUIÇÃO:</strong> ${aluno.instituicao}</p>
+                        </div>
+                    </div>
+                    <div class="cart-pro-footer" style="background:${config.corCart};">
+                        ENSINO SUPERIOR / TÉCNICO
+                    </div>
+                </div>
+
+                <!-- VERSO -->
+                <div class="cart-pro-card" style="border: 2px solid ${config.corCart}; position:relative;">
+                    <div class="cart-pro-body-back">
+                        <div class="cart-pro-row">
+                            <span><strong>CPF:</strong> ${aluno.cpf}</span>
+                            <span><strong>RG:</strong> ${aluno.rg || '----------'}</span>
+                        </div>
+                        <div class="cart-pro-row">
+                            <span><strong>NASCIMENTO:</strong> ${aluno.nascimento}</span>
+                            <span><strong>MATRÍCULA:</strong> ${aluno.matricula}</span>
+                        </div>
+                        
+                        <div class="cart-pro-validade" style="border: 2px solid ${config.corCart}; color:${config.corCart};">
+                            VALIDADE: ${aluno.validade}
+                        </div>
+
+                        <div class="cart-pro-qr">
+                            <img src="${qrDataUrl}" style="width:90px; height:90px;">
+                        </div>
+                        
+                        <div class="cart-pro-sign">
+                            <div class="line"></div>
+                            ${config.nomeSecretario}
+                        </div>
+                    </div>
+                    <div class="cart-pro-footer-back" style="background:${config.corCart};">
+                        Lei Federal nº 12.933/2013
+                    </div>
                 </div>
             </div>
+            
+            <style>
+                .cart-pro-card {
+                    width: 85.6mm; height: 53.98mm; /* Tamanho Cartão Crédito */
+                    background: white; border-radius: 10px; overflow: hidden;
+                    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+                    display: flex; flex-direction: column;
+                    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+                }
+                .cart-pro-header { height: 40px; display: flex; align-items: center; padding: 0 10px; color: white; }
+                .cart-pro-logo { height: 30px; width: 30px; background: white; border-radius: 50%; padding: 2px; margin-right: 8px; }
+                .cart-pro-header-text h3 { margin: 0; font-size: 9px; font-weight: 800; }
+                .cart-pro-header-text small { font-size: 6px; text-transform: uppercase; }
+                .cart-pro-body { flex: 1; display: flex; padding: 10px; align-items: center; }
+                .cart-pro-photo-frame { width: 28mm; height: 35mm; border: 2px solid; margin-right: 10px; border-radius: 4px; overflow: hidden; }
+                .cart-pro-photo-frame img { width: 100%; height: 100%; object-fit: cover; }
+                .cart-pro-info h2 { margin: 0 0 5px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; line-height: 1.1; }
+                .cart-pro-info p { margin: 2px 0; font-size: 8px; text-transform: uppercase; }
+                .cart-pro-footer { height: 18px; display: flex; align-items: center; justify-content: center; color: white; font-size: 7px; font-weight: bold; letter-spacing: 1px; }
+
+                /* VERSO */
+                .cart-pro-body-back { flex: 1; padding: 10px; font-size: 8px; position: relative; }
+                .cart-pro-row { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px dotted #ccc; padding-bottom: 2px; }
+                .cart-pro-validade { position: absolute; top: 40px; left: 10px; padding: 2px 5px; font-weight: bold; border-radius: 4px; font-size: 9px; }
+                .cart-pro-qr { position: absolute; top: 10px; right: 10px; }
+                .cart-pro-sign { position: absolute; bottom: 10px; width: 100%; text-align: center; font-weight: bold; font-size: 7px; }
+                .cart-pro-sign .line { width: 60%; border-top: 1px solid #000; margin: 0 auto 2px; }
+                .cart-pro-footer-back { height: 15px; display: flex; align-items: center; justify-content: center; color: white; font-size: 6px; }
+            </style>
         `;
-        let printLayer = document.getElementById('print-layer');
-        if (!printLayer) { printLayer = document.createElement('div'); printLayer.id = 'print-layer'; document.body.appendChild(printLayer); }
-        printLayer.innerHTML = htmlCarteirinha;
-        setTimeout(() => window.print(), 500);
+
+        const pl = document.getElementById('print-layer') || document.createElement('div');
+        pl.id = 'print-layer';
+        if(!pl.parentElement) document.body.appendChild(pl);
+        pl.innerHTML = htmlCart;
+        
+        // Aguarda a imagem carregar
+        const imgEl = pl.querySelector('.cart-pro-photo-frame img');
+        if(imgEl && !imgEl.complete) {
+            imgEl.onload = () => { Swal.close(); setTimeout(() => window.print(), 200); };
+        } else {
+            Swal.close(); setTimeout(() => window.print(), 200);
+        }
     });
 }
 
