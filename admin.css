@@ -48,7 +48,6 @@ html, body {
 }
 
 /* --- UTILS --- */
-/* Esta classe garante que as abas sumam quando inativas */
 .hidden { display: none !important; }
 
 /* --- GRID MESTRE (APP SHELL) --- */
@@ -144,7 +143,7 @@ html, body {
     background: var(--bg-body);
 }
 
-/* Scroll Area ÚNICA: Apenas esta div rola o conteúdo */
+/* Scroll Area ÚNICA */
 .scroll-area {
     flex: 1;
     overflow-y: auto;
@@ -155,7 +154,6 @@ html, body {
 
 /* Abas (Conteúdo) */
 .tab-content {
-    /* Não defina height 100% aqui para deixar o conteúdo crescer naturalmente */
     display: block;
     width: 100%;
     animation: fadeIn 0.3s ease-in-out;
@@ -299,7 +297,8 @@ html, body {
 .btn-icon:hover { transform: scale(1.1); }
 .bg-edit { background: var(--primary); }
 .bg-view { background: var(--secondary); }
-.bg-delete { background: var(--red-text); background-color: var(--red-bg); }
+.bg-delete { background: var(--red-bg); color: var(--red-text); }
+.bg-print { background: var(--accent); color: #fff; }
 
 /* --- BARRA FLUTUANTE --- */
 .bulk-bar {
@@ -351,11 +350,122 @@ html, body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 
-/* Print */
+/* --- ESTILOS DE IMPRESSÃO (FICHA) --- */
 #print-layer { display: none; }
+
 @media print {
     body > *:not(#print-layer) { display: none !important; }
-    #print-layer { display: block !important; position: absolute; top:0; left:0; width:100%; }
+    
+    #print-layer { 
+        display: block !important; 
+        position: absolute; 
+        top: 0; left: 0; width: 100%; 
+        background: white; 
+        padding: 0;
+        margin: 0;
+    }
+
+    @page { size: A4; margin: 10mm; }
+
+    /* Layout da Ficha A4 */
+    .ficha-container {
+        font-family: Arial, sans-serif;
+        color: #000;
+        width: 100%;
+        max-width: 210mm; /* Largura A4 */
+        margin: 0 auto;
+    }
+
+    .ficha-header {
+        text-align: center;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px;
+        position: relative;
+    }
+
+    .ficha-logo {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 60px;
+        width: auto;
+    }
+
+    .ficha-title { font-size: 18px; font-weight: bold; text-transform: uppercase; margin: 0; }
+    .ficha-subtitle { font-size: 14px; margin: 5px 0; }
+    .ficha-key-box {
+        border: 2px solid #000;
+        display: inline-block;
+        padding: 5px 15px;
+        font-weight: bold;
+        margin-top: 10px;
+        font-family: monospace;
+        font-size: 16px;
+    }
+
+    /* Foto Box */
+    .ficha-top-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        align-items: flex-start;
+    }
+    
+    .ficha-photo-box {
+        width: 100px;
+        height: 130px;
+        border: 1px solid #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        text-transform: uppercase;
+        margin-left: 20px;
+    }
+    .ficha-photo-box img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* Seções de Dados */
+    .ficha-section { margin-bottom: 15px; border: 1px solid #000; }
+    .ficha-section-header {
+        background-color: #eee;
+        border-bottom: 1px solid #000;
+        padding: 5px 10px;
+        font-weight: bold;
+        font-size: 12px;
+        text-transform: uppercase;
+        -webkit-print-color-adjust: exact;
+    }
+    .ficha-section-body { padding: 10px; font-size: 12px; }
+
+    .ficha-row {
+        display: flex;
+        border-bottom: 1px dotted #ccc;
+        padding: 4px 0;
+    }
+    .ficha-row:last-child { border-bottom: none; }
+    
+    .ficha-label { font-weight: bold; width: 140px; flex-shrink: 0; text-transform: uppercase; font-size: 11px; }
+    .ficha-value { flex-grow: 1; }
+
+    /* Assinatura */
+    .ficha-sign-area {
+        margin-top: 60px;
+        text-align: center;
+    }
+    .ficha-sign-line {
+        border-top: 1px solid #000;
+        width: 60%;
+        margin: 0 auto 5px;
+    }
+    .ficha-footer {
+        margin-top: 30px;
+        font-size: 10px;
+        text-align: center;
+        border-top: 1px solid #ccc;
+        padding-top: 5px;
+        color: #555;
+    }
 }
 
 @media (max-width: 1200px) {
