@@ -1,5 +1,8 @@
 const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
-// ATENÇÃO: A URL de validação agora é direta no Script, eliminando a dependência do GitHub para essa função.
+
+// URL DA PÁGINA DE VALIDAÇÃO (GITHUB PAGES)
+// O QR Code levará para aqui, e esta página consultará a API via JSON
+const URL_VALIDACAO = 'https://sistemashoop.github.io/PortalEscolar/validacao.html';
 
 // --- CONFIGURAÇÃO GERAL ---
 const URL_LOGO_FALLBACK = './logo.png'; 
@@ -1159,7 +1162,7 @@ function imprimirCarteirinhaAdmin(chave) {
         
         // >>> MUDANÇA CRÍTICA AQUI: <<<
         // O QR Code aponta para o Google Script, não mais para o GitHub
-        const validationUrl = `${URL_API}?action=validate&c=${chave}`;
+        const validationUrl = `${URL_VALIDACAO}?c=${chave}`;
         
         const qrCanvas = document.createElement('canvas');
         const qr = new QRious({
