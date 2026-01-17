@@ -1,11 +1,14 @@
 /* --- Variáveis de Design (Modern Edu Theme) --- */
 :root {
-    --primary: #2563eb;       /* Azul Institucional Vibrante */
-    --primary-dark: #1e40af;  /* Azul Escuro para interações */
+    --primary: #2563eb;        /* Azul Institucional Vibrante */
+    --primary-dark: #1e40af;   /* Azul Escuro para interações */
     --primary-light: #eff6ff; /* Fundo azul bem claro */
     --secondary: #0ea5e9;     /* Azul Cyan para gradientes */
     --accent: #f59e0b;        /* Laranja para destaques/alertas */
     
+    /* Variável Dinâmica da Carteirinha (Será alterada via JS pelo Admin) */
+    --card-color: #2563eb;    
+
     /* Cores de Fundo e Texto */
     --bg-body: #f1f5f9;       /* Fundo da página (Cinza azulado claro) */
     --bg-card: #ffffff;       /* Fundo branco */
@@ -563,36 +566,61 @@ input[type="file"] { display: none; }
 }
 .btn-ver-cart:hover { background: #1e40af; }
 
-/* --- CARTEIRINHA DIGITAL --- */
+/* --- CARTEIRINHA DIGITAL (ATUALIZADO V2.0 - FRENTE E VERSO) --- */
 .transparent-modal {
     background: transparent !important;
     box-shadow: none !important;
     padding: 0;
 }
 
+/* Container que define o espaço 3D */
 .carteirinha-wrapper {
-    perspective: 1000px;
     width: 100%;
     max-width: 350px;
+    height: 520px; /* Altura fixa para permitir rotação */
     margin: 0 auto;
+    perspective: 1200px; /* Perspectiva para o efeito 3D */
 }
 
-.carteirinha-card {
-    background: linear-gradient(135deg, #1e3a8a, #2563eb);
-    color: white;
-    border-radius: 20px;
-    padding: 20px;
+/* O cartão em si que vai girar */
+.carteirinha-card-inner {
     position: relative;
-    overflow: hidden;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.8s;
+    transform-style: preserve-3d;
+    cursor: pointer;
 }
 
-.cart-bg-pattern {
+/* Classe para ativar a rotação via JS */
+.carteirinha-card-inner.is-flipped {
+    transform: rotateY(180deg);
+}
+
+/* Estilos comuns para Frente e Verso */
+.carteirinha-face {
     position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    -webkit-backface-visibility: hidden; /* Safari */
+    backface-visibility: hidden;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.4);
+    /* Fundo dinâmico baseado na variável */
+    background: linear-gradient(135deg, var(--card-color), #0f172a); 
+    color: white;
+}
+
+/* --- FRENTE DA CARTEIRINHA --- */
+.carteirinha-front {
+    /* Padrão de fundo */
     background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
-    background-size: 10px 10px;
-    opacity: 0.5;
+    background-size: 15px 15px;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
 }
 
 .cart-header {
@@ -602,55 +630,160 @@ input[type="file"] { display: none; }
     margin-bottom: 20px;
     position: relative;
     z-index: 2;
+    text-align: left;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
 }
 
 .cart-logo {
-    width: 50px; height: 50px;
+    width: 45px; height: 45px;
     background: white;
     border-radius: 50%;
-    padding: 4px;
+    padding: 3px;
     object-fit: contain;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
-.cart-org-info h3 { font-size: 0.9rem; font-weight: 800; letter-spacing: 1px; line-height: 1.2; }
-.cart-org-info small { font-size: 0.7rem; text-transform: uppercase; opacity: 0.8; }
+.cart-org-info h3 { font-size: 0.85rem; font-weight: 800; letter-spacing: 0.5px; line-height: 1.2; text-transform: uppercase; margin: 0; }
+.cart-org-info small { font-size: 0.7rem; text-transform: uppercase; opacity: 0.9; font-weight: 300; display: block; margin-top: 2px;}
 
-.cart-body { display: flex; gap: 15px; position: relative; z-index: 2; }
+.cart-body { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center;
+    justify-content: center;
+    position: relative; 
+    z-index: 2; 
+    gap: 15px;
+}
 
 .cart-photo-frame {
-    width: 90px; height: 120px;
+    width: 110px; height: 140px;
     background: #e2e8f0;
     border: 3px solid white;
-    border-radius: 10px;
+    border-radius: 12px;
     overflow: hidden;
-    flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    margin-bottom: 5px;
 }
 .cart-photo-frame img { width: 100%; height: 100%; object-fit: cover; }
 
-.cart-info-col { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-.cart-info-col h2 { font-size: 1rem; text-transform: uppercase; margin-bottom: 5px; line-height: 1.2; }
-.info-row { font-size: 0.7rem; margin-bottom: 2px; opacity: 0.9; display: flex; align-items: center; gap: 5px; }
+.cart-info-main { width: 100%; text-align: center; }
+.cart-info-main h2 { 
+    font-size: 1.1rem; 
+    text-transform: uppercase; 
+    font-weight: 700;
+    margin-bottom: 5px; 
+    line-height: 1.2; 
+    text-shadow: 0 2px 2px rgba(0,0,0,0.2);
+}
+.cart-info-main .cart-course {
+    font-size: 0.85rem;
+    background: rgba(255,255,255,0.15);
+    padding: 4px 10px;
+    border-radius: 15px;
+    display: inline-block;
+    margin-bottom: 10px;
+}
 
-.cart-badges { margin-top: 10px; display: flex; gap: 5px; }
-.badge-mat, .badge-val {
-    background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; font-size: 0.65rem; font-family: monospace;
+.cart-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.detail-item {
+    background: rgba(0,0,0,0.2);
+    padding: 5px;
+    border-radius: 6px;
+    text-align: center;
+}
+.detail-label { display: block; font-size: 0.6rem; text-transform: uppercase; opacity: 0.7; }
+.detail-value { display: block; font-size: 0.75rem; font-weight: 600; font-family: monospace; }
+
+/* --- VERSO DA CARTEIRINHA --- */
+.carteirinha-back {
+    transform: rotateY(180deg);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    background: linear-gradient(135deg, #1e293b, #0f172a); /* Verso mais escuro */
+}
+
+.cart-back-header {
+    text-align: center;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    opacity: 0.6;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 10px;
+}
+
+.qr-code-box {
+    width: 160px; height: 160px;
+    background: white;
+    padding: 10px;
+    border-radius: 12px;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+/* Estilo para a imagem do QR Code gerada via API */
+.qr-code-box img { width: 100%; height: 100%; object-fit: contain; }
+
+.validity-box {
+    text-align: center;
+    margin-bottom: 20px;
+}
+.validity-label { font-size: 0.8rem; opacity: 0.8; text-transform: uppercase; display: block; }
+.validity-year { 
+    font-size: 3.5rem; 
+    font-weight: 800; 
+    line-height: 1;
+    color: var(--accent); /* Destaque no ano */
+    text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    display: block;
 }
 
 .cart-footer {
-    margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2);
-    display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2;
+    margin-top: auto;
+    text-align: center;
+    font-size: 0.65rem;
+    opacity: 0.6;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 10px;
 }
-.cart-status-pill { background: #22c55e; color: #052e16; font-size: 0.6rem; font-weight: bold; padding: 2px 8px; border-radius: 10px; }
-.cart-footer span { font-size: 0.6rem; text-transform: uppercase; opacity: 0.7; }
+.cart-sec-name { font-weight: 600; display: block; margin-bottom: 2px; text-transform: uppercase; }
 
+/* --- BOTÕES DO MODAL --- */
 .modal-actions-row {
-    margin-top: 20px;
+    margin-top: 25px;
     display: flex;
     justify-content: center;
     gap: 15px;
+    flex-wrap: wrap;
 }
-.btn-action-pri { background: white; color: var(--primary); padding: 10px 20px; border-radius: 20px; font-weight: 600; box-shadow: var(--shadow-md); border: none; cursor: pointer; }
-.btn-action-sec { background: rgba(255,255,255,0.2); color: white; padding: 10px 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.3); cursor: pointer; }
+.btn-action-pri { 
+    background: white; color: var(--primary); padding: 12px 24px; border-radius: 30px; 
+    font-weight: 700; box-shadow: var(--shadow-md); border: none; cursor: pointer; 
+    display: flex; align-items: center; gap: 8px;
+}
+.btn-action-sec { 
+    background: rgba(255,255,255,0.1); color: white; padding: 12px 24px; border-radius: 30px; 
+    border: 1px solid rgba(255,255,255,0.3); cursor: pointer; 
+    display: flex; align-items: center; gap: 8px;
+}
+.btn-flip {
+    background: var(--accent); color: white; padding: 12px 24px; border-radius: 30px;
+    font-weight: 700; border: none; cursor: pointer; box-shadow: var(--shadow-md);
+    display: flex; align-items: center; gap: 8px;
+}
 
 /* --- FOOTER --- */
 #main-footer {
@@ -694,4 +827,54 @@ input[type="file"] { display: none; }
     .text-container h1 { font-size: 1.4rem; }
     .card-title { font-size: 1.1rem; }
     .btn-inscrever span { font-size: 0.9rem; }
+}
+
+/* IMPRESSÃO: Ajustes para imprimir frente e verso em página única */
+@media print {
+    body * { visibility: hidden; }
+    #modal-carteirinha, #modal-carteirinha * { visibility: visible; }
+    
+    #modal-carteirinha {
+        position: absolute; left: 0; top: 0; width: 100%; height: auto;
+        background: white; display: block;
+    }
+    .modal-content { 
+        box-shadow: none; width: 100%; max-width: 100%; padding: 0; margin: 0; 
+        overflow: visible; background: transparent; 
+    }
+    
+    .carteirinha-wrapper {
+        perspective: none; /* Remove 3D para impressão */
+        height: auto;
+        max-width: 100%;
+        display: flex;
+        flex-direction: row; /* Coloca lado a lado para impressão */
+        gap: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .carteirinha-card-inner {
+        transform: none !important; /* Reseta rotação */
+        position: relative;
+        height: auto;
+        display: flex;
+        gap: 20px;
+    }
+    
+    .carteirinha-face {
+        position: relative;
+        width: 300px; /* Largura fixa para impressão */
+        height: 480px; /* Altura fixa para impressão */
+        page-break-inside: avoid;
+        transform: none !important; /* Reseta rotação do verso */
+        backface-visibility: visible;
+        margin-bottom: 20px;
+        /* Forçar impressão de background */
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    /* Esconder botões na impressão */
+    .modal-actions-row, .btn-close-modern { display: none !important; }
 }
