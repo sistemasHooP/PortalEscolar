@@ -1,5 +1,5 @@
 const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
-// URL BASE para validação (QR Code)
+// URL BASE para validação (QR Code) - Certifique-se que este arquivo existe no seu GitHub Pages
 const URL_VALIDACAO = 'https://sistemashoop.github.io/PortalEscolar/validacao.html';
 
 // --- CONFIGURAÇÃO GERAL ---
@@ -999,140 +999,6 @@ function acaoEmMassa(s) {
     });
 }
 
-// --- GERAR FICHA CORRIGIDA (ESPERA IMAGEM) ---
-function gerarFicha(chave) {
-    showLoading('Gerando Ficha...'); // Feedback inicial importante
-
-    const inscricao = todasInscricoes.find(i => i.chave === chave);
-    if (!inscricao) return Swal.fire('Erro', 'Inscrição não encontrada na memória.', 'error');
-
-    let dados = {};
-    try { dados = JSON.parse(inscricao.dadosJson); } catch(e) {}
-
-    let evento = cacheEventos[inscricao.eventoId] || { titulo: 'Documento Oficial' };
-
-    let fotoUrl = '';
-    if(dados.linkFoto) {
-        if(dados.linkFoto.includes('drive.google.com')) {
-             let id = dados.linkFoto.split(/\/d\/|id=/)[1].split(/\/|&/)[0];
-             fotoUrl = `https://lh3.googleusercontent.com/d/${id}`;
-        } else {
-             fotoUrl = dados.linkFoto;
-        }
-    }
-
-    const imgTag = fotoUrl 
-        ? `<div class="ficha-photo-box" style="border:none;"><img src="${fotoUrl}" style="width:100px; height:130px; object-fit:cover; border:1px solid #000;"></div>`
-        : `<div class="ficha-photo-box">SEM FOTO</div>`;
-
-    const camposPessoais = ['NomeCompleto', 'CPF', 'DataNascimento', 'Telefone', 'Endereco', 'Cidade', 'Estado', 'Email'];
-    let htmlPessoais = '';
-    camposPessoais.forEach(key => {
-        const label = LABELS_TODOS_CAMPOS[key] || key;
-        const val = dados[key] || '-';
-        htmlPessoais += `<div class="ficha-row"><span class="ficha-label">${label}:</span> <span class="ficha-value">${val}</span></div>`;
-    });
-
-    const camposAcad = ['NomeInstituicao', 'NomeCurso', 'PeriodoCurso', 'Matricula'];
-    let htmlAcad = '';
-    camposAcad.forEach(key => {
-        const label = LABELS_TODOS_CAMPOS[key] || key;
-        const val = dados[key] || '-';
-        htmlAcad += `<div class="ficha-row"><span class="ficha-label">${label}:</span> <span class="ficha-value">${val}</span></div>`;
-    });
-
-    let htmlOutros = '';
-    const ignorar = [...camposPessoais, ...camposAcad, 'linkFoto', 'linkDoc', 'Assinatura', 'Observacoes'];
-    for (const [key, val] of Object.entries(dados)) {
-        if (!ignorar.includes(key)) {
-            htmlOutros += `<div class="ficha-row"><span class="ficha-label">${key}:</span> <span class="ficha-value">${val}</span></div>`;
-        }
-    }
-    if(htmlOutros === '') htmlOutros = '<div style="font-style:italic; color:#666; padding:5px;">Nenhuma informação adicional.</div>';
-
-    // CORREÇÃO LOGO FICHA: Usa o logo do cache se existir, senão o fallback
-    const logoFichaUrl = (cacheConfigGeral && cacheConfigGeral.urlLogo) ? formatarUrlDrive(cacheConfigGeral.urlLogo) : URL_LOGO_FALLBACK;
-
-    const htmlFicha = `
-        <div class="ficha-container">
-            <div class="ficha-header">
-                <img src="${logoFichaUrl}" alt="Logo" class="ficha-logo" onerror="this.src='${URL_LOGO_FALLBACK}'; this.onerror=null; this.style.opacity='0'">
-                <div class="ficha-title">FICHA DE INSCRIÇÃO</div>
-                <div class="ficha-subtitle">${evento.titulo}</div>
-                <div class="ficha-key-box">CHAVE: ${chave}</div>
-            </div>
-
-            <div class="ficha-top-row">
-                <div style="flex:1;">
-                    <div class="ficha-section">
-                        <div class="ficha-section-header">DADOS PESSOAIS</div>
-                        <div class="ficha-section-body">${htmlPessoais}</div>
-                    </div>
-                </div>
-                ${imgTag}
-            </div>
-
-            <div class="ficha-section">
-                <div class="ficha-section-header">DADOS ACADÊMICOS</div>
-                <div class="ficha-section-body">${htmlAcad}</div>
-            </div>
-
-            <div class="ficha-section">
-                <div class="ficha-section-header">OUTRAS INFORMAÇÕES</div>
-                <div class="ficha-section-body">${htmlOutros}</div>
-            </div>
-
-            <div class="ficha-sign-area">
-                <div class="ficha-sign-line"></div>
-                <div style="font-weight:bold; font-size:12px;">ASSINATURA DO ALUNO(A)</div>
-                <div style="font-size:11px; margin-top:3px;">${dados.NomeCompleto || ''}</div>
-            </div>
-
-            <div class="ficha-footer">
-                Documento oficial gerado em ${new Date().toLocaleString('pt-BR')} - Secretaria de Educação
-            </div>
-        </div>
-    `;
-
-    // Injeta no Print Layer
-    const pl = document.getElementById('print-layer') || document.createElement('div');
-    pl.id = 'print-layer';
-    if(!pl.parentElement) document.body.appendChild(pl);
-    
-    pl.innerHTML = htmlFicha;
-    
-    // Lógica para aguardar a imagem carregar antes de imprimir
-    const imgEl = pl.querySelector('.ficha-photo-box img');
-    
-    const finalizeAndPrint = () => {
-        Swal.close(); // Garante que o loading feche
-        
-        // Atualiza status silenciosamente se ainda não foi emitida
-        if(inscricao.status !== 'Ficha Emitida') {
-            fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'atualizarStatus', senha: sessionStorage.getItem('admin_token'), chave: chave, novoStatus: 'Ficha Emitida' }) });
-            inscricao.status = 'Ficha Emitida'; 
-        }
-        
-        // Pequeno delay para renderização final do navegador
-        setTimeout(() => window.print(), 100);
-    };
-
-    if (imgEl) {
-        if (imgEl.complete) {
-            finalizeAndPrint();
-        } else {
-            // Mostra loading específico se a imagem demorar
-            if(Swal.isVisible()) {
-                 Swal.update({ title: 'Carregando foto...' });
-            }
-            imgEl.onload = finalizeAndPrint;
-            imgEl.onerror = finalizeAndPrint; // Imprime mesmo com erro na foto
-        }
-    } else {
-        finalizeAndPrint();
-    }
-}
-
 // --- IMPRIMIR CARTEIRINHA PRO (COM QR CODE LINKADO) ---
 function imprimirCarteirinhaAdmin(chave) {
     showLoading('Gerando Carteirinha...');
@@ -1178,7 +1044,6 @@ function imprimirCarteirinhaAdmin(chave) {
         
         // Pega os dados originais brutos para acessar campos extras
         const dadosBrutos = JSON.parse(j.data.dadosJson || '{}');
-        let countExtras = 0;
         
         for (const [key, val] of Object.entries(dadosBrutos)) {
             if (!camposIgnoradosVerso.includes(key) && val) {
@@ -1187,7 +1052,6 @@ function imprimirCarteirinhaAdmin(chave) {
                     <div class="cart-pro-row">
                         <span><strong>${key.toUpperCase()}:</strong> ${val}</span>
                     </div>`;
-                countExtras++;
             }
         }
 
@@ -1203,16 +1067,16 @@ function imprimirCarteirinhaAdmin(chave) {
         });
         const qrDataUrl = qrCanvas.toDataURL();
 
-        // Template HTML (Frente e Verso)
+        // Template HTML (Frente e Verso) - Layout Horizontal
         const htmlCart = `
-            <div class="print-page-landscape" style="display:flex; justify-content:center; align-items:center; height:100vh; gap:20px;">
+            <div class="print-page-landscape" style="display:flex; justify-content:center; align-items:center; height:100vh; gap:30px;">
                 
                 <!-- FRENTE -->
                 <div class="cart-pro-card" style="border: 2px solid ${config.corCart};">
                     <div class="cart-pro-header" style="background:${config.corCart};">
                         <img src="${logoUrl}" class="cart-pro-logo">
                         <div class="cart-pro-header-text">
-                            <h3>CARTEIRA DE ESTUDANTIL</h3>
+                            <h3>PREFEITURA MUNICIPAL</h3>
                             <small>${config.nomeSec}</small>
                         </div>
                     </div>
@@ -1235,61 +1099,82 @@ function imprimirCarteirinhaAdmin(chave) {
                 <div class="cart-pro-card" style="border: 2px solid ${config.corCart}; position:relative;">
                     <div class="cart-pro-body-back">
                         <div class="cart-pro-row">
-                            <span><strong>CPF:</strong> ${aluno.cpf}</span>
-                        </div>
-                        <div class="cart-pro-row">
-                            <span><strong>NASCIMENTO:</strong> ${nascimentoBR}</span>
                             <span><strong>MATRÍCULA:</strong> ${aluno.matricula}</span>
                         </div>
+                        <div class="cart-pro-row">
+                            <span><strong>CPF:</strong> ${aluno.cpf}</span>
+                        </div>
                         
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 5px;">
+                             <div class="cart-pro-validade" style="border: 2px solid ${config.corCart}; color:${config.corCart};">
+                                <span style="font-size: 6px; display: block;">VALIDADE</span>
+                                ${aluno.validade}
+                            </div>
+                             <div style="text-align: right; font-size: 8px;">
+                                <strong>NASCIMENTO</strong><br>
+                                ${nascimentoBR}
+                            </div>
+                        </div>
+
                         <!-- Campos Extras Dinâmicos -->
                         ${htmlCamposExtras}
                         
-                        <div class="cart-pro-validade" style="border: 2px solid ${config.corCart}; color:${config.corCart};">
-                            VALIDADE: ${aluno.validade}
-                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto;">
+                            <div class="cart-pro-sign" style="width: 60%;">
+                                <div class="line"></div>
+                                ${config.nomeSecretario}<br>
+                                <small>Secretário(a) Municipal</small>
+                            </div>
 
-                        <div class="cart-pro-qr">
-                            <img src="${qrDataUrl}" style="width:90px; height:90px;">
-                        </div>
-                        
-                        <div class="cart-pro-sign">
-                            <div class="line"></div>
-                            ${config.nomeSecretario}
+                            <div class="cart-pro-qr">
+                                <img src="${qrDataUrl}" style="width:70px; height:70px;">
+                                <div style="font-size: 5px; text-align: center; margin-top: 2px;">ESCANEIE PARA VALIDAR</div>
+                            </div>
                         </div>
                     </div>
                     <div class="cart-pro-footer-back" style="background:${config.corCart};">
-                        Documento Pessoal e Intransferível
+                        DOCUMENTO DE IDENTIFICAÇÃO ESTUDANTIL
                     </div>
                 </div>
             </div>
             
             <style>
+                /* RESET PARA IMPRESSÃO */
+                @media print {
+                    body * { visibility: hidden; }
+                    #print-layer, #print-layer * { visibility: visible; }
+                    #print-layer { position: absolute; left: 0; top: 0; width: 100%; }
+                    @page { size: landscape; margin: 0; }
+                    .print-page-landscape { background: white !important; height: 100% !important; }
+                    .box-shadow { box-shadow: none !important; border: 1px solid #ddd; }
+                }
+
                 .cart-pro-card {
                     width: 85.6mm; height: 53.98mm; /* Tamanho Cartão Crédito */
                     background: white; border-radius: 10px; overflow: hidden;
                     box-shadow: 0 0 5px rgba(0,0,0,0.2);
                     display: flex; flex-direction: column;
                     -webkit-print-color-adjust: exact; print-color-adjust: exact;
+                    font-family: 'Helvetica', Arial, sans-serif;
                 }
-                .cart-pro-header { height: 40px; display: flex; align-items: center; padding: 0 10px; color: white; }
-                .cart-pro-logo { height: 30px; width: 30px; background: white; border-radius: 50%; padding: 2px; margin-right: 8px; object-fit: contain; }
-                .cart-pro-header-text h3 { margin: 0; font-size: 9px; font-weight: 800; }
+                .cart-pro-header { height: 35px; display: flex; align-items: center; padding: 0 10px; color: white; }
+                .cart-pro-logo { height: 25px; width: 25px; background: white; border-radius: 50%; padding: 2px; margin-right: 8px; object-fit: contain; }
+                .cart-pro-header-text h3 { margin: 0; font-size: 8px; font-weight: 800; }
                 .cart-pro-header-text small { font-size: 6px; text-transform: uppercase; }
                 .cart-pro-body { flex: 1; display: flex; padding: 10px; align-items: center; }
-                .cart-pro-photo-frame { width: 28mm; height: 35mm; border: 2px solid; margin-right: 10px; border-radius: 4px; overflow: hidden; }
+                .cart-pro-photo-frame { width: 25mm; height: 32mm; border: 2px solid; margin-right: 10px; border-radius: 4px; overflow: hidden; }
                 .cart-pro-photo-frame img { width: 100%; height: 100%; object-fit: cover; }
-                .cart-pro-info h2 { margin: 0 0 5px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; line-height: 1.1; }
-                .cart-pro-info p { margin: 2px 0; font-size: 8px; text-transform: uppercase; }
-                .cart-pro-footer { height: 18px; display: flex; align-items: center; justify-content: center; color: white; font-size: 7px; font-weight: bold; letter-spacing: 1px; }
+                .cart-pro-info h2 { margin: 0 0 5px 0; font-size: 10px; font-weight: 800; text-transform: uppercase; line-height: 1.1; }
+                .cart-pro-info p { margin: 2px 0; font-size: 7px; text-transform: uppercase; }
+                .cart-pro-footer { height: 18px; display: flex; align-items: center; justify-content: center; color: white; font-size: 8px; font-weight: bold; letter-spacing: 1px; }
 
                 /* VERSO */
-                .cart-pro-body-back { flex: 1; padding: 10px; font-size: 8px; position: relative; }
-                .cart-pro-row { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px dotted #ccc; padding-bottom: 2px; }
-                .cart-pro-validade { position: absolute; top: 40px; left: 10px; padding: 2px 5px; font-weight: bold; border-radius: 4px; font-size: 9px; }
-                .cart-pro-qr { position: absolute; top: 10px; right: 10px; }
-                .cart-pro-sign { position: absolute; bottom: 10px; width: 100%; text-align: center; font-weight: bold; font-size: 7px; }
-                .cart-pro-sign .line { width: 60%; border-top: 1px solid #000; margin: 0 auto 2px; }
+                .cart-pro-body-back { flex: 1; padding: 10px; font-size: 7px; position: relative; display: flex; flex-direction: column; }
+                .cart-pro-row { margin-bottom: 3px; border-bottom: 1px dotted #ccc; padding-bottom: 2px; }
+                .cart-pro-validade { padding: 2px 5px; font-weight: bold; border-radius: 4px; font-size: 10px; display: inline-block; }
+                .cart-pro-qr { margin-left: 10px; }
+                .cart-pro-sign { text-align: center; font-weight: bold; font-size: 6px; }
+                .cart-pro-sign .line { width: 80%; border-top: 1px solid #000; margin: 0 auto 2px; }
                 .cart-pro-footer-back { height: 15px; display: flex; align-items: center; justify-content: center; color: white; font-size: 6px; }
             </style>
         `;
@@ -1299,13 +1184,16 @@ function imprimirCarteirinhaAdmin(chave) {
         if(!pl.parentElement) document.body.appendChild(pl);
         pl.innerHTML = htmlCart;
         
-        // Aguarda a imagem carregar
+        // Aguarda a imagem e o logo carregarem
         const imgEl = pl.querySelector('.cart-pro-photo-frame img');
-        if(imgEl && !imgEl.complete) {
-            imgEl.onload = () => { Swal.close(); setTimeout(() => window.print(), 200); };
-        } else {
-            Swal.close(); setTimeout(() => window.print(), 200);
-        }
+        const logoEl = pl.querySelector('.cart-pro-logo');
+        let loaded = 0; const total = (imgEl ? 1 : 0) + (logoEl ? 1 : 0);
+        
+        const checkPrint = () => { loaded++; if(loaded >= total) { Swal.close(); setTimeout(() => window.print(), 300); } };
+        
+        if(imgEl) { if(imgEl.complete) checkPrint(); else imgEl.onload = imgEl.onerror = checkPrint; }
+        if(logoEl) { if(logoEl.complete) checkPrint(); else logoEl.onload = logoEl.onerror = checkPrint; }
+        if(total === 0) { Swal.close(); setTimeout(() => window.print(), 300); }
     });
 }
 
