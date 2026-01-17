@@ -3,23 +3,20 @@ const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo
 // --- CONFIGURAÇÃO GERAL ---
 const URL_LOGO = './logo.png'; 
 
-// Definição dos campos opcionais (CPF e Email removidos pois são obrigatórios)
+// Definição dos campos opcionais (CPF e Email removidos pois são obrigatórios e fixos no app.js)
 const CAMPOS_PADRAO = [
     { key: 'NomeCompleto', label: 'Nome Completo' }, 
-    // CPF removido daqui pois é obrigatório
     { key: 'DataNascimento', label: 'Nascimento' }, 
     { key: 'Telefone', label: 'Celular' }, 
     { key: 'Endereco', label: 'Endereço' },
-    { key: 'Cidade', label: 'Cidade' }, 
-    { key: 'Estado', label: 'UF' },
+    // Cidade e Estado são tratados separadamente na lógica, mas opcionais na visualização
     { key: 'NomeInstituicao', label: 'Instituição' }, 
     { key: 'NomeCurso', label: 'Curso' }, 
     { key: 'PeriodoCurso', label: 'Período' }, 
     { key: 'Matricula', label: 'Matrícula' }, 
-    // Email removido daqui pois é obrigatório
 ];
 
-// Mapeamento completo para exibição em tabelas/modais (inclui os obrigatórios)
+// Mapeamento completo para exibição em tabelas/modais
 const LABELS_TODOS_CAMPOS = {
     'NomeCompleto': 'Nome Completo',
     'CPF': 'CPF',
@@ -81,8 +78,8 @@ function realizarLogin(e) {
     .then(res => res.json()).then(json => {
         Swal.close();
         if(json.auth) {
-            document.getElementById('login-screen').style.display = 'none'; // Oculta login
-            document.getElementById('admin-panel').classList.remove('hidden'); // Exibe painel
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('admin-panel').classList.remove('hidden');
             sessionStorage.setItem('admin_token', pass);
             carregarDashboard();
         } else { Swal.fire({icon: 'error', title: 'Acesso Negado', text: 'Senha administrativa incorreta.'}); }
@@ -91,22 +88,17 @@ function realizarLogin(e) {
 
 function logout() { 
     sessionStorage.removeItem('admin_token'); 
-    window.location.reload(); // Recarrega para voltar ao login limpo
+    window.location.reload(); 
 }
 
 // --- NAVEGAÇÃO APP SHELL ---
 function switchTab(tabId) {
-    // 1. Esconde TODAS as abas (força a classe hidden)
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-    
-    // 2. Remove classe active de TODOS os botões do menu
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     
-    // 3. Mostra APENAS a aba selecionada
     const selectedTab = document.getElementById(tabId);
     if(selectedTab) selectedTab.classList.remove('hidden');
     
-    // 4. Ativa o botão correspondente no menu
     let btnId = '';
     if(tabId === 'tab-dashboard') btnId = 'btn-dashboard';
     if(tabId === 'tab-relatorios') btnId = 'btn-relatorios';
@@ -119,9 +111,7 @@ function switchTab(tabId) {
         if(btn) btn.classList.add('active');
     }
 
-    // 5. Carrega dados específicos da aba
     if(tabId === 'tab-dashboard' || tabId === 'tab-relatorios') carregarDashboard();
-    
     if(tabId === 'tab-eventos') carregarEventosAdmin();
     if(tabId === 'tab-inscricoes') carregarInscricoes();
     if(tabId === 'tab-config') {
@@ -159,12 +149,10 @@ function salvarConfigDrive() {
 // --- DASHBOARD E DADOS GERAIS ---
 function carregarDashboard() {
     const token = sessionStorage.getItem('admin_token');
-    // Carrega Eventos e Inscrições em paralelo
     Promise.all([
         fetch(`${URL_API}?action=getTodosEventos`).then(r => r.json()),
         fetch(`${URL_API}?action=getInscricoesAdmin&token=${token}`).then(r => r.json())
     ]).then(([jsonEventos, jsonInscricoes]) => {
-        // Processa Eventos
         mapaEventos = {}; 
         cacheEventos = {}; 
         if(jsonEventos.data) jsonEventos.data.forEach(ev => {
@@ -172,14 +160,10 @@ function carregarDashboard() {
             cacheEventos[ev.id] = ev; 
         });
         
-        // Processa Inscrições
         dashboardData = jsonInscricoes.data || [];
-        
-        // Atualiza Elementos de UI
         atualizarSelectsRelatorio(jsonEventos.data || [], dashboardData);
         atualizarEstatisticasDashboard(dashboardData);
 
-        // Gera Gráficos
         const contagemEventos = {}, contagemStatus = {};
         dashboardData.forEach(i => {
             const nome = mapaEventos[i.eventoId] || `Evento ${i.eventoId}`;
@@ -187,7 +171,6 @@ function carregarDashboard() {
             contagemStatus[i.status] = (contagemStatus[i.status] || 0) + 1;
         });
         
-        // Verifica se os elementos de gráfico existem (só existem na aba dashboard)
         if(document.getElementById('chartEventos')) {
             renderizarGraficos(contagemEventos, contagemStatus);
         }
@@ -252,7 +235,7 @@ function gerarRelatorioTransporte() {
 
     const todasChaves = new Set();
     const chavesPrioritarias = ['NomeCompleto', 'NomeInstituicao', 'NomeCurso', 'PeriodoCurso', 'Telefone', 'Cidade', 'Estado'];
-    const ignorar = ['linkFoto', 'linkDoc', 'Assinatura', 'CPF', 'Email']; // Oculta CPF e Email do relatório público por padrão
+    const ignorar = ['linkFoto', 'linkDoc', 'Assinatura', 'CPF', 'Email'];
 
     alunosFiltrados.forEach(aluno => {
         try {
@@ -517,7 +500,7 @@ function modalNovoEvento() {
         width: '900px',
         html: `
             <div style="background:#eff6ff; color:#1e40af; padding:10px; border-radius:6px; font-size:0.85rem; margin-bottom:15px; border:1px solid #dbeafe;">
-                <i class="fa-solid fa-info-circle"></i> <strong>Nota:</strong> CPF e E-mail são obrigatórios e incluídos automaticamente.
+                <i class="fa-solid fa-info-circle"></i> <strong>Nota:</strong> CPF e E-mail são campos fixos obrigatórios.
             </div>
 
             <div class="swal-grid-2">
@@ -585,8 +568,8 @@ function modalNovoEvento() {
                 return false;
             }
 
-            // Sempre inclui CPF e Email ocultamente, além de Cidade/Estado
-            const sels = ['Cidade', 'Estado', 'CPF', 'Email']; 
+            // CORREÇÃO: Removemos CPF e Email daqui para não duplicar no formulário público
+            const sels = ['Cidade', 'Estado']; 
             
             // Adiciona campos selecionados pelo usuário
             CAMPOS_PADRAO.forEach(c => { 
