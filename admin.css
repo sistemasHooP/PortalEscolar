@@ -1,19 +1,22 @@
 /* --- VARIÁVEIS GLOBAIS (Tema Profissional) --- */
 :root {
     /* Cores Institucionais */
-    --primary: #2563eb;       
+    --primary: #2563eb;        
     --primary-dark: #1e40af; 
     --primary-light: #eff6ff;
-    --accent: #f59e0b;       
+    --accent: #f59e0b;        
+
+    /* Variável Dinâmica da Carteirinha (Padrão) */
+    --card-color: #2563eb;
 
     /* Estrutura */
     --sidebar-width: 260px;   
     --header-height: 60px;    
 
     /* Superfícies */
-    --bg-body: #f3f4f6;       
-    --bg-card: #ffffff;       
-    --bg-sidebar: #0f172a;    
+    --bg-body: #f3f4f6;        
+    --bg-card: #ffffff;        
+    --bg-sidebar: #0f172a;     
 
     /* Texto */
     --text-main: #1e293b;
@@ -350,7 +353,123 @@ html, body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 
-/* --- ESTILOS DE IMPRESSÃO (FICHA) --- */
+/* --- ESTILOS DE CARTEIRINHA NOVO (3D FLIP & QR CODE) --- */
+/* Overlay Modal para Carteirinha */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(5px);
+    z-index: 2000;
+    display: flex; align-items: center; justify-content: center;
+}
+.modal-content-cart {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+}
+
+.carteirinha-wrapper {
+    width: 100%;
+    max-width: 350px;
+    height: 520px; /* Altura fixa */
+    margin: 0 auto;
+    perspective: 1200px;
+}
+
+.carteirinha-card-inner {
+    position: relative; width: 100%; height: 100%;
+    text-align: center; transition: transform 0.8s;
+    transform-style: preserve-3d;
+    cursor: pointer;
+}
+.carteirinha-card-inner.is-flipped { transform: rotateY(180deg); }
+
+.carteirinha-face {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    -webkit-backface-visibility: hidden; backface-visibility: hidden;
+    border-radius: 20px; overflow: hidden;
+    box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.4);
+    background: linear-gradient(135deg, var(--card-color, #2563eb), #0f172a); 
+    color: white;
+}
+
+/* Frente */
+.carteirinha-front {
+    background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 15px 15px;
+    display: flex; flex-direction: column; padding: 20px;
+}
+.cart-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+    position: relative; z-index: 2; text-align: left; padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+.cart-logo {
+    width: 45px; height: 45px; background: white; border-radius: 50%;
+    padding: 3px; object-fit: contain; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.cart-org-info h3 { font-size: 0.85rem; font-weight: 800; letter-spacing: 0.5px; line-height: 1.2; text-transform: uppercase; margin: 0; }
+.cart-org-info small { font-size: 0.7rem; text-transform: uppercase; opacity: 0.9; font-weight: 300; display: block; margin-top: 2px;}
+
+.cart-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 2; gap: 15px; }
+.cart-photo-frame {
+    width: 110px; height: 140px; background: #e2e8f0; border: 3px solid white;
+    border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.2); margin-bottom: 5px;
+}
+.cart-photo-frame img { width: 100%; height: 100%; object-fit: cover; }
+
+.cart-info-main { width: 100%; text-align: center; }
+.cart-info-main h2 { font-size: 1.1rem; text-transform: uppercase; font-weight: 700; margin-bottom: 5px; line-height: 1.2; text-shadow: 0 2px 2px rgba(0,0,0,0.2); }
+.cart-info-main .cart-course {
+    font-size: 0.85rem; background: rgba(255,255,255,0.15); padding: 4px 10px;
+    border-radius: 15px; display: inline-block; margin-bottom: 10px;
+}
+
+.cart-details-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 10px;
+}
+.detail-item { background: rgba(0,0,0,0.2); padding: 5px; border-radius: 6px; text-align: center; }
+.detail-label { display: block; font-size: 0.6rem; text-transform: uppercase; opacity: 0.7; }
+.detail-value { display: block; font-size: 0.75rem; font-weight: 600; font-family: monospace; }
+
+/* Verso */
+.carteirinha-back {
+    transform: rotateY(180deg);
+    display: flex; flex-direction: column; padding: 20px;
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+}
+.cart-back-header {
+    text-align: center; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px;
+    opacity: 0.6; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;
+}
+.qr-code-box {
+    width: 160px; height: 160px; background: white; padding: 10px;
+    border-radius: 12px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;
+}
+.qr-code-box img { width: 100%; height: 100%; object-fit: contain; }
+
+.validity-box { text-align: center; margin-bottom: 20px; }
+.validity-label { font-size: 0.8rem; opacity: 0.8; text-transform: uppercase; display: block; }
+.validity-year { 
+    font-size: 3.5rem; font-weight: 800; line-height: 1; color: var(--accent); 
+    text-shadow: 0 4px 10px rgba(0,0,0,0.3); display: block;
+}
+
+.cart-footer {
+    margin-top: auto; text-align: center; font-size: 0.65rem; opacity: 0.6;
+    border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;
+}
+.cart-sec-name { font-weight: 600; display: block; margin-bottom: 2px; text-transform: uppercase; }
+
+/* Botões do Modal Cart */
+.cart-actions { margin-top: 25px; display: flex; justify-content: center; gap: 15px; }
+.btn-flip {
+    background: var(--accent); color: white; padding: 12px 24px; border-radius: 30px;
+    font-weight: 700; border: none; cursor: pointer; box-shadow: var(--shadow-md);
+    display: flex; align-items: center; gap: 8px;
+}
+
+/* --- ESTILOS DE IMPRESSÃO (FICHA E CARTEIRINHA) --- */
 #print-layer { display: none; }
 
 @media print {
@@ -361,111 +480,64 @@ html, body {
         position: absolute; 
         top: 0; left: 0; width: 100%; 
         background: white; 
-        padding: 0;
-        margin: 0;
+        padding: 0; margin: 0; 
     }
 
     @page { size: A4; margin: 10mm; }
 
     /* Layout da Ficha A4 */
     .ficha-container {
-        font-family: Arial, sans-serif;
-        color: #000;
-        width: 100%;
-        max-width: 210mm; /* Largura A4 */
-        margin: 0 auto;
+        font-family: Arial, sans-serif; color: #000; width: 100%; max-width: 210mm; margin: 0 auto;
     }
-
     .ficha-header {
-        text-align: center;
-        margin-bottom: 20px;
-        border-bottom: 2px solid #000;
-        padding-bottom: 10px;
-        position: relative;
+        text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; position: relative;
     }
-
-    .ficha-logo {
-        position: absolute;
-        left: 0;
-        top: 0;
-        height: 60px;
-        width: auto;
-    }
-
+    .ficha-logo { position: absolute; left: 0; top: 0; height: 60px; width: auto; }
     .ficha-title { font-size: 18px; font-weight: bold; text-transform: uppercase; margin: 0; }
     .ficha-subtitle { font-size: 14px; margin: 5px 0; }
     .ficha-key-box {
-        border: 2px solid #000;
-        display: inline-block;
-        padding: 5px 15px;
-        font-weight: bold;
-        margin-top: 10px;
-        font-family: monospace;
-        font-size: 16px;
+        border: 2px solid #000; display: inline-block; padding: 5px 15px;
+        font-weight: bold; margin-top: 10px; font-family: monospace; font-size: 16px;
     }
-
-    /* Foto Box */
-    .ficha-top-row {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 15px;
-        align-items: flex-start;
-    }
-    
+    .ficha-top-row { display: flex; justify-content: space-between; margin-bottom: 15px; align-items: flex-start; }
     .ficha-photo-box {
-        width: 100px;
-        height: 130px;
-        border: 1px solid #000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 10px;
-        text-transform: uppercase;
-        margin-left: 20px;
+        width: 100px; height: 130px; border: 1px solid #000; display: flex; align-items: center;
+        justify-content: center; font-size: 10px; text-transform: uppercase; margin-left: 20px;
     }
     .ficha-photo-box img { width: 100%; height: 100%; object-fit: cover; }
-
-    /* Seções de Dados */
     .ficha-section { margin-bottom: 15px; border: 1px solid #000; }
     .ficha-section-header {
-        background-color: #eee;
-        border-bottom: 1px solid #000;
-        padding: 5px 10px;
-        font-weight: bold;
-        font-size: 12px;
-        text-transform: uppercase;
-        -webkit-print-color-adjust: exact;
+        background-color: #eee; border-bottom: 1px solid #000; padding: 5px 10px;
+        font-weight: bold; font-size: 12px; text-transform: uppercase; -webkit-print-color-adjust: exact;
     }
     .ficha-section-body { padding: 10px; font-size: 12px; }
-
-    .ficha-row {
-        display: flex;
-        border-bottom: 1px dotted #ccc;
-        padding: 4px 0;
-    }
+    .ficha-row { display: flex; border-bottom: 1px dotted #ccc; padding: 4px 0; }
     .ficha-row:last-child { border-bottom: none; }
-    
     .ficha-label { font-weight: bold; width: 140px; flex-shrink: 0; text-transform: uppercase; font-size: 11px; }
     .ficha-value { flex-grow: 1; }
+    .ficha-sign-area { margin-top: 60px; text-align: center; }
+    .ficha-sign-line { border-top: 1px solid #000; width: 60%; margin: 0 auto 5px; }
+    .ficha-footer { margin-top: 30px; font-size: 10px; text-align: center; border-top: 1px solid #ccc; padding-top: 5px; color: #555; }
 
-    /* Assinatura */
-    .ficha-sign-area {
-        margin-top: 60px;
-        text-align: center;
+    /* Layout de Impressão da Carteirinha (Frente e Verso lado a lado) */
+    .print-cart-wrapper {
+        display: flex; gap: 20px; justify-content: center; margin-top: 20px;
     }
-    .ficha-sign-line {
-        border-top: 1px solid #000;
-        width: 60%;
-        margin: 0 auto 5px;
+    .carteirinha-face {
+        position: relative; transform: none !important;
+        width: 85.6mm; height: 53.98mm; /* Tamanho Cartão Crédito */
+        box-shadow: none; border: 1px solid #ddd;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+        font-size: 0.8em; /* Ajuste de escala para impressão */
     }
-    .ficha-footer {
-        margin-top: 30px;
-        font-size: 10px;
-        text-align: center;
-        border-top: 1px solid #ccc;
-        padding-top: 5px;
-        color: #555;
-    }
+    /* Ajustes específicos para caber no tamanho físico */
+    .cart-photo-frame { width: 25mm; height: 32mm; }
+    .cart-logo { width: 10mm; height: 10mm; }
+    .qr-code-box { width: 30mm; height: 30mm; padding: 2mm; }
+    .validity-year { font-size: 2em; }
+    
+    /* Esconde elementos 3D e wrappers do modal na impressão */
+    .carteirinha-wrapper, .modal-overlay { display: none !important; }
 }
 
 @media (max-width: 1200px) {
