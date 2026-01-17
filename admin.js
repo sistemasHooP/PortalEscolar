@@ -1,5 +1,5 @@
 const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
-// URL BASE para validação (QR Code) - Certifique-se que este arquivo existe no seu GitHub Pages
+// URL BASE para validação (QR Code)
 const URL_VALIDACAO = 'https://sistemashoop.github.io/PortalEscolar/validacao.html';
 
 // --- CONFIGURAÇÃO GERAL ---
@@ -999,6 +999,147 @@ function acaoEmMassa(s) {
     });
 }
 
+// --- GERAR FICHA CORRIGIDA (ESPERA IMAGEM) ---
+function gerarFicha(chave) {
+    showLoading('Gerando Ficha...'); // Feedback inicial importante
+
+    const inscricao = todasInscricoes.find(i => i.chave === chave);
+    if (!inscricao) return Swal.fire('Erro', 'Inscrição não encontrada na memória.', 'error');
+
+    let dados = {};
+    try { dados = JSON.parse(inscricao.dadosJson); } catch(e) {}
+
+    let evento = cacheEventos[inscricao.eventoId] || { titulo: 'Documento Oficial' };
+
+    let fotoUrl = '';
+    if(dados.linkFoto) {
+        if(dados.linkFoto.includes('drive.google.com')) {
+             let id = dados.linkFoto.split(/\/d\/|id=/)[1].split(/\/|&/)[0];
+             fotoUrl = `https://lh3.googleusercontent.com/d/${id}`;
+        } else {
+             fotoUrl = dados.linkFoto;
+        }
+    }
+
+    const imgTag = fotoUrl 
+        ? `<div class="ficha-photo-box" style="border:none;"><img src="${fotoUrl}" style="width:100px; height:130px; object-fit:cover; border:1px solid #000;"></div>`
+        : `<div class="ficha-photo-box">SEM FOTO</div>`;
+
+    const camposPessoais = ['NomeCompleto', 'CPF', 'DataNascimento', 'Telefone', 'Endereco', 'Cidade', 'Estado', 'Email'];
+    let htmlPessoais = '';
+    camposPessoais.forEach(key => {
+        const label = LABELS_TODOS_CAMPOS[key] || key;
+        let val = dados[key] || '-';
+        
+        // CORREÇÃO: Formatar Data de Nascimento
+        if(key === 'DataNascimento' && val !== '-') {
+            const parts = val.split('-');
+            if(parts.length === 3) val = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        htmlPessoais += `<div class="ficha-row"><span class="ficha-label">${label}:</span> <span class="ficha-value">${val}</span></div>`;
+    });
+
+    const camposAcad = ['NomeInstituicao', 'NomeCurso', 'PeriodoCurso', 'Matricula'];
+    let htmlAcad = '';
+    camposAcad.forEach(key => {
+        const label = LABELS_TODOS_CAMPOS[key] || key;
+        const val = dados[key] || '-';
+        htmlAcad += `<div class="ficha-row"><span class="ficha-label">${label}:</span> <span class="ficha-value">${val}</span></div>`;
+    });
+
+    let htmlOutros = '';
+    const ignorar = [...camposPessoais, ...camposAcad, 'linkFoto', 'linkDoc', 'Assinatura', 'Observacoes'];
+    for (const [key, val] of Object.entries(dados)) {
+        if (!ignorar.includes(key)) {
+            htmlOutros += `<div class="ficha-row"><span class="ficha-label">${key}:</span> <span class="ficha-value">${val}</span></div>`;
+        }
+    }
+    if(htmlOutros === '') htmlOutros = '<div style="font-style:italic; color:#666; padding:5px;">Nenhuma informação adicional.</div>';
+
+    // CORREÇÃO LOGO FICHA: Usa o logo do cache se existir, senão o fallback
+    const logoFichaUrl = (cacheConfigGeral && cacheConfigGeral.urlLogo) ? formatarUrlDrive(cacheConfigGeral.urlLogo) : URL_LOGO_FALLBACK;
+
+    const htmlFicha = `
+        <div class="ficha-container">
+            <div class="ficha-header">
+                <img src="${logoFichaUrl}" alt="Logo" class="ficha-logo" onerror="this.src='${URL_LOGO_FALLBACK}'; this.onerror=null; this.style.opacity='0'">
+                <div class="ficha-title">FICHA DE INSCRIÇÃO</div>
+                <div class="ficha-subtitle">${evento.titulo}</div>
+                <div class="ficha-key-box">CHAVE: ${chave}</div>
+            </div>
+
+            <div class="ficha-top-row">
+                <div style="flex:1;">
+                    <div class="ficha-section">
+                        <div class="ficha-section-header">DADOS PESSOAIS</div>
+                        <div class="ficha-section-body">${htmlPessoais}</div>
+                    </div>
+                </div>
+                ${imgTag}
+            </div>
+
+            <div class="ficha-section">
+                <div class="ficha-section-header">DADOS ACADÊMICOS</div>
+                <div class="ficha-section-body">${htmlAcad}</div>
+            </div>
+
+            <div class="ficha-section">
+                <div class="ficha-section-header">OUTRAS INFORMAÇÕES</div>
+                <div class="ficha-section-body">${htmlOutros}</div>
+            </div>
+
+            <div class="ficha-sign-area">
+                <div class="ficha-sign-line"></div>
+                <div style="font-weight:bold; font-size:12px;">ASSINATURA DO ALUNO(A)</div>
+                <div style="font-size:11px; margin-top:3px;">${dados.NomeCompleto || ''}</div>
+            </div>
+
+            <div class="ficha-footer">
+                Documento oficial gerado em ${new Date().toLocaleString('pt-BR')} - Secretaria de Educação
+            </div>
+        </div>
+    `;
+
+    // Injeta no Print Layer
+    const pl = document.getElementById('print-layer') || document.createElement('div');
+    pl.id = 'print-layer';
+    if(!pl.parentElement) document.body.appendChild(pl);
+    
+    pl.innerHTML = htmlFicha;
+    
+    // Lógica para aguardar a imagem carregar antes de imprimir
+    const imgEl = pl.querySelector('.ficha-photo-box img');
+    
+    const finalizeAndPrint = () => {
+        Swal.close(); // Garante que o loading feche
+        
+        // Atualiza status silenciosamente se ainda não foi emitida
+        if(inscricao.status !== 'Ficha Emitida') {
+            fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'atualizarStatus', senha: sessionStorage.getItem('admin_token'), chave: chave, novoStatus: 'Ficha Emitida' }) });
+            inscricao.status = 'Ficha Emitida'; 
+        }
+        
+        // Pequeno delay para renderização final do navegador
+        setTimeout(() => window.print(), 100);
+    };
+
+    if (imgEl) {
+        if (imgEl.complete) {
+            finalizeAndPrint();
+        } else {
+            // Mostra loading específico se a imagem demorar
+            if(Swal.isVisible()) {
+                 Swal.update({ title: 'Carregando foto...' });
+            }
+            imgEl.onload = finalizeAndPrint;
+            imgEl.onerror = finalizeAndPrint; // Imprime mesmo com erro na foto
+        }
+    } else {
+        finalizeAndPrint();
+    }
+}
+
 // --- IMPRIMIR CARTEIRINHA PRO (COM QR CODE LINKADO) ---
 function imprimirCarteirinhaAdmin(chave) {
     showLoading('Gerando Carteirinha...');
@@ -1038,23 +1179,6 @@ function imprimirCarteirinhaAdmin(chave) {
              if(parts.length === 3) nascimentoBR = `${parts[2]}/${parts[1]}/${parts[0]}`;
         }
         
-        // Lógica para listar TODOS os campos adicionais dinamicamente no verso
-        let htmlCamposExtras = '';
-        const camposIgnoradosVerso = ['NomeCompleto', 'CPF', 'RG', 'DataNascimento', 'Telefone', 'Endereco', 'Cidade', 'Estado', 'Email', 'NomeInstituicao', 'NomeCurso', 'PeriodoCurso', 'Matricula', 'linkFoto', 'linkDoc', 'Assinatura', 'Observacoes', 'nascimento', 'foto', 'validade'];
-        
-        // Pega os dados originais brutos para acessar campos extras
-        const dadosBrutos = JSON.parse(j.data.dadosJson || '{}');
-        
-        for (const [key, val] of Object.entries(dadosBrutos)) {
-            if (!camposIgnoradosVerso.includes(key) && val) {
-                // Adiciona linha extra se não for ignorado
-                htmlCamposExtras += `
-                    <div class="cart-pro-row">
-                        <span><strong>${key.toUpperCase()}:</strong> ${val}</span>
-                    </div>`;
-            }
-        }
-
         // GERA QR CODE COM LINK CORRETO (Front-end URL)
         const validationUrl = `${URL_VALIDACAO}?c=${chave}`;
         
@@ -1077,7 +1201,7 @@ function imprimirCarteirinhaAdmin(chave) {
                         <img src="${logoUrl}" class="cart-pro-logo">
                         <div class="cart-pro-header-text">
                             <h3>PREFEITURA MUNICIPAL</h3>
-                            <small>${config.nomeSec}</small>
+                            <small>SECRETARIA MUNICIPAL DE EDUCAÇÃO</small>
                         </div>
                     </div>
                     <div class="cart-pro-body">
@@ -1088,6 +1212,7 @@ function imprimirCarteirinhaAdmin(chave) {
                             <h2 style="color:${config.corCart};">${aluno.nome}</h2>
                             <p><strong>CURSO:</strong> ${aluno.curso}</p>
                             <p><strong>INSTITUIÇÃO:</strong> ${aluno.instituicao}</p>
+                            <p><strong>MATRÍCULA:</strong> ${aluno.matricula}</p>
                         </div>
                     </div>
                     <div class="cart-pro-footer" style="background:${config.corCart};">
@@ -1098,14 +1223,11 @@ function imprimirCarteirinhaAdmin(chave) {
                 <!-- VERSO -->
                 <div class="cart-pro-card" style="border: 2px solid ${config.corCart}; position:relative;">
                     <div class="cart-pro-body-back">
-                        <div class="cart-pro-row">
-                            <span><strong>MATRÍCULA:</strong> ${aluno.matricula}</span>
-                        </div>
-                        <div class="cart-pro-row">
+                         <div class="cart-pro-row">
                             <span><strong>CPF:</strong> ${aluno.cpf}</span>
                         </div>
                         
-                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 5px;">
+                         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
                              <div class="cart-pro-validade" style="border: 2px solid ${config.corCart}; color:${config.corCart};">
                                 <span style="font-size: 6px; display: block;">VALIDADE</span>
                                 ${aluno.validade}
@@ -1115,9 +1237,6 @@ function imprimirCarteirinhaAdmin(chave) {
                                 ${nascimentoBR}
                             </div>
                         </div>
-
-                        <!-- Campos Extras Dinâmicos -->
-                        ${htmlCamposExtras}
                         
                         <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto;">
                             <div class="cart-pro-sign" style="width: 60%;">
