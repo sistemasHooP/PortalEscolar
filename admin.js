@@ -3,15 +3,37 @@ const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo
 // --- CONFIGURAÇÃO GERAL ---
 const URL_LOGO = './logo.png'; 
 
+// Definição dos campos opcionais (CPF e Email removidos pois são obrigatórios)
 const CAMPOS_PADRAO = [
-    { key: 'NomeCompleto', label: 'Nome Completo' }, { key: 'CPF', label: 'CPF' },
-    { key: 'DataNascimento', label: 'Nascimento' }, { key: 'Telefone', label: 'Celular' }, 
+    { key: 'NomeCompleto', label: 'Nome Completo' }, 
+    // CPF removido daqui pois é obrigatório
+    { key: 'DataNascimento', label: 'Nascimento' }, 
+    { key: 'Telefone', label: 'Celular' }, 
     { key: 'Endereco', label: 'Endereço' },
-    { key: 'Cidade', label: 'Cidade' }, { key: 'Estado', label: 'UF' },
+    { key: 'Cidade', label: 'Cidade' }, 
+    { key: 'Estado', label: 'UF' },
     { key: 'NomeInstituicao', label: 'Instituição' }, 
-    { key: 'NomeCurso', label: 'Curso' }, { key: 'PeriodoCurso', label: 'Período' }, 
-    { key: 'Matricula', label: 'Matrícula' }, { key: 'Email', label: 'E-mail' }
+    { key: 'NomeCurso', label: 'Curso' }, 
+    { key: 'PeriodoCurso', label: 'Período' }, 
+    { key: 'Matricula', label: 'Matrícula' }, 
+    // Email removido daqui pois é obrigatório
 ];
+
+// Mapeamento completo para exibição em tabelas/modais (inclui os obrigatórios)
+const LABELS_TODOS_CAMPOS = {
+    'NomeCompleto': 'Nome Completo',
+    'CPF': 'CPF',
+    'DataNascimento': 'Nascimento',
+    'Telefone': 'Celular',
+    'Endereco': 'Endereço',
+    'Cidade': 'Cidade',
+    'Estado': 'UF',
+    'NomeInstituicao': 'Instituição',
+    'NomeCurso': 'Curso',
+    'PeriodoCurso': 'Período',
+    'Matricula': 'Matrícula',
+    'Email': 'E-mail'
+};
 
 // Estado da Aplicação
 let mapaEventos = {}; 
@@ -87,7 +109,7 @@ function switchTab(tabId) {
     // 4. Ativa o botão correspondente no menu
     let btnId = '';
     if(tabId === 'tab-dashboard') btnId = 'btn-dashboard';
-    if(tabId === 'tab-relatorios') btnId = 'btn-relatorios'; // Nova Aba
+    if(tabId === 'tab-relatorios') btnId = 'btn-relatorios';
     if(tabId === 'tab-eventos') btnId = 'btn-eventos';
     if(tabId === 'tab-inscricoes') btnId = 'btn-inscricoes';
     if(tabId === 'tab-config') btnId = 'btn-config';
@@ -98,7 +120,6 @@ function switchTab(tabId) {
     }
 
     // 5. Carrega dados específicos da aba
-    // Nota: A aba de relatórios precisa dos mesmos dados do Dashboard (Eventos + Inscrições) para os filtros
     if(tabId === 'tab-dashboard' || tabId === 'tab-relatorios') carregarDashboard();
     
     if(tabId === 'tab-eventos') carregarEventosAdmin();
@@ -231,7 +252,7 @@ function gerarRelatorioTransporte() {
 
     const todasChaves = new Set();
     const chavesPrioritarias = ['NomeCompleto', 'NomeInstituicao', 'NomeCurso', 'PeriodoCurso', 'Telefone', 'Cidade', 'Estado'];
-    const ignorar = ['linkFoto', 'linkDoc', 'Assinatura'];
+    const ignorar = ['linkFoto', 'linkDoc', 'Assinatura', 'CPF', 'Email']; // Oculta CPF e Email do relatório público por padrão
 
     alunosFiltrados.forEach(aluno => {
         try {
@@ -253,7 +274,7 @@ function gerarRelatorioTransporte() {
 
     let htmlChecks = `<div class="checkbox-grid" style="max-height:300px; overflow-y:auto; padding:5px;">`;
     listaChaves.forEach(chave => {
-        const label = CAMPOS_PADRAO.find(c => c.key === chave)?.label || chave;
+        const label = LABELS_TODOS_CAMPOS[chave] || chave;
         const checked = chavesPrioritarias.includes(chave) ? 'checked' : '';
         htmlChecks += `
             <label class="checkbox-card">
@@ -317,7 +338,7 @@ function construirRelatorioFinal(alunos, colunasKeys, eventoId) {
 
     let thead = `<tr><th class="col-index">#</th>`;
     colunasKeys.forEach(k => {
-        const label = k === 'Assinatura' ? 'Assinatura' : (CAMPOS_PADRAO.find(c => c.key === k)?.label || k);
+        const label = k === 'Assinatura' ? 'Assinatura' : (LABELS_TODOS_CAMPOS[k] || k);
         const widthStyle = k === 'Assinatura' ? 'width: 25%;' : '';
         thead += `<th style="${widthStyle}">${label}</th>`;
     });
@@ -483,6 +504,7 @@ function toggleStatusEvento(id, status) {
 
 function modalNovoEvento() {
     let htmlCampos = '<div class="checkbox-grid">';
+    // GERAÇÃO DE CAMPOS OPCIONAIS (CPF e Email já foram excluídos de CAMPOS_PADRAO)
     CAMPOS_PADRAO.forEach(c => {
         if(c.key !== 'Cidade' && c.key !== 'Estado') { 
              htmlCampos += `<label class="checkbox-card"><input type="checkbox" id="check_${c.key}" value="${c.key}" checked> ${c.label}</label>`;
@@ -494,6 +516,10 @@ function modalNovoEvento() {
         title: 'Criar Novo Evento', 
         width: '900px',
         html: `
+            <div style="background:#eff6ff; color:#1e40af; padding:10px; border-radius:6px; font-size:0.85rem; margin-bottom:15px; border:1px solid #dbeafe;">
+                <i class="fa-solid fa-info-circle"></i> <strong>Nota:</strong> CPF e E-mail são obrigatórios e incluídos automaticamente.
+            </div>
+
             <div class="swal-grid-2">
                 <div>
                     <label class="swal-label">Título do Evento</label>
@@ -513,7 +539,7 @@ function modalNovoEvento() {
             <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid #e2e8f0;">
                 <h4 style="margin: 0 0 15px 0; color: var(--primary); font-size:0.9rem; text-transform:uppercase;">Configuração do Formulário</h4>
                 
-                <label class="swal-label">Campos do Aluno</label>
+                <label class="swal-label">Campos Adicionais do Aluno</label>
                 ${htmlCampos}
                 
                 <div class="swal-grid-2" style="margin-top: 15px;">
@@ -559,7 +585,10 @@ function modalNovoEvento() {
                 return false;
             }
 
-            const sels = ['Cidade', 'Estado']; 
+            // Sempre inclui CPF e Email ocultamente, além de Cidade/Estado
+            const sels = ['Cidade', 'Estado', 'CPF', 'Email']; 
+            
+            // Adiciona campos selecionados pelo usuário
             CAMPOS_PADRAO.forEach(c => { 
                 const el = document.getElementById(`check_${c.key}`);
                 if(el && el.checked) sels.push(c.key); 
@@ -715,9 +744,10 @@ function abrirEdicaoInscricao(chave) {
     const ignorar = ['linkFoto', 'linkDoc'];
     const camposAcad = ['NomeInstituicao', 'NomeCurso', 'PeriodoCurso', 'Matricula', 'Turno'];
 
+    // Usamos o mapeamento completo para os labels, garantindo que CPF e Email tenham rótulos
     for (const [key, val] of Object.entries(dados)) {
         if (!ignorar.includes(key)) {
-            const label = CAMPOS_PADRAO.find(c => c.key === key)?.label || key;
+            const label = LABELS_TODOS_CAMPOS[key] || key;
             const inputHtml = `<div style="margin-bottom:8px;"><label class="swal-label">${label}</label><input type="text" id="edit_aluno_${key}" value="${val}" class="swal-input-custom"></div>`;
             
             if (camposAcad.includes(key) || key.startsWith('Inst') || key.includes('Curso')) {
