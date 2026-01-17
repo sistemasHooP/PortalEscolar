@@ -1,7 +1,8 @@
 const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
 
 // --- CONFIGURAÇÃO GERAL ---
-const URL_LOGO = './logo.png'; 
+// O logo será carregado dinamicamente das configurações, este é apenas um fallback local
+const URL_LOGO_FALLBACK = './logo.png'; 
 
 // Campos padrão
 const CAMPOS_PADRAO = [
@@ -45,10 +46,11 @@ let selecionados = new Set();
 
 // --- LOADING CUSTOMIZADO ---
 function showLoading(msg = 'Processando...') {
+    const logoUrl = (cacheConfigGeral && cacheConfigGeral.urlLogo) ? cacheConfigGeral.urlLogo : URL_LOGO_FALLBACK;
     Swal.fire({
         html: `
             <div style="display:flex; flex-direction:column; align-items:center; gap:15px; padding:20px;">
-                <img src="${URL_LOGO}" style="width:60px; height:auto; animation: pulse-swal 1.5s infinite ease-in-out;" onerror="this.style.display='none'">
+                <img src="${logoUrl}" style="width:60px; height:auto; animation: pulse-swal 1.5s infinite ease-in-out;" onerror="this.src='${URL_LOGO_FALLBACK}'; this.onerror=null; this.style.display='none'">
                 <h3 style="font-family:'Poppins', sans-serif; font-size:1.1rem; color:#1e293b; margin:0; font-weight:600;">${msg}</h3>
                 <style>@keyframes pulse-swal { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }</style>
             </div>
@@ -330,7 +332,7 @@ function construirRelatorioFinal(alunos, colunasKeys, eventoId) {
         <div class="report-container">
             <div class="report-header">
                 <div class="header-left">
-                    <img src="${URL_LOGO}" alt="Logo" class="report-logo" onerror="this.style.opacity='0'">
+                    <img src="${(cacheConfigGeral && cacheConfigGeral.urlLogo) ? cacheConfigGeral.urlLogo : URL_LOGO_FALLBACK}" alt="Logo" class="report-logo" onerror="this.src='${URL_LOGO_FALLBACK}'; this.onerror=null; this.style.opacity='0'">
                     <div class="header-titles">
                         <h1>Relatório de Transporte Escolar</h1>
                         <p>${tituloEvento}</p>
@@ -1021,10 +1023,13 @@ function gerarFicha(chave) {
     }
     if(htmlOutros === '') htmlOutros = '<div style="font-style:italic; color:#666; padding:5px;">Nenhuma informação adicional.</div>';
 
+    // CORREÇÃO LOGO FICHA: Usa o logo do cache se existir, senão o fallback
+    const logoFichaUrl = (cacheConfigGeral && cacheConfigGeral.urlLogo) ? cacheConfigGeral.urlLogo : URL_LOGO_FALLBACK;
+
     const htmlFicha = `
         <div class="ficha-container">
             <div class="ficha-header">
-                <img src="${URL_LOGO}" alt="Logo" class="ficha-logo" onerror="this.style.opacity='0'">
+                <img src="${logoFichaUrl}" alt="Logo" class="ficha-logo" onerror="this.src='${URL_LOGO_FALLBACK}'; this.onerror=null; this.style.opacity='0'">
                 <div class="ficha-title">FICHA DE INSCRIÇÃO</div>
                 <div class="ficha-subtitle">${evento.titulo}</div>
                 <div class="ficha-key-box">CHAVE: ${chave}</div>
@@ -1101,7 +1106,7 @@ function gerarFicha(chave) {
     }
 }
 
-// --- IMPRIMIR CARTEIRINHA PRO (COM QR CODE) ---
+// --- IMPRIMIR CARTEIRINHA PRO (COM QR CODE LINKADO) ---
 function imprimirCarteirinhaAdmin(chave) {
     showLoading('Gerando Carteirinha...');
     
@@ -1112,12 +1117,13 @@ function imprimirCarteirinhaAdmin(chave) {
         
         // Garante que o cache de config foi carregado
         if(!cacheConfigGeral) {
-            // Se por algum motivo não tiver cache, usa padrão
-            cacheConfigGeral = { corCart: "#2563eb", nomeSec: "Secretaria de Educação", nomeSecretario: "Responsável" };
+            cacheConfigGeral = { corCart: "#2563eb", nomeSec: "Secretaria de Educação", nomeSecretario: "Responsável", urlLogo: URL_LOGO_FALLBACK };
         }
         
         const aluno = j.data.aluno;
         const config = cacheConfigGeral;
+        const anoAtual = new Date().getFullYear();
+        const logoUrl = config.urlLogo || URL_LOGO_FALLBACK;
         
         // Tratamento da Foto
         let imgSrc = 'https://via.placeholder.com/150?text=FOTO';
@@ -1131,102 +1137,149 @@ function imprimirCarteirinhaAdmin(chave) {
             }
         }
 
-        // Gera QR Code
+        // CORREÇÃO DATA NASCIMENTO (AAAA-MM-DD -> DD/MM/AAAA)
+        let nascimentoBR = aluno.nascimento || '-';
+        if(nascimentoBR.includes('-')) {
+             const parts = nascimentoBR.split('-');
+             if(parts.length === 3) nascimentoBR = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        // GERA QR CODE COM LINK DE VALIDAÇÃO (Requer update no backend depois)
+        // O link aponta para o próprio Web App com parâmetros de validação
+        const validationUrl = `${URL_API}?action=validarDocumento&c=${chave}&d=${aluno.cpf.slice(0,3)}`; // Usando parte do CPF para ofuscar levemente
+        
         const qrCanvas = document.createElement('canvas');
         const qr = new QRious({
             element: qrCanvas,
-            value: `VALID:${chave}|${aluno.cpf}`, // Dados para validação
-            size: 200
+            value: validationUrl, // URL direta para validação
+            size: 250, // Aumentar um pouco a resolução
+            level: 'H' // Alto nível de correção de erro
         });
         const qrDataUrl = qrCanvas.toDataURL();
 
-        // Template HTML (Frente e Verso)
-        // Usamos CSS Grid para colocar lado a lado na impressão paisagem
+        // Template HTML (Layout Profissional Frente e Verso)
         const htmlCart = `
-            <div class="print-page-landscape" style="display:flex; justify-content:center; align-items:center; height:100vh; gap:20px;">
+            <div class="print-page-landscape" style="display:flex; justify-content:center; align-items:center; height:100vh; gap:30px; background:#f0f2f5;">
                 
                 <!-- FRENTE -->
-                <div class="cart-pro-card" style="border: 2px solid ${config.corCart};">
-                    <div class="cart-pro-header" style="background:${config.corCart};">
-                        <img src="${URL_LOGO}" class="cart-pro-logo">
-                        <div class="cart-pro-header-text">
-                            <h3>CARTEIRA DE ESTUDANTIL</h3>
-                            <small>${config.nomeSec}</small>
+                <div class="cart-pro-card box-shadow">
+                    <div class="cart-header-bar" style="background:${config.corCart};">
+                        <img src="${logoUrl}" class="cart-logo-img" onerror="this.src='${URL_LOGO_FALLBACK}'; this.onerror=null;">
+                        <div class="cart-header-text">
+                            <h3>PREFEITURA MUNICIPAL</h3>
+                            <small>${config.nomeSec.toUpperCase()}</small>
                         </div>
                     </div>
-                    <div class="cart-pro-body">
-                        <div class="cart-pro-photo-frame" style="border-color:${config.corCart};">
+                    
+                    <div class="cart-body-front">
+                        <div class="cart-photo-container" style="border-color:${config.corCart};">
                             <img src="${imgSrc}">
                         </div>
-                        <div class="cart-pro-info">
+                        <div class="cart-details-front">
                             <h2 style="color:${config.corCart};">${aluno.nome}</h2>
-                            <p><strong>CURSO:</strong> ${aluno.curso}</p>
-                            <p><strong>INSTITUIÇÃO:</strong> ${aluno.instituicao}</p>
+                            <div class="cart-detail-row">
+                                <span class="label">CURSO:</span> <span class="value">${aluno.curso}</span>
+                            </div>
+                            <div class="cart-detail-row">
+                                <span class="label">INSTITUIÇÃO:</span> <span class="value">${aluno.instituicao}</span>
+                            </div>
+                             <div class="cart-detail-row">
+                                <span class="label">MATRÍCULA:</span> <span class="value">${aluno.matricula}</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="cart-pro-footer" style="background:${config.corCart};">
-                        ENSINO SUPERIOR / TÉCNICO
+                    
+                    <div class="cart-footer-bar" style="background:${config.corCart};">
+                        ESTUDANTE ${anoAtual}
                     </div>
                 </div>
 
                 <!-- VERSO -->
-                <div class="cart-pro-card" style="border: 2px solid ${config.corCart}; position:relative;">
-                    <div class="cart-pro-body-back">
-                        <div class="cart-pro-row">
-                            <span><strong>CPF:</strong> ${aluno.cpf}</span>
-                            <span><strong>RG:</strong> ${aluno.rg || '----------'}</span>
-                        </div>
-                        <div class="cart-pro-row">
-                            <span><strong>NASCIMENTO:</strong> ${aluno.nascimento}</span>
-                            <span><strong>MATRÍCULA:</strong> ${aluno.matricula}</span>
-                        </div>
+                <div class="cart-pro-card box-shadow" style="position:relative;">
+                    <div class="cart-body-back">
                         
-                        <div class="cart-pro-validade" style="border: 2px solid ${config.corCart}; color:${config.corCart};">
-                            VALIDADE: ${aluno.validade}
+                        <div class="cart-back-grid">
+                            <div><span class="label-back">CPF</span><br><span class="value-back">${aluno.cpf}</span></div>
+                            <div><span class="label-back">RG</span><br><span class="value-back">${aluno.rg || '----------'}</span></div>
+                            <div><span class="label-back">NASCIMENTO</span><br><span class="value-back">${nascimentoBR}</span></div>
                         </div>
 
-                        <div class="cart-pro-qr">
-                            <img src="${qrDataUrl}" style="width:90px; height:90px;">
+                        <div class="cart-validity-box" style="border-color:${config.corCart};">
+                            <span class="validity-label" style="color:${config.corCart};">VALIDADE</span>
+                            <strong class="validity-date">${aluno.validade}</strong>
                         </div>
-                        
-                        <div class="cart-pro-sign">
-                            <div class="line"></div>
-                            ${config.nomeSecretario}
+
+                        <div class="cart-bottom-section">
+                            <div class="cart-sign-box">
+                                <div class="line"></div>
+                                <span>${config.nomeSecretario}</span>
+                                <small>Secretário(a) Municipal</small>
+                            </div>
+                            <div class="cart-qr-box">
+                                <img src="${qrDataUrl}">
+                                <small style="color:${config.corCart};">Escaneie para validar</small>
+                            </div>
                         </div>
                     </div>
-                    <div class="cart-pro-footer-back" style="background:${config.corCart};">
-                        Lei Federal nº 12.933/2013
+                    <div class="cart-footer-bar-back" style="background:${config.corCart};">
+                        DOCUMENTO DE IDENTIFICAÇÃO ESTUDANTIL
                     </div>
                 </div>
             </div>
             
             <style>
+                /* RESET PARA IMPRESSÃO */
+                @media print {
+                    body * { visibility: hidden; }
+                    #print-layer, #print-layer * { visibility: visible; }
+                    #print-layer { position: absolute; left: 0; top: 0; width: 100%; }
+                    @page { size: landscape; margin: 0; }
+                    .print-page-landscape { background: white !important; height: 100% !important; }
+                    .box-shadow { box-shadow: none !important; border: 1px solid #ddd; }
+                }
+
                 .cart-pro-card {
-                    width: 85.6mm; height: 53.98mm; /* Tamanho Cartão Crédito */
-                    background: white; border-radius: 10px; overflow: hidden;
-                    box-shadow: 0 0 5px rgba(0,0,0,0.2);
-                    display: flex; flex-direction: column;
+                    width: 85.6mm; height: 53.98mm; /* Tamanho ISO 7810 ID-1 */
+                    background: white; border-radius: 12px; overflow: hidden;
+                    display: flex; flex-direction: column; font-family: 'Helvetica', Arial, sans-serif;
                     -webkit-print-color-adjust: exact; print-color-adjust: exact;
                 }
-                .cart-pro-header { height: 40px; display: flex; align-items: center; padding: 0 10px; color: white; }
-                .cart-pro-logo { height: 30px; width: 30px; background: white; border-radius: 50%; padding: 2px; margin-right: 8px; }
-                .cart-pro-header-text h3 { margin: 0; font-size: 9px; font-weight: 800; }
-                .cart-pro-header-text small { font-size: 6px; text-transform: uppercase; }
-                .cart-pro-body { flex: 1; display: flex; padding: 10px; align-items: center; }
-                .cart-pro-photo-frame { width: 28mm; height: 35mm; border: 2px solid; margin-right: 10px; border-radius: 4px; overflow: hidden; }
-                .cart-pro-photo-frame img { width: 100%; height: 100%; object-fit: cover; }
-                .cart-pro-info h2 { margin: 0 0 5px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; line-height: 1.1; }
-                .cart-pro-info p { margin: 2px 0; font-size: 8px; text-transform: uppercase; }
-                .cart-pro-footer { height: 18px; display: flex; align-items: center; justify-content: center; color: white; font-size: 7px; font-weight: bold; letter-spacing: 1px; }
+                .box-shadow { box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+
+                /* FRENTE */
+                .cart-header-bar { height: 42px; display: flex; align-items: center; padding: 0 12px; color: white; }
+                .cart-logo-img { height: 32px; width: 32px; background: white; border-radius: 50%; padding: 2px; margin-right: 10px; object-fit: contain; }
+                .cart-header-text h3 { margin: 0; font-size: 10px; font-weight: 900; letter-spacing: 0.5px; }
+                .cart-header-text small { font-size: 7px; font-weight: 500; opacity: 0.9; }
+                .cart-body-front { flex: 1; display: flex; padding: 12px; align-items: center; gap: 15px; }
+                .cart-photo-container { width: 26mm; height: 34mm; border: 3px solid; border-radius: 6px; overflow: hidden; flex-shrink: 0; }
+                .cart-photo-container img { width: 100%; height: 100%; object-fit: cover; }
+                .cart-details-front { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+                .cart-details-front h2 { margin: 0 0 8px 0; font-size: 12px; font-weight: 900; text-transform: uppercase; line-height: 1.1; }
+                .cart-detail-row { margin-bottom: 3px; font-size: 8px; text-transform: uppercase; }
+                .cart-detail-row .label { font-weight: 700; color: #555; margin-right: 4px; }
+                .cart-detail-row .value { font-weight: 600; color: #000; }
+                .cart-footer-bar { height: 22px; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
 
                 /* VERSO */
-                .cart-pro-body-back { flex: 1; padding: 10px; font-size: 8px; position: relative; }
-                .cart-pro-row { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px dotted #ccc; padding-bottom: 2px; }
-                .cart-pro-validade { position: absolute; top: 40px; left: 10px; padding: 2px 5px; font-weight: bold; border-radius: 4px; font-size: 9px; }
-                .cart-pro-qr { position: absolute; top: 10px; right: 10px; }
-                .cart-pro-sign { position: absolute; bottom: 10px; width: 100%; text-align: center; font-weight: bold; font-size: 7px; }
-                .cart-pro-sign .line { width: 60%; border-top: 1px solid #000; margin: 0 auto 2px; }
-                .cart-pro-footer-back { height: 15px; display: flex; align-items: center; justify-content: center; color: white; font-size: 6px; }
+                .cart-body-back { flex: 1; padding: 15px 12px 5px 12px; display: flex; flex-direction: column; }
+                .cart-back-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+                .label-back { font-size: 7px; font-weight: 700; color: #666; text-transform: uppercase; }
+                .value-back { font-size: 9px; font-weight: 600; color: #000; }
+                
+                .cart-validity-box { border: 2px solid; border-radius: 6px; text-align: center; padding: 4px; margin-bottom: 10px; background: #f9f9f9; }
+                .validity-label { display: block; font-size: 8px; font-weight: 900; letter-spacing: 1px; margin-bottom: 2px; }
+                .validity-date { font-size: 14px; font-weight: 900; display: block; }
+
+                .cart-bottom-section { flex: 1; display: flex; align-items: flex-end; justify-content: space-between; }
+                .cart-sign-box { text-align: center; width: 60%; }
+                .cart-sign-box .line { border-top: 1px solid #333; margin-bottom: 4px; }
+                .cart-sign-box span { font-size: 8px; font-weight: 700; display: block; text-transform: uppercase; }
+                .cart-sign-box small { font-size: 7px; color: #666; }
+                .cart-qr-box { text-align: center; width: 35%; display: flex; flex-direction: column; align-items: center; }
+                .cart-qr-box img { width: 60px; height: 60px; }
+                .cart-qr-box small { font-size: 6px; font-weight: 700; margin-top: 2px; text-transform: uppercase; }
+                .cart-footer-bar-back { height: 16px; display: flex; align-items: center; justify-content: center; color: white; font-size: 7px; font-weight: 700; letter-spacing: 0.5px; }
             </style>
         `;
 
@@ -1235,13 +1288,16 @@ function imprimirCarteirinhaAdmin(chave) {
         if(!pl.parentElement) document.body.appendChild(pl);
         pl.innerHTML = htmlCart;
         
-        // Aguarda a imagem carregar
-        const imgEl = pl.querySelector('.cart-pro-photo-frame img');
-        if(imgEl && !imgEl.complete) {
-            imgEl.onload = () => { Swal.close(); setTimeout(() => window.print(), 200); };
-        } else {
-            Swal.close(); setTimeout(() => window.print(), 200);
-        }
+        // Aguarda a imagem e o logo carregarem
+        const imgEl = pl.querySelector('.cart-photo-container img');
+        const logoEl = pl.querySelector('.cart-logo-img');
+        let loaded = 0; const total = (imgEl ? 1 : 0) + (logoEl ? 1 : 0);
+        
+        const checkPrint = () => { loaded++; if(loaded >= total) { Swal.close(); setTimeout(() => window.print(), 300); } };
+        
+        if(imgEl) { if(imgEl.complete) checkPrint(); else imgEl.onload = imgEl.onerror = checkPrint; }
+        if(logoEl) { if(logoEl.complete) checkPrint(); else logoEl.onload = logoEl.onerror = checkPrint; }
+        if(total === 0) { Swal.close(); setTimeout(() => window.print(), 300); }
     });
 }
 
