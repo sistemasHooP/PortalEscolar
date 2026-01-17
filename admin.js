@@ -140,7 +140,7 @@ function salvarConfigDrive() {
             idPasta: id 
         }) 
     }).then(() => {
-        Swal.fire({icon: 'success', title: 'Salvo!', timer: 1500, showConfirmButton: false});
+        Swal.fire({icon: 'success', title: 'Configuração Salva!', timer: 1500, showConfirmButton: false});
     });
 }
 
@@ -221,7 +221,7 @@ function atualizarSelectsRelatorio(eventos, inscricoes) {
     }
 }
 
-// --- RELATÓRIO PDF LISTA (Geral) ---
+// --- RELATÓRIO PDF ---
 function gerarRelatorioTransporte() {
     const eventoId = document.getElementById('relatorio-evento').value;
     const instFiltro = document.getElementById('relatorio-inst').value;
@@ -440,10 +440,20 @@ function abrirEdicaoEvento(evento) {
         width: '900px',
         html: `
             <div class="swal-grid-2">
-                <div><label class="swal-label">Data de Encerramento</label><input type="date" id="edit_fim" class="swal-input-custom" value="${evento.fim ? evento.fim.split('T')[0] : ''}"></div>
-                <div><label class="swal-label">Restrição de Cidades</label><input type="text" id="edit_cidades" class="swal-input-custom" placeholder="Separe por vírgulas..." value="${cidades}"></div>
+                <div>
+                    <label class="swal-label">Data de Encerramento</label>
+                    <input type="date" id="edit_fim" class="swal-input-custom" value="${evento.fim ? evento.fim.split('T')[0] : ''}">
+                </div>
+                <div>
+                    <label class="swal-label">Restrição de Cidades</label>
+                    <input type="text" id="edit_cidades" class="swal-input-custom" placeholder="Separe por vírgulas..." value="${cidades}">
+                </div>
             </div>
-            <div class="swal-full"><label class="swal-label">Mensagem de Alerta (Topo)</label><textarea id="edit_msg" class="swal-input-custom" style="height:60px;">${config.mensagemAlerta || ''}</textarea></div>
+            
+            <div class="swal-full">
+                <label class="swal-label">Mensagem de Alerta (Topo do Formulário)</label>
+                <textarea id="edit_msg" class="swal-input-custom" style="height:60px;">${config.mensagemAlerta || ''}</textarea>
+            </div>
             
             <div style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:15px;">
                 <label class="swal-label" style="color:var(--primary);">Perguntas Personalizadas (Opcional)</label>
@@ -527,7 +537,9 @@ function modalNovoEvento() {
             </div>
 
             <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid #e2e8f0;">
-                <label class="swal-label">Campos Padrão do Aluno</label>
+                <h4 style="margin: 0 0 15px 0; color: var(--primary); font-size:0.9rem; text-transform:uppercase;">Configuração do Formulário</h4>
+                
+                <label class="swal-label">Campos Adicionais do Aluno</label>
                 ${htmlCampos}
                 
                 <div style="margin-top:20px; border-top:1px dashed #cbd5e1; padding-top:15px;">
@@ -540,17 +552,34 @@ function modalNovoEvento() {
                 </div>
 
                 <div class="swal-grid-2" style="margin-top: 15px;">
-                    <div><label class="swal-label">Restrição de Cidades</label><input type="text" id="swal-cidades" class="swal-input-custom" placeholder="Deixe vazio para todas"></div>
-                    <div><label class="swal-label">Obs (Leitura)</label><textarea id="txt_obs_admin" class="swal-input-custom" style="height:42px;"></textarea></div>
+                    <div>
+                        <label class="swal-label">Restrição de Cidades</label>
+                        <input type="text" id="swal-cidades" class="swal-input-custom" placeholder="Deixe vazio para todas">
+                    </div>
+                    <div>
+                        <label class="swal-label">Observações (Somente Leitura)</label>
+                        <textarea id="txt_obs_admin" class="swal-input-custom" style="height:42px;" placeholder="Instruções para o aluno..."></textarea>
+                    </div>
                 </div>
-                <label class="swal-label" style="margin-top: 15px;">Uploads</label>
+
+                <label class="swal-label" style="margin-top: 15px;">Documentos Obrigatórios</label>
                 <div class="checkbox-grid">
                     <label class="checkbox-card"><input type="checkbox" id="req_foto" checked> Foto 3x4</label>
-                    <label class="checkbox-card"><input type="checkbox" id="req_doc" checked> Declaração</label>
+                    <label class="checkbox-card"><input type="checkbox" id="req_doc" checked> Declaração/Comprovante</label>
                 </div>
-                <div class="checkbox-grid" style="margin-top: 15px;">
-                    <label class="checkbox-card" style="background:#fffbeb; border-color:#f59e0b;"><input type="checkbox" id="req_ficha" checked> Exigir Ficha Presencial</label>
-                    <label class="checkbox-card" style="background:#eff6ff; border-color:#3b82f6;"><input type="checkbox" id="emitir_carteirinha"> Carteirinha Digital</label>
+
+                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed #cbd5e1;">
+                     <label class="swal-label">Regras de Negócio</label>
+                     <div class="checkbox-grid">
+                        <label class="checkbox-card" style="background: #fffbeb; border-color: #f59e0b;">
+                            <input type="checkbox" id="req_ficha" checked> 
+                            <strong>Exigir Assinatura Presencial</strong>
+                        </label>
+                        <label class="checkbox-card" style="background: #eff6ff; border-color: #3b82f6;">
+                            <input type="checkbox" id="emitir_carteirinha"> 
+                            <strong>Emitir Carteirinha Digital</strong>
+                        </label>
+                     </div>
                 </div>
             </div>
         `,
@@ -569,13 +598,17 @@ function modalNovoEvento() {
             });
         },
         preConfirm: () => {
-            const t = document.getElementById('swal-titulo').value;
-            const i = document.getElementById('swal-inicio').value;
-            const f = document.getElementById('swal-fim').value;
+            const titulo = document.getElementById('swal-titulo').value;
+            const inicio = document.getElementById('swal-inicio').value;
+            const fim = document.getElementById('swal-fim').value;
 
-            if(!t || !i || !f) { Swal.showValidationMessage('Preencha dados básicos.'); return false; }
+            if(!titulo || !inicio || !fim) {
+                Swal.showValidationMessage('Preencha Título e Datas.');
+                return false;
+            }
 
-            const sels = ['Cidade', 'Estado']; // CPF e Email são fixos
+            const sels = ['Cidade', 'Estado']; 
+            
             CAMPOS_PADRAO.forEach(c => { 
                 const el = document.getElementById(`check_${c.key}`);
                 if(el && el.checked) sels.push(c.key); 
@@ -588,7 +621,7 @@ function modalNovoEvento() {
             const cidadesArr = cidadesTexto ? cidadesTexto.split(',').map(s => s.trim()).filter(s => s) : [];
 
             return {
-                titulo: t, descricao: document.getElementById('swal-desc').value,
+                titulo: titulo, descricao: document.getElementById('swal-desc').value,
                 inicio: i, fim: f,
                 config: { 
                     camposTexto: sels, 
@@ -869,8 +902,10 @@ function acaoEmMassa(s) {
     });
 }
 
-// --- NOVA FUNÇÃO GERAR FICHA (LOCAL / FRONT-END) ---
+// --- GERAR FICHA CORRIGIDA (ESPERA IMAGEM) ---
 function gerarFicha(chave) {
+    showLoading('Gerando Ficha...'); // Feedback inicial importante
+
     const inscricao = todasInscricoes.find(i => i.chave === chave);
     if (!inscricao) return Swal.fire('Erro', 'Inscrição não encontrada na memória.', 'error');
 
@@ -879,7 +914,6 @@ function gerarFicha(chave) {
 
     let evento = cacheEventos[inscricao.eventoId] || { titulo: 'Documento Oficial' };
 
-    // Tenta obter a URL da foto corrigida para exibição direta
     let fotoUrl = '';
     if(dados.linkFoto) {
         if(dados.linkFoto.includes('drive.google.com')) {
@@ -890,13 +924,10 @@ function gerarFicha(chave) {
         }
     }
 
-    // HTML da Foto (ou Placeholder)
     const imgTag = fotoUrl 
         ? `<div class="ficha-photo-box" style="border:none;"><img src="${fotoUrl}" style="width:100px; height:130px; object-fit:cover; border:1px solid #000;"></div>`
         : `<div class="ficha-photo-box">SEM FOTO</div>`;
 
-    // Montagem das Seções de Dados
-    // Dados Pessoais
     const camposPessoais = ['NomeCompleto', 'CPF', 'DataNascimento', 'Telefone', 'Endereco', 'Cidade', 'Estado', 'Email'];
     let htmlPessoais = '';
     camposPessoais.forEach(key => {
@@ -905,7 +936,6 @@ function gerarFicha(chave) {
         htmlPessoais += `<div class="ficha-row"><span class="ficha-label">${label}:</span> <span class="ficha-value">${val}</span></div>`;
     });
 
-    // Dados Acadêmicos
     const camposAcad = ['NomeInstituicao', 'NomeCurso', 'PeriodoCurso', 'Matricula'];
     let htmlAcad = '';
     camposAcad.forEach(key => {
@@ -914,7 +944,6 @@ function gerarFicha(chave) {
         htmlAcad += `<div class="ficha-row"><span class="ficha-label">${label}:</span> <span class="ficha-value">${val}</span></div>`;
     });
 
-    // Outros Campos (Personalizados e Extras)
     let htmlOutros = '';
     const ignorar = [...camposPessoais, ...camposAcad, 'linkFoto', 'linkDoc', 'Assinatura', 'Observacoes'];
     for (const [key, val] of Object.entries(dados)) {
@@ -924,7 +953,6 @@ function gerarFicha(chave) {
     }
     if(htmlOutros === '') htmlOutros = '<div style="font-style:italic; color:#666; padding:5px;">Nenhuma informação adicional.</div>';
 
-    // Montagem Final do HTML
     const htmlFicha = `
         <div class="ficha-container">
             <div class="ficha-header">
@@ -966,21 +994,43 @@ function gerarFicha(chave) {
         </div>
     `;
 
-    // Injeta no Print Layer e Imprime
+    // Injeta no Print Layer
     const pl = document.getElementById('print-layer') || document.createElement('div');
     pl.id = 'print-layer';
     if(!pl.parentElement) document.body.appendChild(pl);
     
     pl.innerHTML = htmlFicha;
     
-    // Atualiza status silenciosamente se ainda não foi emitida
-    if(inscricao.status !== 'Ficha Emitida') {
-        fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'atualizarStatus', senha: sessionStorage.getItem('admin_token'), chave: chave, novoStatus: 'Ficha Emitida' }) });
-        inscricao.status = 'Ficha Emitida'; // Atualiza local
-        // Não chamamos resetEFiltrar para não pular a tela do usuário antes da impressão
-    }
+    // Lógica para aguardar a imagem carregar antes de imprimir
+    const imgEl = pl.querySelector('.ficha-photo-box img');
+    
+    const finalizeAndPrint = () => {
+        Swal.close(); // Garante que o loading feche
+        
+        // Atualiza status silenciosamente se ainda não foi emitida
+        if(inscricao.status !== 'Ficha Emitida') {
+            fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'atualizarStatus', senha: sessionStorage.getItem('admin_token'), chave: chave, novoStatus: 'Ficha Emitida' }) });
+            inscricao.status = 'Ficha Emitida'; 
+        }
+        
+        // Pequeno delay para renderização final do navegador
+        setTimeout(() => window.print(), 100);
+    };
 
-    setTimeout(() => window.print(), 500);
+    if (imgEl) {
+        if (imgEl.complete) {
+            finalizeAndPrint();
+        } else {
+            // Mostra loading específico se a imagem demorar
+            if(Swal.isVisible()) {
+                 Swal.update({ title: 'Carregando foto...' });
+            }
+            imgEl.onload = finalizeAndPrint;
+            imgEl.onerror = finalizeAndPrint; // Imprime mesmo com erro na foto
+        }
+    } else {
+        finalizeAndPrint();
+    }
 }
 
 function imprimirCarteirinhaAdmin(chave) {
