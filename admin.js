@@ -1,11 +1,11 @@
 const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
-// URL BASE para validação (QR Code)
+// URL BASE para validação (QR Code) - Aponta para a página pública
 const URL_VALIDACAO = 'https://sistemashoop.github.io/PortalEscolar/validacao.html';
 
 // --- CONFIGURAÇÃO GERAL ---
 const URL_LOGO_FALLBACK = './logo.png'; 
 
-// Campos padrão
+// Campos padrão (CPF e Email são fixos)
 const CAMPOS_PADRAO = [
     { key: 'NomeCompleto', label: 'Nome Completo' }, 
     { key: 'DataNascimento', label: 'Nascimento' }, 
@@ -339,7 +339,6 @@ function construirRelatorioFinal(alunos, colunasKeys, eventoId) {
 
     if (!colunasKeys.includes('Assinatura')) colunasKeys.push('Assinatura');
     
-    // Logo para Ficha (usa fallback se config falhar)
     const logoUrl = (cacheConfigGeral && cacheConfigGeral.urlLogo) ? formatarUrlDrive(cacheConfigGeral.urlLogo) : URL_LOGO_FALLBACK;
 
     let htmlContent = `
@@ -1029,14 +1028,7 @@ function gerarFicha(chave) {
     let htmlPessoais = '';
     camposPessoais.forEach(key => {
         const label = LABELS_TODOS_CAMPOS[key] || key;
-        let val = dados[key] || '-';
-        
-        // CORREÇÃO: Formatar Data de Nascimento
-        if(key === 'DataNascimento' && val !== '-') {
-            const parts = val.split('-');
-            if(parts.length === 3) val = `${parts[2]}/${parts[1]}/${parts[0]}`;
-        }
-
+        const val = dados[key] || '-';
         htmlPessoais += `<div class="ficha-row"><span class="ficha-label">${label}:</span> <span class="ficha-value">${val}</span></div>`;
     });
 
@@ -1151,7 +1143,7 @@ function imprimirCarteirinhaAdmin(chave) {
         
         // Garante que o cache de config foi carregado
         if(!cacheConfigGeral) {
-            cacheConfigGeral = { corCart: "#2563eb", nomeSec: "Secretaria de Educação", nomeSecretario: "Responsável", urlLogo: URL_LOGO_FALLBACK };
+            cacheConfigGeral = { corCart: "#2563eb", nomeSec: "SECRETARIA MUNICIPAL DE EDUCAÇÃO", nomeSecretario: "Responsável", urlLogo: URL_LOGO_FALLBACK };
         }
         
         const aluno = j.data.aluno;
