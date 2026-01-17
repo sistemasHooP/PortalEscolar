@@ -62,7 +62,6 @@
                     <button id="btn-dashboard" class="nav-item active" onclick="switchTab('tab-dashboard')">
                         <i class="fa-solid fa-gauge-high"></i> Dashboard
                     </button>
-                    <!-- NOVA ABA RELATÓRIOS -->
                     <button id="btn-relatorios" class="nav-item" onclick="switchTab('tab-relatorios')">
                         <i class="fa-solid fa-file-contract"></i> Relatórios
                     </button>
@@ -138,7 +137,7 @@
                     </section>
 
                     <!-- ========================================= -->
-                    <!-- NOVA ABA: RELATÓRIOS -->
+                    <!-- ABA: RELATÓRIOS -->
                     <!-- ========================================= -->
                     <section id="tab-relatorios" class="tab-content hidden">
                         <div class="page-header">
@@ -280,18 +279,21 @@
                     </section>
 
                     <!-- ========================================= -->
-                    <!-- ABA 4: CONFIGURAÇÕES -->
+                    <!-- ABA 4: CONFIGURAÇÕES (EXPANDIDA) -->
                     <!-- ========================================= -->
                     <section id="tab-config" class="tab-content hidden">
                         <div class="page-header">
                             <div class="page-title">
-                                <h1>Configurações</h1>
-                                <p>Parâmetros globais do sistema.</p>
+                                <h1>Configurações do Sistema</h1>
+                                <p>Parâmetros globais e personalização da carteirinha.</p>
                             </div>
+                            <button class="btn btn-primary" onclick="salvarConfigGeral()">
+                                <i class="fa-solid fa-floppy-disk"></i> Salvar Tudo
+                            </button>
                         </div>
 
                         <div class="swal-grid-2">
-                            <!-- Card Instituições -->
+                            <!-- Card Instituições (Esquerda) -->
                             <div class="card-widget">
                                 <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text-main);">Instituições de Ensino</h3>
                                 <div style="display: flex; gap: 10px; margin-bottom: 1rem;">
@@ -303,17 +305,47 @@
                                 </div>
                             </div>
 
-                            <!-- Card Drive -->
-                            <div class="card-widget">
-                                <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text-main);">Integração Google Drive</h3>
-                                <label class="swal-label">ID da Pasta de Uploads</label>
-                                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                                    <input type="text" id="config-drive-id" class="swal-input-custom" placeholder="ID da Pasta (ex: 1AbCd...)">
-                                    <button class="btn btn-primary" onclick="salvarConfigDrive()"><i class="fa-solid fa-save"></i></button>
+                            <!-- Coluna Direita: Personalização e Drive -->
+                            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                                
+                                <!-- Card Personalização Carteirinha (NOVO) -->
+                                <div class="card-widget">
+                                    <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text-main);">
+                                        <i class="fa-solid fa-id-card" style="color: var(--primary);"></i> Personalização da Carteirinha
+                                    </h3>
+                                    
+                                    <div style="display: grid; gap: 15px;">
+                                        <div>
+                                            <label class="swal-label">Cor Principal (Anual)</label>
+                                            <div style="display: flex; gap: 10px; align-items: center;">
+                                                <input type="color" id="config-cor-cart" value="#2563eb" style="width: 50px; height: 40px; padding: 0; border: var(--border); cursor: pointer;">
+                                                <small style="color: var(--text-muted);">Define a cor de fundo e detalhes.</small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="swal-label">Nome da Secretaria</label>
+                                            <input type="text" id="config-nome-sec" class="swal-input-custom" placeholder="Ex: Secretaria de Educação de Riachuelo">
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="swal-label">Nome do Secretário(a)</label>
+                                            <input type="text" id="config-nome-resp" class="swal-input-custom" placeholder="Ex: Romulo Basilio">
+                                        </div>
+                                    </div>
                                 </div>
-                                <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
-                                    Todos os arquivos enviados pelos alunos (fotos e documentos) serão organizados nesta pasta. Se vazio, salvará na raiz.
-                                </p>
+
+                                <!-- Card Drive -->
+                                <div class="card-widget">
+                                    <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text-main);">Integração Google Drive</h3>
+                                    <label class="swal-label">ID da Pasta de Uploads</label>
+                                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                        <input type="text" id="config-drive-id" class="swal-input-custom" placeholder="ID da Pasta (ex: 1AbCd...)">
+                                    </div>
+                                    <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
+                                        Arquivos enviados (fotos/docs) serão salvos aqui. Se vazio, salva na raiz.
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </section>
@@ -341,6 +373,8 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- BIBLIOTECA QR CODE (QRIOUS) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <script src="admin.js"></script>
 </body>
 </html>
