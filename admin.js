@@ -1,6 +1,6 @@
 const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
-// URL BASE para validação (QR Code) - Aponta para a página pública
-const URL_VALIDACAO = 'https://sistemashoop.github.io/PortalEscolar/validacao.html';
+// ATENÇÃO: NÃO PRECISAMOS MAIS DA URL_VALIDACAO do GitHub.
+// O QR Code agora aponta direto para a API com action=validate
 
 // --- CONFIGURAÇÃO GERAL ---
 const URL_LOGO_FALLBACK = './logo.png'; 
@@ -37,7 +37,7 @@ let mapaEventos = {};
 let cacheEventos = {}; 
 let cacheConfigGeral = null; 
 let chartEventosInstance = null; let chartStatusInstance = null;
-let todasInscricoes = [];       
+let todasInscricoes = [];        
 let inscricoesFiltradas = []; 
 let dashboardData = []; 
 let paginaAtual = 1;
@@ -663,7 +663,7 @@ function modalNovoEvento() {
 
             return {
                 titulo: titulo, descricao: document.getElementById('swal-desc').value,
-                inicio: i, fim: f,
+                inicio: inicio, fim: fim,
                 config: { 
                     camposTexto: sels, 
                     camposPersonalizados: extras, 
@@ -750,7 +750,6 @@ function renderizarProximaPagina() {
         let d = {}; try { d = JSON.parse(ins.dadosJson); } catch(e){}
         const checked = selecionados.has(ins.chave) ? 'checked' : '';
         
-        // Botão de Ficha: Agora chama a nova função LOCAL
         let btnFicha = `<button class="btn-icon bg-view" style="background:#6366f1;" onclick="gerarFicha('${ins.chave}')" title="Gerar Ficha"><i class="fa-solid fa-print"></i></button>`;
         
         let btnCartAdm = '';
@@ -939,7 +938,6 @@ function abrirEdicaoInscricao(chave) {
             
             const novoStatus = document.getElementById('novo_status_modal').value;
             
-            // Coleta Arquivos (Correção: Verifica diretamente se o input existe e tem arquivo)
             const arqs = {};
             const inputFoto = document.getElementById('edit_upload_foto');
             const inputDoc = document.getElementById('edit_upload_doc');
@@ -975,7 +973,6 @@ function abrirEdicaoInscricao(chave) {
                     }) 
                 });
             }).then(() => {
-                // CORREÇÃO CRÍTICA: Recarregar TUDO para atualizar cache de imagem/docs
                 Swal.fire({icon: 'success', title: 'Dados Atualizados!', timer: 1500, showConfirmButton: false});
                 carregarInscricoes(); // Força reload completo
             });
@@ -1000,7 +997,7 @@ function acaoEmMassa(s) {
 
 // --- GERAR FICHA CORRIGIDA (ESPERA IMAGEM) ---
 function gerarFicha(chave) {
-    showLoading('Gerando Ficha...'); // Feedback inicial importante
+    showLoading('Gerando Ficha...'); 
 
     const inscricao = todasInscricoes.find(i => i.chave === chave);
     if (!inscricao) return Swal.fire('Erro', 'Inscrição não encontrada na memória.', 'error');
@@ -1049,7 +1046,6 @@ function gerarFicha(chave) {
     }
     if(htmlOutros === '') htmlOutros = '<div style="font-style:italic; color:#666; padding:5px;">Nenhuma informação adicional.</div>';
 
-    // CORREÇÃO LOGO FICHA: Usa o logo do cache se existir, senão o fallback
     const logoFichaUrl = (cacheConfigGeral && cacheConfigGeral.urlLogo) ? formatarUrlDrive(cacheConfigGeral.urlLogo) : URL_LOGO_FALLBACK;
 
     const htmlFicha = `
@@ -1093,26 +1089,22 @@ function gerarFicha(chave) {
         </div>
     `;
 
-    // Injeta no Print Layer
     const pl = document.getElementById('print-layer') || document.createElement('div');
     pl.id = 'print-layer';
     if(!pl.parentElement) document.body.appendChild(pl);
     
     pl.innerHTML = htmlFicha;
     
-    // Lógica para aguardar a imagem carregar antes de imprimir
     const imgEl = pl.querySelector('.ficha-photo-box img');
     
     const finalizeAndPrint = () => {
-        Swal.close(); // Garante que o loading feche
+        Swal.close(); 
         
-        // Atualiza status silenciosamente se ainda não foi emitida
         if(inscricao.status !== 'Ficha Emitida') {
             fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'atualizarStatus', senha: sessionStorage.getItem('admin_token'), chave: chave, novoStatus: 'Ficha Emitida' }) });
             inscricao.status = 'Ficha Emitida'; 
         }
         
-        // Pequeno delay para renderização final do navegador
         setTimeout(() => window.print(), 100);
     };
 
@@ -1120,19 +1112,18 @@ function gerarFicha(chave) {
         if (imgEl.complete) {
             finalizeAndPrint();
         } else {
-            // Mostra loading específico se a imagem demorar
             if(Swal.isVisible()) {
                  Swal.update({ title: 'Carregando foto...' });
             }
             imgEl.onload = finalizeAndPrint;
-            imgEl.onerror = finalizeAndPrint; // Imprime mesmo com erro na foto
+            imgEl.onerror = finalizeAndPrint; 
         }
     } else {
         finalizeAndPrint();
     }
 }
 
-// --- IMPRIMIR CARTEIRINHA PRO (COM QR CODE LINKADO) ---
+// --- IMPRIMIR CARTEIRINHA PRO (COM QR CODE LINKADO DIRETO AO SCRIPT) ---
 function imprimirCarteirinhaAdmin(chave) {
     showLoading('Gerando Carteirinha...');
     
@@ -1141,7 +1132,6 @@ function imprimirCarteirinhaAdmin(chave) {
     .then(j => {
         if(j.status !== 'success') { Swal.fire('Erro', 'Dados não encontrados.', 'error'); return; }
         
-        // Garante que o cache de config foi carregado
         if(!cacheConfigGeral) {
             cacheConfigGeral = { corCart: "#2563eb", nomeSec: "SECRETARIA MUNICIPAL DE EDUCAÇÃO", nomeSecretario: "Responsável", urlLogo: URL_LOGO_FALLBACK };
         }
@@ -1149,10 +1139,8 @@ function imprimirCarteirinhaAdmin(chave) {
         const aluno = j.data.aluno;
         const config = cacheConfigGeral;
         const anoAtual = new Date().getFullYear();
-        // LOGO CORRETA: Usa a URL da configuração pública, formatada se for do Drive
         const logoUrl = config.urlLogo ? formatarUrlDrive(config.urlLogo) : URL_LOGO_FALLBACK;
         
-        // Tratamento da Foto
         let imgSrc = 'https://via.placeholder.com/150?text=FOTO';
         if (aluno.foto) {
             if (aluno.foto.startsWith('data:image') || aluno.foto.startsWith('http')) {
@@ -1164,15 +1152,15 @@ function imprimirCarteirinhaAdmin(chave) {
             }
         }
 
-        // CORREÇÃO DATA NASCIMENTO (AAAA-MM-DD -> DD/MM/AAAA)
         let nascimentoBR = aluno.nascimento || '-';
         if(nascimentoBR.includes('-')) {
              const parts = nascimentoBR.split('-');
              if(parts.length === 3) nascimentoBR = `${parts[2]}/${parts[1]}/${parts[0]}`;
         }
         
-        // GERA QR CODE COM LINK CORRETO (Front-end URL)
-        const validationUrl = `${URL_VALIDACAO}?c=${chave}`;
+        // >>> MUDANÇA CRÍTICA AQUI: <<<
+        // O QR Code aponta para o Google Script, não mais para o GitHub
+        const validationUrl = `${URL_API}?action=validate&c=${chave}`;
         
         const qrCanvas = document.createElement('canvas');
         const qr = new QRious({
@@ -1183,7 +1171,6 @@ function imprimirCarteirinhaAdmin(chave) {
         });
         const qrDataUrl = qrCanvas.toDataURL();
 
-        // Template HTML (Frente e Verso) - Layout Horizontal
         const htmlCart = `
             <div class="print-page-landscape" style="display:flex; justify-content:center; align-items:center; height:100vh; gap:30px;">
                 
@@ -1295,7 +1282,6 @@ function imprimirCarteirinhaAdmin(chave) {
         if(!pl.parentElement) document.body.appendChild(pl);
         pl.innerHTML = htmlCart;
         
-        // Aguarda a imagem e o logo carregarem
         const imgEl = pl.querySelector('.cart-pro-photo-frame img');
         const logoEl = pl.querySelector('.cart-pro-logo');
         let loaded = 0; const total = (imgEl ? 1 : 0) + (logoEl ? 1 : 0);
