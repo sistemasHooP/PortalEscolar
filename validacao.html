@@ -150,7 +150,8 @@
         .hidden { display: none !important; }
         
         /* Debug Info */
-        #debug-info { margin-top: 15px; padding: 10px; background: #fff3cd; color: #856404; font-size: 0.7rem; border-radius: 5px; text-align: left; word-break: break-all; }
+        #debug-info { margin-top: 15px; padding: 15px; background: #fff3cd; color: #856404; font-size: 0.75rem; border-radius: 8px; text-align: left; word-break: break-all; border: 1px solid #ffeeba; }
+        .btn-retry { margin-top: 15px; background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 50px; font-weight: 600; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -170,7 +171,7 @@
         <div id="status-bar" class="status-bar status-loading">
             <div id="loader-content">
                 <div class="spinner"></div>
-                <span id="loading-text" style="font-size: 0.8rem; font-weight: 500;">INICIANDO SISTEMA...</span>
+                <span id="loading-text" style="font-size: 0.8rem; font-weight: 500;">VALIDANDO DOCUMENTO...</span>
             </div>
             <span id="status-text" class="hidden"></span>
         </div>
@@ -225,38 +226,41 @@
             <h3 style="color: var(--text-main); margin: 0;">Falha na Validação</h3>
             <p id="error-msg" style="color: var(--text-muted); font-size: 0.9rem; margin-top: 10px;"></p>
             
-            <!-- DEBUG INFO PARA AJUDAR NA CORREÇÃO -->
+            <button class="btn-retry" onclick="window.location.reload()">
+                <i class="fa-solid fa-rotate-right"></i> Tentar Novamente
+            </button>
+
+            <!-- DEBUG INFO -->
             <div id="debug-info" class="hidden"></div>
             
-            <a href="index.html" style="display: inline-block; margin-top: 25px; text-decoration: none; color: var(--primary); font-weight: 600; border: 2px solid var(--primary); padding: 10px 20px; border-radius: 50px;">
-                Ir para o Portal
-            </a>
+            <div style="margin-top: 25px;">
+                <a href="index.html" style="text-decoration: none; color: var(--primary); font-weight: 600; font-size: 0.9rem;">
+                    Ir para o Portal
+                </a>
+            </div>
         </div>
 
     </div>
 
     <script>
-        // ATENÇÃO: Verifique se esta é a URL correta da sua implantação "Executável"
+        // --- CONFIGURAÇÃO DA API ---
         const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Tenta obter a chave de forma robusta
-            // CORREÇÃO AQUI: Renomeei para chamar a função com o nome correto
-            const chave = getChaveFromUrl();
+            // Verifica URL da API antes de começar
+            if(URL_API.endsWith('/dev')) {
+                alert('AVISO: Você está usando a URL de teste (/dev). Para validação pública, use a URL terminada em /exec.');
+            }
 
-            // Configuração Visual Inicial (Logo)
+            const chave = getChaveFromUrl();
             carregarConfiguracaoVisual();
 
             if (!chave) {
-                mostrarErro("Chave não encontrada na URL.", true);
+                mostrarErro("Chave de identificação não encontrada.", false);
                 return;
             }
 
-            const loadText = document.getElementById('loading-text');
-            loadText.innerText = "CONSULTANDO DADOS...";
-            
-            // Chama API
-            // Usamos mode: 'cors' para forçar o navegador a respeitar o CORS
+            // Inicia Validação
             fetch(`${URL_API}?action=apiValidarCarteirinha&c=${chave}`)
                 .then(response => {
                     if (!response.ok) throw new Error("Erro HTTP: " + response.status);
@@ -265,8 +269,8 @@
                 .then(data => {
                     if (data.status === 'valid' || data.status === 'invalid') {
                         renderizarResultado(data);
-                    } else if (data.status === 'error' && data.message === 'Ação inválida') {
-                        mostrarErro("Backend Desatualizado: É necessário reimplantar o script.", true);
+                    } else if (data.status === 'error' && data.message.includes('Ação')) {
+                        mostrarErro("Erro de Versão: O backend precisa ser reimplantado (Nova Versão).", true);
                     } else {
                         mostrarErro(data.message || "Documento não encontrado.", false);
                     }
@@ -275,37 +279,37 @@
                     console.error("Erro Fetch:", err);
                     let msg = "Erro de conexão com o servidor.";
                     
+                    // Diagnóstico de CORS
                     if(err.message.includes('Failed to fetch') || err.name === 'TypeError') {
-                        msg += "<br><br><b>Erro de CORS detectado.</b><br>Verifique se o script foi implantado como 'Qualquer pessoa'.";
+                        msg = `<strong>Acesso Negado (CORS)</strong><br>
+                               O sistema não permitiu o acesso anônimo.<br><br>
+                               <small>SOLUÇÃO (Para o Admin):<br>
+                               1. Vá no Apps Script > Implantar > Gerenciar.<br>
+                               2. Edite a implantação "Executável".<br>
+                               3. Em "Quem pode acessar", selecione: <strong>"Qualquer pessoa"</strong>.</small>`;
                     }
                     mostrarErro(msg, true);
                 });
         });
 
-        // --- SUPER PARSER DE URL (Renomeada para bater com a chamada) ---
+        // Parser Robusto de URL
         function getChaveFromUrl() {
             const url = window.location.href;
-            console.log("URL Completa:", url);
-
-            // 1. Método Padrão
             const params = new URLSearchParams(window.location.search);
             if (params.get('c')) return params.get('c');
-
-            // 2. Método Hash
+            
+            // Suporte a Hash Router e Parâmetros extras
             if (url.includes('#')) {
                 const hashPart = url.split('#')[1];
-                const hashParams = new URLSearchParams(hashPart.includes('?') ? hashPart.split('?')[1] : hashPart);
-                if (hashParams.get('c')) return hashParams.get('c');
+                // Tenta extrair c=XXXX do hash
+                const match = hashPart.match(/c=([a-zA-Z0-9\-]+)/);
+                if (match && match[1]) return match[1];
             }
-
-            // 3. Método Regex
-            const match = url.match(/[?&]c=([A-Za-z0-9]+)/);
-            if (match && match[1]) return match[1];
-
             return null;
         }
 
         function carregarConfiguracaoVisual() {
+            // Tenta carregar config visual sem bloquear a validação principal
             fetch(`${URL_API}?action=getPublicConfig`)
             .then(r => r.json())
             .then(json => {
@@ -328,7 +332,6 @@
         }
 
         function renderizarResultado(data) {
-            document.getElementById('loading-state')?.classList.add('hidden'); // Fallback
             document.getElementById('status-bar').classList.remove('status-loading');
             document.getElementById('loader-content').classList.add('hidden');
             
@@ -350,7 +353,8 @@
             document.getElementById('validation-date').innerText = `Validado em: ${new Date().toLocaleString('pt-BR')}`;
 
             // Cor Dinâmica no Nome
-            document.getElementById('student-name').style.color = c.cor || window.corPrincipal || '#2563eb';
+            if(c && c.cor) document.getElementById('student-name').style.color = c.cor;
+            else if(window.corPrincipal) document.getElementById('student-name').style.color = window.corPrincipal;
 
             // Foto
             if (d.foto) document.getElementById('student-photo').src = d.foto;
@@ -360,13 +364,11 @@
             if (data.status === 'valid') {
                 statusBar.classList.add('status-valid');
                 statusText.innerHTML = '<i class="fa-solid fa-circle-check"></i> DOCUMENTO VÁLIDO';
-                
                 pill.className = 'validity-pill pill-valid';
                 pill.innerHTML = '<i class="fa-solid fa-check"></i> Situação Regular';
             } else {
                 statusBar.classList.add('status-invalid');
                 statusText.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> DOCUMENTO INVÁLIDO';
-                
                 pill.className = 'validity-pill pill-invalid';
                 pill.innerHTML = `<i class="fa-solid fa-ban"></i> ${data.razao || 'Irregular/Vencido'}`;
             }
@@ -382,7 +384,7 @@
             if(showDebug) {
                 const dbg = document.getElementById('debug-info');
                 dbg.classList.remove('hidden');
-                dbg.innerHTML = `<strong>Diagnóstico Técnico:</strong><br>URL Lida: ${window.location.href}`;
+                dbg.innerHTML = `<strong>Diagnóstico Técnico:</strong><br>URL: ${window.location.href}`;
             }
         }
 
