@@ -3,7 +3,7 @@ const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo
 // --- CONFIGURAÇÃO GERAL ---
 const URL_LOGO = './logo.png'; 
 
-// Campos padrão (CPF e Email são fixos no sistema e não precisam estar aqui)
+// Campos padrão
 const CAMPOS_PADRAO = [
     { key: 'NomeCompleto', label: 'Nome Completo' }, 
     { key: 'DataNascimento', label: 'Nascimento' }, 
@@ -425,7 +425,6 @@ function abrirEdicaoEvento(evento) {
     const checkCart = config.emiteCarteirinha ? 'checked' : '';
     const cidades = config.cidadesPermitidas ? config.cidadesPermitidas.join(', ') : '';
     
-    // Lógica para carregar campos personalizados existentes
     const camposExtras = config.camposPersonalizados || [];
     let htmlExtras = '';
     camposExtras.forEach((campo, index) => {
@@ -528,8 +527,14 @@ function modalNovoEvento() {
             </div>
 
             <div class="swal-grid-2">
-                <div><label class="swal-label">Título do Evento</label><input id="swal-titulo" class="swal-input-custom" placeholder="Ex: Transporte 2025.1"></div>
-                <div><label class="swal-label">Descrição Curta</label><input id="swal-desc" class="swal-input-custom" placeholder="Ex: Período letivo regular"></div>
+                <div>
+                    <label class="swal-label">Título do Evento</label>
+                    <input id="swal-titulo" class="swal-input-custom" placeholder="Ex: Transporte 2025.1">
+                </div>
+                <div>
+                    <label class="swal-label">Descrição Curta</label>
+                    <input id="swal-desc" class="swal-input-custom" placeholder="Ex: Período letivo regular">
+                </div>
             </div>
             
             <div class="swal-grid-2">
@@ -726,7 +731,7 @@ function renderizarProximaPagina() {
             <td style="text-align:center;"><input type="checkbox" class="bulk-check" value="${ins.chave}" ${checked} onclick="toggleCheck('${ins.chave}')"></td>
             <td>${safeDate(ins.data)}</td>
             <td><div style="font-weight:600; font-size:0.9rem; color:var(--text-main);">${d.NomeCompleto||'Sem Nome'}</div><small style="color:var(--text-secondary);">${d.CPF||'-'}</small></td>
-            <td><div class="badge" style="background:#f1f5f9; color:#475569; font-weight:500;">${mapaEventos[ins.eventoId]||ins.eventoId}</div></td>
+            <td><div class="badge" style="background:#f1f5f9; color:#334155; font-weight:600; font-size:0.85rem; padding: 6px 12px; border: 1px solid #cbd5e1;">${mapaEventos[ins.eventoId]||ins.eventoId}</div></td>
             <td><span class="badge ${ins.status.replace(/\s/g, '')}">${ins.status}</span></td>
             <td style="text-align:right;">
                 <div style="display:flex; gap:4px; justify-content:flex-end;">
@@ -762,17 +767,21 @@ function abrirEdicaoInscricao(chave) {
         }
     }
 
-    // Tratamento de Documento (Sidebar Esquerda - Card)
+    // Tratamento de Documento (Sidebar Esquerda - Card Melhorado)
     let htmlDocCard = '';
     if (inscricao.doc) {
         htmlDocCard = `
-            <div style="background: #eff6ff; border: 1px solid #dbeafe; padding: 10px; border-radius: 8px; margin-top: 10px; display: flex; align-items: center; gap: 10px; text-align: left;">
-                <i class="fa-solid fa-file-pdf" style="color: #ea580c; font-size: 24px;"></i>
-                <div style="flex: 1; overflow: hidden;">
-                    <strong style="display: block; font-size: 0.85rem; color: #1e40af;">Comprovante</strong>
-                    <small style="color: #64748b; font-size: 0.75rem; display: block;">Anexado</small>
+            <div style="background: white; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; text-align: left;">
+                    <i class="fa-solid fa-file-contract" style="color:#f59e0b; font-size:1.5rem;"></i>
+                    <div style="text-align:left;">
+                        <span style="display:block; font-weight:700; color:#1e293b; font-size:0.9rem;">Documento Anexado</span>
+                        <span style="display:block; font-size:0.75rem; color:#64748b;">Comprovante de Matrícula</span>
+                    </div>
                 </div>
-                <a href="${inscricao.doc}" target="_blank" class="btn-icon bg-view" style="text-decoration: none; width: 32px; height: 32px; flex-shrink: 0;" title="Visualizar"><i class="fa-solid fa-eye"></i></a>
+                <a href="${inscricao.doc}" target="_blank" class="btn btn-primary" style="width:100%; justify-content:center; text-decoration:none; padding: 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 500;">
+                    <i class="fa-solid fa-eye"></i> Visualizar Arquivo
+                </a>
             </div>
         `;
     }
