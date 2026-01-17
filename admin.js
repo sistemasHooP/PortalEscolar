@@ -425,7 +425,6 @@ function abrirEdicaoEvento(evento) {
     const checkCart = config.emiteCarteirinha ? 'checked' : '';
     const cidades = config.cidadesPermitidas ? config.cidadesPermitidas.join(', ') : '';
     
-    // Lógica para carregar campos personalizados existentes
     const camposExtras = config.camposPersonalizados || [];
     let htmlExtras = '';
     camposExtras.forEach((campo, index) => {
@@ -741,7 +740,7 @@ function renderizarProximaPagina() {
     document.getElementById('btn-load-more').style.display = (paginaAtual * ITENS_POR_PAGINA < inscricoesFiltradas.length + ITENS_POR_PAGINA) ? 'block' : 'none';
 }
 
-// --- EDIÇÃO DE INSCRIÇÃO (WIDESCREEN MODAL - NOVA GRID) ---
+// --- EDIÇÃO DE INSCRIÇÃO (MODAL PREMIUM REVISADO) ---
 function abrirEdicaoInscricao(chave) {
     const inscricao = todasInscricoes.find(i => i.chave === chave);
     if (!inscricao) return;
@@ -750,7 +749,7 @@ function abrirEdicaoInscricao(chave) {
     let evento = cacheEventos[inscricao.eventoId] || {};
     let configEvento = {}; try { configEvento = JSON.parse(evento.config || '{}'); } catch(e) {}
 
-    // Tratamento de imagem para o modal
+    // Tratamento de imagem para o modal (Sidebar Esquerda)
     let fotoUrl = 'https://via.placeholder.com/150?text=Sem+Foto';
     if(dados.linkFoto) {
         if(dados.linkFoto.includes('drive.google.com')) {
@@ -761,6 +760,21 @@ function abrirEdicaoInscricao(chave) {
         }
     }
 
+    // Tratamento de Documento (Sidebar Esquerda - Card)
+    let htmlDocCard = '';
+    if (inscricao.doc) {
+        htmlDocCard = `
+            <div style="background: #eff6ff; border: 1px solid #dbeafe; padding: 10px; border-radius: 8px; margin-top: 10px; display: flex; align-items: center; gap: 10px; text-align: left;">
+                <i class="fa-solid fa-file-pdf" style="color: #ea580c; font-size: 24px;"></i>
+                <div style="flex: 1; overflow: hidden;">
+                    <strong style="display: block; font-size: 0.85rem; color: #1e40af;">Comprovante</strong>
+                    <small style="color: #64748b; font-size: 0.75rem; display: block;">Anexado</small>
+                </div>
+                <a href="${inscricao.doc}" target="_blank" class="btn-icon bg-view" style="text-decoration: none; width: 32px; height: 32px; flex-shrink: 0;" title="Visualizar"><i class="fa-solid fa-eye"></i></a>
+            </div>
+        `;
+    }
+
     // Construção dos Campos em 2 Colunas usando classes swal-grid-2
     let htmlCamposEsquerda = ''; // Dados Pessoais
     let htmlCamposDireita = '';  // Dados Acadêmicos
@@ -768,11 +782,10 @@ function abrirEdicaoInscricao(chave) {
     const ignorar = ['linkFoto', 'linkDoc'];
     const camposAcad = ['NomeInstituicao', 'NomeCurso', 'PeriodoCurso', 'Matricula', 'Turno'];
 
-    // Usamos o mapeamento completo para os labels, garantindo que CPF e Email tenham rótulos
     for (const [key, val] of Object.entries(dados)) {
         if (!ignorar.includes(key)) {
             const label = LABELS_TODOS_CAMPOS[key] || key;
-            const inputHtml = `<div style="margin-bottom:8px;"><label class="swal-label">${label}</label><input type="text" id="edit_aluno_${key}" value="${val}" class="swal-input-custom"></div>`;
+            const inputHtml = `<div style="margin-bottom:10px;"><label class="swal-label">${label}</label><input type="text" id="edit_aluno_${key}" value="${val}" class="swal-input-custom"></div>`;
             
             if (camposAcad.includes(key) || key.startsWith('Inst') || key.includes('Curso')) {
                 htmlCamposDireita += inputHtml;
@@ -782,51 +795,77 @@ function abrirEdicaoInscricao(chave) {
         }
     }
 
-    // Área de Uploads Condicional
+    // Área de Uploads Condicional (Substituição)
     let htmlUploads = '';
     const pedeFoto = configEvento.arquivos && configEvento.arquivos.foto;
     const pedeDoc = configEvento.arquivos && configEvento.arquivos.doc;
 
     if (pedeFoto || pedeDoc) {
-        htmlUploads = `<div class="swal-grid-2" style="margin-top:20px; border-top:1px solid #e2e8f0; padding-top:15px;">`;
-        if (pedeFoto) htmlUploads += `<div><label class="swal-label">Nova Foto 3x4</label><input type="file" id="edit_upload_foto" accept="image/*" class="swal-input-custom"></div>`;
-        if (pedeDoc) htmlUploads += `<div><label class="swal-label">Novo Comprovante</label><input type="file" id="edit_upload_doc" accept="application/pdf" class="swal-input-custom"></div>`;
-        htmlUploads += `</div>`;
+        htmlUploads = `<div style="margin-top:25px; border-top:1px dashed #e2e8f0; padding-top:15px;">
+            <label class="swal-label" style="color:#f59e0b; margin-bottom:10px;"> SUBSTITUIR ARQUIVOS (Opcional)</label>
+            <div class="swal-grid-2">`;
+        
+        if (pedeFoto) htmlUploads += `
+            <div style="background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0;">
+                <label class="swal-label" style="font-size:0.75rem;"><i class="fa-solid fa-camera"></i> Nova Foto 3x4</label>
+                <input type="file" id="edit_upload_foto" accept="image/*" class="swal-input-custom" style="font-size:0.8rem;">
+            </div>`;
+        
+        if (pedeDoc) htmlUploads += `
+            <div style="background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0;">
+                <label class="swal-label" style="font-size:0.75rem;"><i class="fa-solid fa-file-arrow-up"></i> Novo Documento</label>
+                <input type="file" id="edit_upload_doc" accept="application/pdf" class="swal-input-custom" style="font-size:0.8rem;">
+            </div>`;
+        
+        htmlUploads += `</div></div>`;
     }
 
     Swal.fire({
-        width: '1000px', // Modal Largo
+        width: '1100px', // Modal Extra Largo para o Grid funcionar bem
         title: '', 
         html: `
             <div class="grid-sidebar">
-                <!-- COLUNA LATERAL (FOTO + AÇÕES RÁPIDAS) -->
-                <div style="background: #f8fafc; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid #e2e8f0;">
-                    <img src="${fotoUrl}" style="width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 4px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 15px;">
-                    <h3 style="font-size: 1.1rem; margin: 0; color: var(--primary); font-weight:700;">${dados.NomeCompleto || 'Estudante'}</h3>
-                    <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px;">${dados.CPF || ''}</p>
+                <!-- COLUNA LATERAL (FOTO + STATUS + DOC) -->
+                <div style="background: #f8fafc; padding: 25px; border-radius: 12px; text-align: center; border: 1px solid #e2e8f0; height: 100%;">
                     
-                    <div style="text-align: left;">
-                        <label class="swal-label">Status da Inscrição</label>
-                        <select id="novo_status_modal" class="swal-input-custom" style="font-weight:600;">
-                            <option value="Pendente" ${inscricao.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
-                            <option value="Aprovada" ${inscricao.status === 'Aprovada' ? 'selected' : ''}>Aprovada</option>
-                            <option value="Rejeitada" ${inscricao.status === 'Rejeitada' ? 'selected' : ''}>Rejeitada</option>
-                            <option value="Ficha Emitida" ${inscricao.status === 'Ficha Emitida' ? 'selected' : ''}>Ficha Emitida</option>
+                    <!-- Foto em Destaque -->
+                    <div style="width: 160px; height: 160px; margin: 0 auto 15px; position: relative;">
+                        <img src="${fotoUrl}" style="width: 100%; height: 100%; border-radius: 12px; object-fit: cover; border: 4px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    </div>
+
+                    <h3 style="font-size: 1.2rem; margin: 0; color: var(--primary); font-weight:700;">${dados.NomeCompleto || 'Estudante'}</h3>
+                    <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 25px; font-family: monospace;">${dados.CPF || ''}</p>
+                    
+                    <div style="text-align: left; margin-bottom: 20px;">
+                        <label class="swal-label">Status Atual</label>
+                        <select id="novo_status_modal" class="swal-input-custom" style="font-weight:600; color: #1e293b; border: 2px solid #cbd5e1;">
+                            <option value="Pendente" ${inscricao.status === 'Pendente' ? 'selected' : ''}>🟡 Pendente</option>
+                            <option value="Aprovada" ${inscricao.status === 'Aprovada' ? 'selected' : ''}>🟢 Aprovada</option>
+                            <option value="Rejeitada" ${inscricao.status === 'Rejeitada' ? 'selected' : ''}>🔴 Rejeitada</option>
+                            <option value="Ficha Emitida" ${inscricao.status === 'Ficha Emitida' ? 'selected' : ''}>🔵 Ficha Emitida</option>
                         </select>
                     </div>
 
-                    <div style="margin-top: 20px; display: grid; gap: 10px;">
-                        ${inscricao.doc ? `<a href="${inscricao.doc}" target="_blank" class="btn btn-secondary" style="width:100%; justify-content:center;"><i class="fa-solid fa-eye"></i> Visualizar Comprovante</a>` : ''}
-                    </div>
+                    <!-- Cartão de Documento (se existir) -->
+                    ${htmlDocCard}
                 </div>
 
-                <!-- COLUNA PRINCIPAL (FORMULÁRIO) -->
-                <div>
-                    <h3 style="margin: 0 0 20px 0; color: var(--text-main); border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; font-size:1.1rem;">Dados Cadastrais</h3>
+                <!-- COLUNA PRINCIPAL (EDIÇÃO DE CAMPOS) -->
+                <div style="padding-right: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+                        <i class="fa-solid fa-user-pen" style="color: var(--primary); font-size: 1.2rem;"></i>
+                        <h3 style="margin: 0; color: var(--text-main); font-size:1.1rem; font-weight: 700;">Editar Informações</h3>
+                    </div>
                     
                     <div class="swal-grid-2" style="align-items: start; margin-bottom:0;">
-                        <div>${htmlCamposEsquerda}</div>
-                        <div>${htmlCamposDireita}</div>
+                        <div>
+                            <label class="swal-label" style="color: var(--primary); border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 10px;"><i class="fa-regular fa-id-card"></i> Dados Pessoais</label>
+                            ${htmlCamposEsquerda}
+                        </div>
+                        <div>
+                            <label class="swal-label" style="color: var(--primary); border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 10px;"><i class="fa-solid fa-graduation-cap"></i> Dados Acadêmicos</label>
+                            ${htmlCamposDireita}
+                        </div>
                     </div>
 
                     ${htmlUploads}
