@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Validação de Documento Estudantil</title>
+    <title>Validação Digital</title>
     
     <!-- Fontes (Poppins) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -16,13 +16,11 @@
     <style>
         :root {
             --primary: #2563eb;
-            --success: #16a34a; --success-bg: #dcfce7;
-            --danger: #dc2626;  --danger-bg: #fee2e2;
+            --success: #16a34a; 
+            --danger: #dc2626;
             --bg-body: #f3f4f6;
-            --card-bg: #ffffff;
             --text-main: #1f2937;
             --text-muted: #6b7280;
-            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
         }
 
         * { box-sizing: border-box; outline: none; }
@@ -39,336 +37,267 @@
             min-height: 100vh;
         }
 
-        .validation-card {
-            background: var(--card-bg);
+        .card {
+            background: white;
             width: 100%;
-            max-width: 400px;
-            border-radius: 16px;
-            box-shadow: var(--shadow);
+            max-width: 380px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
             overflow: hidden;
             text-align: center;
             position: relative;
-            animation: slideUp 0.5s ease-out;
+            display: flex;
+            flex-direction: column;
         }
 
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
         /* HEADER DE STATUS */
-        .status-header {
+        .status-bar {
             padding: 20px;
             color: white;
-            font-weight: 700;
+            font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
+            min-height: 80px;
         }
-        .status-valid { background-color: var(--success); }
-        .status-invalid { background-color: var(--danger); }
-        .status-loading { background-color: var(--text-muted); }
+        .bg-valid { background-color: var(--success); }
+        .bg-invalid { background-color: var(--danger); }
+        .bg-loading { background-color: var(--text-main); }
 
-        /* FOTO DO ALUNO */
-        .photo-container {
-            width: 140px;
-            height: 140px;
-            margin: -70px auto 0;
-            position: relative;
+        /* FOTO */
+        .photo-wrapper {
+            margin-top: -40px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+        }
+        .photo-circle {
+            width: 130px;
+            height: 130px;
             border-radius: 50%;
             border: 5px solid white;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             background: #e5e7eb;
             overflow: hidden;
-            z-index: 10;
         }
-        .photo-container img {
+        .photo-circle img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        /* CONTEÚDO */
-        .card-content {
-            padding: 15px 25px 30px;
-        }
+        /* DADOS */
+        .content { padding: 0 25px 30px; }
+        
+        h2 { margin: 0 0 5px; font-size: 1.3rem; line-height: 1.2; color: var(--primary); }
+        .cpf { font-family: monospace; background: #f3f4f6; padding: 2px 8px; border-radius: 4px; font-size: 0.9rem; display: inline-block; margin-bottom: 20px; color: var(--text-muted); }
 
-        .student-name {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin: 15px 0 5px;
-            color: var(--primary);
-            line-height: 1.3;
-        }
-
-        .student-cpf {
-            font-family: monospace;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            background: #f9fafb;
-            padding: 2px 8px;
-            border-radius: 4px;
-            display: inline-block;
-            margin-bottom: 20px;
-        }
-
-        .data-grid {
+        .info-grid {
             display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
+            gap: 12px;
             text-align: left;
-            background: #f8fafc;
+            background: #f9fafb;
             padding: 15px;
             border-radius: 12px;
             border: 1px solid #e5e7eb;
         }
+        .info-item label { font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block; }
+        .info-item span { font-size: 1rem; font-weight: 600; color: var(--text-main); line-height: 1.2; }
 
-        .data-item {
-            display: flex;
-            flex-direction: column;
-        }
-        .data-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            font-weight: 600;
-            margin-bottom: 2px;
-        }
-        .data-value {
-            font-size: 0.95rem;
-            font-weight: 500;
-            color: var(--text-main);
-        }
-
-        .validity-badge {
+        .validity-tag {
             margin-top: 20px;
             display: inline-block;
             padding: 8px 20px;
             border-radius: 50px;
             font-weight: 700;
             font-size: 0.9rem;
+            border: 2px solid;
         }
-        .valid-badge { background: var(--success-bg); color: var(--success); border: 1px solid #bbf7d0; }
-        .invalid-badge { background: var(--danger-bg); color: var(--danger); border: 1px solid #fecaca; }
+        .tag-valid { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+        .tag-invalid { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
 
-        .footer-official {
+        .footer {
             margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
             font-size: 0.75rem;
             color: var(--text-muted);
-            border-top: 1px solid #e5e7eb;
-            padding-top: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        /* LOGO DA INSTITUIÇÃO (NOVO) */
-        .org-logo-circle {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            border: 3px solid #e5e7eb; /* Borda cinza suave */
-            padding: 4px;
-            background: white;
-            object-fit: contain;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
-        /* LOADERS */
-        .spinner {
-            width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.3);
-            border-top: 3px solid white; border-radius: 50%;
+        /* LOADER */
+        .loader {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 30px; height: 30px;
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        .hidden { display: none; }
+        
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="app" class="validation-card">
-        <!-- ESTADO: CARREGANDO -->
-        <div id="loading-state">
-            <div class="status-header status-loading" style="height: 120px; flex-direction: column;">
-                <div class="spinner"></div>
-                <span style="font-size: 0.9rem; margin-top: 10px;">Verificando Autenticidade...</span>
-            </div>
-            <div class="card-content">
-                <p style="color: var(--text-muted);">Aguarde um momento.</p>
+    <div class="card">
+        <!-- TELA DE CARREGAMENTO -->
+        <div id="loading-view">
+            <div class="status-bar bg-loading" style="flex-direction: column; padding: 40px 20px;">
+                <div class="loader"></div>
+                <span style="font-size: 0.9rem; margin-top: 10px; font-weight: 400;">Consultando Base de Dados...</span>
             </div>
         </div>
 
-        <!-- ESTADO: RESULTADO (Injetado via JS) -->
-        <div id="result-container" class="hidden">
-            <!-- Header Dinâmico -->
-            <div id="status-header-result" class="status-header"></div>
+        <!-- TELA DE RESULTADO (Escondida Inicialmente) -->
+        <div id="result-view" class="hidden">
+            <div id="status-header" class="status-bar">
+                <!-- Ícone e Texto injetados via JS -->
+            </div>
             
-            <div class="photo-container">
-                <img id="student-photo" src="" alt="Foto do Estudante" onerror="this.src='https://via.placeholder.com/150?text=FOTO'">
+            <div class="photo-wrapper">
+                <div class="photo-circle">
+                    <img id="student-photo" src="" onerror="this.src='https://via.placeholder.com/150?text=Foto'">
+                </div>
             </div>
 
-            <div class="card-content">
-                <h2 id="student-name" class="student-name"></h2>
-                <div id="student-cpf" class="student-cpf"></div>
+            <div class="content">
+                <h2 id="student-name">Nome do Estudante</h2>
+                <div id="student-cpf" class="cpf">000.***.***-**</div>
 
-                <div class="data-grid">
-                    <div class="data-item">
-                        <span class="data-label">Instituição de Ensino</span>
-                        <span id="student-inst" class="data-value"></span>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Instituição</label>
+                        <span id="student-inst">-</span>
                     </div>
-                    <div class="data-item">
-                        <span class="data-label">Curso</span>
-                        <span id="student-course" class="data-value"></span>
+                    <div class="info-item">
+                        <label>Curso</label>
+                        <span id="student-course">-</span>
                     </div>
-                    <div class="data-item" style="flex-direction: row; justify-content: space-between;">
+                    <div class="info-item" style="display: flex; justify-content: space-between;">
                         <div>
-                            <span class="data-label">Matrícula</span><br>
-                            <span id="student-mat" class="data-value"></span>
+                            <label>Matrícula</label>
+                            <span id="student-mat">-</span>
                         </div>
                         <div style="text-align: right;">
-                             <span class="data-label">Vencimento</span><br>
-                             <span id="student-validity" class="data-value" style="color: var(--primary);"></span>
+                             <label>Vencimento</label>
+                             <span id="student-validity" style="color: var(--primary);">-</span>
                         </div>
                     </div>
                 </div>
 
-                <div id="validity-badge-container"></div>
+                <div id="badge-container"></div>
 
-                <div class="footer-official">
-                    <!-- LOGO OFICIAL (Redonda com Borda) -->
-                    <img id="org-logo" src="logo.png" class="org-logo-circle" alt="Logo Instituição" onerror="this.style.display='none'">
-                    
-                    <p id="sec-name">Secretaria de Educação</p>
-                    <small>Validação Oficial do Sistema de Transporte</small>
+                <div class="footer">
+                    <p id="org-name" style="font-weight: 600;">Secretaria de Educação</p>
+                    Sistema de Validação Digital
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // CONFIGURAÇÃO DA API (MESMA DO ADMIN/APP)
+        // URL DA API (Verifique se é a mesma do admin.js)
         const URL_API = 'https://script.google.com/macros/s/AKfycby-rnmBcploCmdEb8QWkMyo1tEanCcPkmNOA_QMlujH0XQvjLeiCCYhkqe7Hqhi6-mo8A/exec';
 
         document.addEventListener('DOMContentLoaded', () => {
-            // 1. Carrega Logo Oficial (Configuração Pública)
-            fetch(`${URL_API}?action=getPublicConfig`)
-                .then(res => res.json())
-                .then(json => {
-                    if(json.status === 'success' && json.config.urlLogo) {
-                        // Formata URL do Drive se necessário
-                        let logoUrl = json.config.urlLogo;
-                        if (logoUrl.includes('drive.google.com')) {
-                            const id = logoUrl.split(/\/d\/|id=/)[1].split(/\/|&/)[0];
-                            logoUrl = `https://lh3.googleusercontent.com/d/${id}`;
-                        }
-                        const img = document.getElementById('org-logo');
-                        img.src = logoUrl;
-                        img.style.display = 'block';
-                    }
-                })
-                .catch(err => console.log("Logo não carregada:", err));
-
-            // 2. Captura parâmetros da URL (?c=CHAVE)
             const params = new URLSearchParams(window.location.search);
             const chave = params.get('c');
-            const cpfParcial = params.get('d'); 
 
             if (!chave) {
-                renderError("Código QR inválido ou incompleto.");
+                mostrarErro("Código QR inválido (Sem chave).");
                 return;
             }
 
-            // 3. Chama a API de Validação
+            // Chama a API
             fetch(`${URL_API}?action=apiValidarCarteirinha&c=${chave}`)
-                .then(response => response.json())
-                .then(json => {
-                    if (json.status === 'valid' || json.status === 'invalid') {
-                        renderResult(json);
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'valid' || data.status === 'invalid') {
+                        preencherDados(data);
+                    } else if (data.status === 'error' && data.message === 'Ação inválida') {
+                        mostrarErro("Sistema Desatualizado: O Backend precisa de nova implantação.");
                     } else {
-                        renderError(json.message || "Documento não encontrado.");
+                        mostrarErro(data.message || "Documento não encontrado.");
                     }
                 })
                 .catch(err => {
                     console.error(err);
-                    renderError("Erro de conexão. Tente novamente.");
+                    mostrarErro("Falha de conexão com o servidor.");
                 });
         });
 
-        function renderResult(data) {
-            document.getElementById('loading-state').classList.add('hidden');
-            document.getElementById('result-container').classList.remove('hidden');
+        function preencherDados(data) {
+            document.getElementById('loading-view').classList.add('hidden');
+            document.getElementById('result-view').classList.remove('hidden');
 
-            const header = document.getElementById('status-header-result');
-            const dados = data.dados;
-            const config = data.config;
+            const d = data.dados;
+            const c = data.config;
+            
+            // Textos
+            document.getElementById('student-name').innerText = d.nome;
+            document.getElementById('student-cpf').innerText = mascararCPF(d.cpf);
+            document.getElementById('student-inst').innerText = d.instituicao;
+            document.getElementById('student-course').innerText = d.curso;
+            document.getElementById('student-mat').innerText = d.matricula;
+            document.getElementById('student-validity').innerText = d.validade;
+            document.getElementById('org-name').innerText = c.secretaria || 'Secretaria de Educação';
 
-            // Configurações Visuais
-            document.getElementById('sec-name').innerText = config.secretaria || 'Secretaria de Educação';
+            // Foto
+            if(d.foto) document.getElementById('student-photo').src = d.foto;
 
-            // Preenche Dados
-            document.getElementById('student-name').innerText = dados.nome;
-            // Ofusca o CPF visualmente para privacidade pública
-            document.getElementById('student-cpf').innerText = formatarCPFOfuscado(dados.cpf);
-            document.getElementById('student-inst').innerText = dados.instituicao;
-            document.getElementById('student-course').innerText = dados.curso;
-            document.getElementById('student-mat').innerText = dados.matricula;
-            document.getElementById('student-validity').innerText = dados.validade;
-            document.getElementById('student-photo').src = dados.foto || 'https://via.placeholder.com/150?text=FOTO';
+            // Status Visual
+            const header = document.getElementById('status-header');
+            const badgeBox = document.getElementById('badge-container');
 
-            // Lógica de Status (Verde ou Vermelho)
             if (data.status === 'valid') {
-                header.className = 'status-header status-valid';
+                header.className = 'status-bar bg-valid';
                 header.innerHTML = '<i class="fa-solid fa-circle-check"></i> DOCUMENTO VÁLIDO';
                 
-                document.getElementById('validity-badge-container').innerHTML = `
-                    <div class="validity-badge valid-badge">
-                        <i class="fa-solid fa-check"></i> Regular
-                    </div>
-                `;
+                badgeBox.innerHTML = `
+                    <div class="validity-tag tag-valid">
+                        <i class="fa-solid fa-check"></i> Situação Regular
+                    </div>`;
                 
-                // Aplica cor personalizada da secretaria no nome
-                document.querySelector('.student-name').style.color = config.cor || '#2563eb';
+                document.getElementById('student-name').style.color = c.cor || '#2563eb';
             } else {
-                header.className = 'status-header status-invalid';
-                header.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> INVÁLIDO / VENCIDO';
+                header.className = 'status-bar bg-invalid';
+                header.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> DOCUMENTO INVÁLIDO';
                 
-                document.getElementById('validity-badge-container').innerHTML = `
-                    <div class="validity-badge invalid-badge">
-                        <i class="fa-solid fa-ban"></i> ${data.razao || 'Não Autorizado'}
-                    </div>
-                `;
+                badgeBox.innerHTML = `
+                    <div class="validity-tag tag-invalid">
+                        <i class="fa-solid fa-ban"></i> ${data.razao || 'Vencido ou Cancelado'}
+                    </div>`;
             }
         }
 
-        function renderError(msg) {
-            document.getElementById('loading-state').classList.add('hidden');
-            document.getElementById('result-container').classList.remove('hidden');
+        function mostrarErro(msg) {
+            document.getElementById('loading-view').classList.add('hidden');
+            document.getElementById('result-view').classList.remove('hidden');
             
-            // Renderiza estado de erro crítico (Não encontrado)
-            const header = document.getElementById('status-header-result');
-            header.className = 'status-header status-invalid';
-            header.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> ERRO DE VALIDAÇÃO';
-            
-            document.querySelector('.card-content').innerHTML = `
-                <div style="padding: 40px 20px; text-align: center;">
-                    <i class="fa-solid fa-file-circle-question" style="font-size: 4rem; color: #dc2626; margin-bottom: 20px;"></i>
-                    <h3 style="margin: 0; color: #1f2937;">Registro Não Encontrado</h3>
+            const header = document.getElementById('status-header');
+            header.className = 'status-bar bg-invalid';
+            header.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> ERRO';
+
+            document.querySelector('.content').innerHTML = `
+                <div style="padding: 40px 20px;">
+                    <i class="fa-solid fa-file-circle-question" style="font-size: 4rem; color: #dc2626; margin-bottom: 20px; display:block;"></i>
+                    <h3 style="margin: 0; color: #1f2937;">Não foi possível validar</h3>
                     <p style="color: #6b7280; margin-top: 10px;">${msg}</p>
-                    <a href="index.html" style="display: inline-block; margin-top: 20px; text-decoration: none; color: #2563eb; font-weight: 600;">Ir para o Portal</a>
+                    <a href="index.html" style="display: inline-block; margin-top: 20px; text-decoration: none; color: #2563eb; font-weight: 600;">Ir para o Início</a>
                 </div>
             `;
-            
-            document.querySelector('.photo-container').style.display = 'none';
+            document.querySelector('.photo-wrapper').style.display = 'none';
         }
 
-        function formatarCPFOfuscado(cpf) {
+        function mascararCPF(cpf) {
             if(!cpf) return '---';
-            const limp = cpf.replace(/\D/g, '');
-            if(limp.length !== 11) return cpf;
-            return `***.${limp.substr(3,3)}.${limp.substr(6,3)}-**`;
+            const v = cpf.replace(/\D/g, '');
+            if(v.length !== 11) return cpf;
+            return `***.${v.substr(3,3)}.${v.substr(6,3)}-**`;
         }
     </script>
 </body>
