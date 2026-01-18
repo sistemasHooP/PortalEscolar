@@ -336,48 +336,8 @@ input[type="file"] { display: none; }
 .cart-footer { margin-top: auto; text-align: center; font-size: 0.65rem; opacity: 0.6; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
 .cart-sec-name { font-weight: 600; display: block; margin-bottom: 2px; text-transform: uppercase; }
 
-/* BOTÕES DO MODAL */
-.modal-actions-row { margin-top: 25px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
-.btn-action-pri { 
-    background: white; color: var(--primary); padding: 12px 24px; border-radius: 30px; 
-    font-weight: 700; box-shadow: var(--shadow-md); border: none; cursor: pointer; display: flex; align-items: center; gap: 8px;
-}
-.btn-action-sec { 
-    background: rgba(255,255,255,0.1); color: white; padding: 12px 24px; border-radius: 30px; 
-    border: 1px solid rgba(255,255,255,0.3); cursor: pointer; display: flex; align-items: center; gap: 8px;
-}
-.btn-flip {
-    background: var(--accent); color: white; padding: 12px 24px; border-radius: 30px;
-    font-weight: 700; border: none; cursor: pointer; box-shadow: var(--shadow-md); display: flex; align-items: center; gap: 8px;
-}
-
-/* --- FOOTER --- */
-#main-footer { text-align: center; margin-top: 50px; color: var(--text-muted); font-size: 0.9rem; }
-.footer-links a { font-size: 0.8rem; color: var(--primary); opacity: 0.8; }
-
-/* --- LOADER --- */
-#loader-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: var(--bg-body); z-index: 9999;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-}
-.loader-logo { width: 80px; margin-bottom: 20px; animation: pulse 1.5s infinite; }
-.spinner-ring {
-    width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top: 4px solid var(--primary);
-    border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px;
-}
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-
-/* Animações */
-.fade-in { animation: fadeIn 0.6s ease-out forwards; opacity: 0; }
-.fade-in-down { animation: fadeInDown 0.8s ease-out forwards; opacity: 0; }
-.fade-in-up { animation: fadeInUp 0.6s ease-out forwards; opacity: 0; }
-.zoom-in { animation: zoomIn 0.3s ease-out forwards; }
-@keyframes fadeIn { to { opacity: 1; } }
-@keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes zoomIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+/* Ocultar elementos interativos */
+.modal-actions-row, .cart-actions, .btn-close-modern, .btn-action-pri, .btn-action-sec, .btn-flip { display: none !important; }
 
 /* ==========================================================================
    IMPRESSÃO OTIMIZADA (OFICIAL + GUIAS DE CORTE)
@@ -389,6 +349,13 @@ input[type="file"] { display: none; }
         margin: 0; 
     }
 
+    /* Padding de Segurança Global na Impressão */
+    body {
+        padding-left: 15mm !important; /* Empurra tudo para a direita para fugir da borda física */
+        padding-right: 5mm !important;
+        box-sizing: border-box;
+    }
+
     /* Oculta tudo que não for o modal da carteirinha */
     body > *:not(#modal-carteirinha):not(#modal-carteirinha-admin) { display: none !important; }
     
@@ -398,7 +365,6 @@ input[type="file"] { display: none; }
         overflow: visible !important;
         background: white !important;
         margin: 0 !important;
-        padding: 0 !important;
     }
 
     #modal-carteirinha, #modal-carteirinha-admin {
@@ -479,6 +445,7 @@ input[type="file"] { display: none; }
     /* --- FRENTE: LAYOUT OFICIAL (Foto Esq | Dados Dir) --- */
     .carteirinha-front {
         padding: 2mm !important; 
+        padding-left: 4mm !important; /* Margem extra na esquerda interna */
         display: grid;
         grid-template-columns: 22mm 1fr; /* Coluna Foto ajustada */
         grid-template-rows: 10mm 1fr auto; /* Header maior para o texto */
