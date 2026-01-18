@@ -832,88 +832,133 @@ input[type="file"] { display: none; }
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes zoomIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 
-.hidden { display: none !important; }
-
-/* Responsividade Mobile Pequeno */
-@media(max-width: 400px) {
-    .hero-header { height: 260px; }
-    .text-container h1 { font-size: 1.4rem; }
-    .card-title { font-size: 1.1rem; }
-    .btn-inscrever span { font-size: 0.9rem; }
-}
-
-/* IMPRESSÃO PADRONIZADA (Frente e Verso lado a lado) */
+/* --- IMPRESSÃO REESTRUTURADA PARA CABER TUDO --- */
 @media print {
-    /* Esconder tudo exceto os modais de carteirinha */
     body > *:not(#modal-carteirinha):not(#modal-carteirinha-admin) { display: none !important; }
     
-    /* Regra para ambos os modais (Aluno e Admin) */
     #modal-carteirinha, #modal-carteirinha-admin {
-        display: block !important; 
-        position: absolute; top: 0; left: 0; width: 100%; height: auto;
-        background: white; z-index: 9999; margin: 0; padding: 0;
+        display: block !important; position: absolute; top: 0; left: 0; 
+        width: 100%; background: white; z-index: 9999; margin: 0; padding: 0;
         visibility: visible;
     }
-    
-    /* Mostrar conteúdo interno */
     #modal-carteirinha *, #modal-carteirinha-admin * { visibility: visible; }
-
-    /* Remove estilos de modal */
-    .modal-content, .modal-content-cart { 
-        box-shadow: none; width: 100%; max-width: 100%; padding: 0; margin: 0; 
-        background: transparent; overflow: visible; 
-    }
+    .modal-content, .modal-content-cart { box-shadow: none; padding: 0; margin: 0; background: transparent; }
     
-    /* Layout Lado a Lado (Remove 3D) */
     .carteirinha-wrapper {
-        perspective: none; height: auto; max-width: 100%;
-        display: flex; flex-direction: row; gap: 20px;
-        justify-content: center; flex-wrap: wrap; margin-top: 20px;
+        perspective: none; height: auto; max-width: 100%; margin-top: 10px;
+        display: flex; flex-direction: row; gap: 10px; justify-content: center;
     }
     
     .carteirinha-card-inner {
         transform: none !important; position: relative; height: auto;
-        display: flex; gap: 20px;
+        display: flex; gap: 10px;
     }
     
-    .carteirinha-face {
+    /* FRENTE - LAYOUT DE IMPRESSÃO (Foto esquerda, Dados direita) */
+    .carteirinha-front {
         position: relative; transform: none !important;
-        width: 85.6mm; height: 53.98mm; /* Tamanho Cartão Crédito */
-        box-shadow: none; border: 1px solid #ddd;
+        width: 85.6mm; height: 53.98mm; /* Tamanho exato */
+        border: 1px solid #000;
         -webkit-print-color-adjust: exact; print-color-adjust: exact;
-        font-size: 0.8em; margin-bottom: 20px;
+        font-size: 8pt; /* Fonte reduzida base */
         
-        /* CORREÇÃO: Força fundo colorido e texto branco */
-        color: white !important;
+        display: grid;
+        grid-template-columns: 26mm 1fr; /* Coluna foto fixa, resto dados */
+        grid-template-rows: 12mm 1fr; /* Header fixo, resto corpo */
+        padding: 2mm !important;
         background: linear-gradient(135deg, var(--card-color, #2563eb), #0f172a) !important;
-        padding: 5px; /* Reduz padding na impressão */
+        color: white !important;
     }
 
-    /* Ajustes específicos para caber no tamanho físico */
-    .cart-photo-frame { width: 25mm; height: 32mm; margin-bottom: 2px; }
-    .cart-logo { width: 8mm; height: 8mm; }
-    .cart-header { margin-bottom: 5px; padding-bottom: 5px; }
-    .cart-body { gap: 5px; }
-    .cart-info-main h2 { font-size: 0.9rem; margin-bottom: 2px; }
-    .cart-info-main .cart-course { padding: 2px 5px; font-size: 0.7rem; margin-bottom: 5px; }
-    
-    .cart-details-grid { margin-top: 2px; gap: 5px; }
-    .detail-item { padding: 2px; }
-    .detail-label { font-size: 0.5rem; }
-    .detail-value { font-size: 0.6rem; }
+    /* Ajuste Header Frente */
+    .carteirinha-front .cart-header {
+        grid-column: 1 / -1; /* Ocupa tudo em cima */
+        display: flex; align-items: center; gap: 5px;
+        border-bottom: 1px solid rgba(255,255,255,0.3);
+        margin: 0; padding-bottom: 2px; height: 100%;
+    }
+    .carteirinha-front .cart-logo { width: 8mm; height: 8mm; padding: 1px; }
+    .carteirinha-front .cart-org-info h3 { font-size: 7pt; line-height: 1; margin: 0; }
+    .carteirinha-front .cart-org-info small { font-size: 5pt; line-height: 1; display: block; }
 
-    /* Verso */
-    .cart-back-header { font-size: 0.6rem; margin-bottom: 5px; padding-bottom: 5px; }
-    .qr-code-box { width: 28mm; height: 28mm; padding: 1mm; margin-bottom: 5px; }
-    .validity-box { margin-bottom: 5px; }
-    .validity-label { font-size: 0.6rem; }
-    .validity-year { font-size: 1.5em; }
-    .cart-footer { padding-top: 5px; font-size: 0.5rem; }
+    /* Ajuste Corpo Frente - Ocultar elementos originais e reposicionar */
+    .carteirinha-front .cart-body {
+        display: contents; /* Remove o container flex para usar o grid principal */
+    }
+
+    /* Foto à esquerda */
+    .carteirinha-front .cart-photo-frame {
+        width: 24mm; height: 32mm;
+        margin: 2mm 0 0 0;
+        border: 2px solid white;
+        grid-column: 1; grid-row: 2;
+        align-self: center;
+    }
+
+    /* Dados à direita (reorganizando via CSS Grid áreas) */
+    .carteirinha-front .cart-info-main {
+        display: none; /* Esconde o título centralizado original */
+    }
     
-    /* Esconder botões na impressão */
+    /* Vamos forçar os dados do grid de detalhes para aparecerem listados à direita */
+    .carteirinha-front .cart-details-grid {
+        grid-column: 2; grid-row: 2;
+        display: flex; flex-direction: column;
+        gap: 2px; margin-top: 2mm; margin-left: 2mm;
+        align-items: flex-start; text-align: left;
+    }
+
+    /* Recriar Nome e Curso usando pseudo-elementos ou reutilizando slots */
+    /* Como não posso alterar o HTML, vou adaptar os estilos existentes */
+    .carteirinha-front .detail-item {
+        background: transparent; padding: 0; border: none; text-align: left;
+        display: flex; gap: 4px; align-items: baseline; width: 100%;
+    }
+    .carteirinha-front .detail-label { 
+        font-size: 5pt; text-transform: uppercase; opacity: 0.8; width: 35px; flex-shrink: 0; 
+    }
+    .carteirinha-front .detail-value { 
+        font-size: 7pt; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* VERSO - LAYOUT DE IMPRESSÃO */
+    .carteirinha-back {
+        position: relative; transform: none !important;
+        width: 85.6mm; height: 53.98mm;
+        border: 1px solid #000;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+        display: flex; flex-direction: row; /* Lado a lado: QR e Validade */
+        align-items: center; justify-content: space-between;
+        padding: 4mm !important;
+        background: linear-gradient(135deg, var(--card-color, #2563eb), #0f172a) !important;
+        color: white !important;
+    }
+
+    /* Esconder header e footer originais do verso para simplificar */
+    .carteirinha-back .cart-back-header, 
+    .carteirinha-back .cart-footer { 
+        position: absolute; width: 100%; text-align: center;
+    }
+    .carteirinha-back .cart-back-header { top: 3mm; left: 0; font-size: 6pt; border: none; }
+    .carteirinha-back .cart-footer { bottom: 3mm; left: 0; font-size: 5pt; border: none; padding: 0; }
+
+    /* QR Code esquerda */
+    .carteirinha-back .qr-code-box {
+        width: 28mm; height: 28mm; padding: 1mm; background: white; margin: 0;
+    }
+
+    /* Validade direita */
+    .carteirinha-back .validity-box {
+        margin: 0; text-align: center; flex: 1;
+    }
+    .carteirinha-back .validity-label { font-size: 6pt; }
+    .carteirinha-back .validity-year { font-size: 24pt; line-height: 1; }
+
+    /* Esconder botões */
     .modal-actions-row, .cart-actions, .btn-close-modern, .btn-action-pri, .btn-action-sec, .btn-flip { display: none !important; }
 }
 
-@media (max-width: 1200px) {
-    .charts-wrapper { grid-template-columns: 1fr; height: auto; }
+@media(max-width: 400px) {
+    .hero-header { height: 260px; }
+    .text-container h1 { font-size: 1.4rem; }
 }
