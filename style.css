@@ -449,6 +449,7 @@ input[type="file"] { display: none; }
     .carteirinha-face {
         position: relative; transform: none !important;
         width: 85.6mm; height: 53.98mm; 
+        min-height: 53.98mm; /* FORÇA ALTURA MÍNIMA */
         
         /* SEM BORDA OU MARGEM PARA CORTE LIMPO */
         border: none !important; 
@@ -490,16 +491,17 @@ input[type="file"] { display: none; }
         margin: 0; padding-bottom: 1mm; height: 100%;
         overflow: visible; /* Deixar visível para garantir a logo */
     }
-    /* Logo Ajustada */
+    /* Logo Ajustada (MENOR PARA NÃO VAZAR) */
     .carteirinha-front .cart-logo { 
-        width: 12mm; /* Aumentada para ocupar todo o espaço */
-        height: 12mm; /* Aumentada */
-        padding: 0; /* Remove padding interno da logo */
+        width: 10mm; /* REAJUSTADO PARA NÃO VAZAR */
+        height: 10mm; /* REAJUSTADO PARA NÃO VAZAR */
+        max-height: 100%; /* GARANTE QUE NÃO PASSE DA ALTURA DO HEADER */
+        padding: 0; 
         box-shadow: none; 
         flex-shrink: 0;
-        object-fit: cover; /* Cobre o container sem distorção */
-        object-position: center; /* Centraliza a imagem */
-        border: 2px solid white; /* Borda branca */
+        object-fit: cover; 
+        object-position: center; 
+        border: 2px solid white; 
         border-radius: 50%;
         background-color: white;
     }
@@ -579,6 +581,7 @@ input[type="file"] { display: none; }
     .carteirinha-back {
         width: 100%;
         height: 100%;
+        min-height: 100%; /* GARANTE ALTURA TOTAL */
         border-radius: 3mm;
         /* FALLBACK PARA COR DE FUNDO + GRADIENTE */
         background-color: var(--card-color, #1e293b) !important;
