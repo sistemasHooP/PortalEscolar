@@ -249,7 +249,7 @@ input[type="file"] { display: none; }
 }
 .btn-ver-cart:hover { background: #1e40af; }
 
-/* --- CARTEIRINHA DIGITAL (ESTRUTURA DE TELA - MANTIDA) --- */
+/* --- CARTEIRINHA DIGITAL (TELA - MANTIDA) --- */
 .transparent-modal { background: transparent !important; box-shadow: none !important; padding: 0; }
 .carteirinha-wrapper {
     width: 100%; max-width: 350px; height: 520px; margin: 0 auto;
@@ -376,19 +376,21 @@ input[type="file"] { display: none; }
         margin: 0; 
     }
 
-    /* FORÇAR RENDERIZAÇÃO DE CORES DE FUNDO */
+    /* 1. RESET E LIMPEZA TOTAL */
     * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
         color-adjust: exact !important;
+        box-sizing: border-box !important;
+        padding: 0; margin: 0;
     }
 
-    /* 1. LIMPEZA TOTAL DA PÁGINA */
     html, body {
-        width: 100%; height: 100%; margin: 0 !important; padding: 0 !important;
+        width: 100%; height: 100%; 
         overflow: hidden !important; background: white;
         display: flex; justify-content: center; align-items: center;
     }
+    
     body > *:not(#modal-carteirinha):not(#modal-carteirinha-admin) { display: none !important; }
     .modal-actions-row, .cart-actions, .btn-close-modern, .btn-action-pri, .btn-action-sec, .btn-flip { display: none !important; }
 
@@ -406,11 +408,11 @@ input[type="file"] { display: none; }
         border: none !important;
     }
     
-    /* 3. WRAPPER LADO A LADO - ESPAÇO PARA CORTE */
+    /* 3. WRAPPER LADO A LADO */
     .carteirinha-wrapper {
         perspective: none; width: auto !important; height: auto !important; max-width: none !important;
         display: flex !important; flex-direction: row !important;
-        gap: 5mm; /* Pequeno espaço entre cartões */
+        gap: 5mm; 
         justify-content: center; align-items: center; margin: 0;
     }
     
@@ -419,11 +421,10 @@ input[type="file"] { display: none; }
         display: flex !important; flex-direction: row !important; gap: 0;
     }
 
-    /* 4. CONFIGURAÇÃO FÍSICA DO CARTÃO (ID-1 CR80) */
+    /* 4. CONFIGURAÇÃO FÍSICA DO CARTÃO */
     .carteirinha-face {
         position: relative !important; transform: none !important;
         
-        /* Tamanho Exato */
         width: 85.6mm !important; height: 53.98mm !important;
         min-width: 85.6mm !important; max-width: 85.6mm !important;
         min-height: 53.98mm !important; max-height: 53.98mm !important;
@@ -431,135 +432,128 @@ input[type="file"] { display: none; }
         border-radius: 3mm !important;
         margin: 0 !important; padding: 0 !important;
         
-        /* GUIAS DE CORTE - Borda Tracejada Fina */
+        /* Borda de Corte */
         border: 1px dashed #999 !important;
         box-shadow: none !important;
         
-        /* Forçar fundo branco base */
-        background: white !important; 
+        /* FUNDO DA COR DO SISTEMA */
+        background-color: var(--card-color, #2563eb) !important;
         
         flex: 0 0 auto !important; display: block !important;
         visibility: visible !important; opacity: 1 !important;
         overflow: hidden;
     }
 
-    /* --- FRENTE: LAYOUT OFICIAL (COM FUNDO COLORIDO) --- */
+    /* --- FRENTE: LAYOUT OFICIAL --- */
     .carteirinha-front {
-        /* USAR GRADIENTE COMO IMAGEM PARA FORÇAR A COR */
+        /* Garante cor usando imagem */
         background-image: linear-gradient(var(--card-color, #2563eb), var(--card-color, #2563eb)) !important;
-        background-color: var(--card-color, #2563eb) !important;
-        -webkit-print-color-adjust: exact !important;
         
-        display: grid !important;
-        /* Cabeçalho MENOR (8mm) | Corpo MAIOR (Resto) | Código (5mm) */
-        grid-template-rows: 8mm 1fr 5mm !important;
-        grid-template-columns: 1fr !important;
+        display: flex !important;
+        flex-direction: column !important;
         padding: 0 !important;
     }
 
     /* Header Frente */
     .carteirinha-front .cart-header {
-        grid-row: 1;
+        height: 10mm !important;
         display: flex; align-items: center; gap: 2mm;
-        /* Tarja Escura translúcida */
+        /* Tarja Escura */
         background-color: rgba(0,0,0,0.2) !important;
         background-image: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)) !important;
         
         color: white !important;
         padding: 0 3mm !important; margin: 0 !important;
         border-bottom: 0.5pt solid rgba(255,255,255,0.4) !important;
-        height: 100%;
-        overflow: hidden;
+        flex-shrink: 0 !important;
     }
     .carteirinha-front .cart-logo { 
-        width: 6mm; height: 6mm; object-fit: contain;
+        width: 7mm; height: 7mm; object-fit: contain;
         background: white !important; border-radius: 50%; padding: 0.5mm; 
-        border: 1pt solid white !important;
-        box-shadow: none !important; flex-shrink: 0;
-    }
-    .carteirinha-front .cart-org-info {
-        text-align: left;
+        border: 1pt solid white !important; margin: 0 !important;
     }
     .carteirinha-front .cart-org-info h3 { 
-        font-size: 6pt !important; margin: 0; line-height: 1; 
+        font-size: 7pt !important; margin: 0; line-height: 1; 
         text-transform: uppercase; font-weight: 900; color: white !important;
     }
     .carteirinha-front .cart-org-info small { 
-        font-size: 4pt !important; margin-top: 0.5mm; display: block; color: rgba(255,255,255,0.95) !important;
+        font-size: 4.5pt !important; margin-top: 0.5mm; display: block; color: rgba(255,255,255,0.95) !important;
         font-weight: 400;
     }
 
-    /* Corpo Frente */
+    /* Corpo Frente - FUNDO BRANCO PARA DADOS */
     .carteirinha-front .cart-body { 
-        grid-row: 2;
-        /* Força fundo branco na área de dados do aluno */
+        flex: 1 !important;
+        /* Força fundo branco APENAS aqui para contraste */
         background: white !important;
+        background-image: none !important;
         
-        display: grid !important;
-        /* Foto (22mm) | Dados (Resto) */
-        grid-template-columns: 22mm 1fr !important;
-        padding: 2mm 3mm !important; /* Padding reduzido para subir o conteúdo */
+        display: flex !important;
+        flex-direction: row !important;
+        padding: 2mm 3mm !important; 
         align-items: start !important;
         gap: 3mm !important;
-        position: relative;
     } 
 
-    /* Foto Frente - Reduzida ligeiramente para caber melhor */
+    /* Foto Frente - Reduzida */
     .carteirinha-front .cart-photo-frame {
-        width: 22mm !important; height: 29mm !important; 
+        width: 22mm !important; height: 28mm !important; 
         margin: 0 !important; border: 0.5pt solid #ccc !important;
         background: #eee !important; border-radius: 2px !important;
-        box-shadow: none !important;
+        box-shadow: none !important; flex-shrink: 0;
     }
     .cart-photo-frame img { width: 100%; height: 100%; object-fit: cover; }
 
     /* Dados Frente */
     .carteirinha-front .cart-info-main { 
-        grid-column: 2; text-align: left !important; margin: 0 !important; padding: 0 !important; display: block !important;
+        flex: 1 !important; text-align: left !important; margin: 0 !important; padding: 0 !important; display: block !important;
+        background: transparent !important;
     }
     
-    /* CURSO EM DESTAQUE */
+    /* CURSO */
     .carteirinha-front .cart-info-main .cart-course { 
-        font-size: 7.5pt !important; color: var(--card-color, #2563eb) !important; 
-        background: transparent !important; padding: 0 !important; margin: 0 0 1.5mm 0 !important;
+        font-size: 7pt !important; color: var(--card-color, #2563eb) !important; 
+        background: transparent !important; padding: 0 !important; margin: 0 0 1mm 0 !important;
         font-weight: 800 !important; display: block !important; border-radius: 0 !important;
         text-transform: uppercase; border-bottom: 1pt solid #eee !important;
     }
 
-    /* NOME ALUNO */
+    /* NOME */
     .carteirinha-front .cart-info-main h2 { 
-        font-size: 8.5pt !important; margin-bottom: 1.5mm !important; line-height: 1.1; 
+        font-size: 8pt !important; margin-bottom: 1.5mm !important; line-height: 1.1; 
         text-transform: uppercase; color: #000 !important; font-weight: 800 !important;
         display: block;
     }
 
-    /* LISTA DE DETALHES COMPACTA */
+    /* DETALHES */
     .carteirinha-front .cart-details-grid { 
-        grid-column: 2; display: block !important; margin-top: 0 !important; gap: 0 !important;
+        display: block !important; margin-top: 0 !important; gap: 0 !important;
+        background: transparent !important;
     }
     .carteirinha-front .detail-item {
-        background: transparent !important; padding: 0 !important; margin-bottom: 0.8mm !important;
+        background: transparent !important; padding: 0 !important; margin-bottom: 0.5mm !important;
         text-align: left !important; display: flex !important; align-items: baseline !important;
-        border: none !important; border-radius: 0 !important;
+        border: none !important;
     }
     .carteirinha-front .detail-label { 
-        font-size: 5pt !important; width: 16mm !important; display: inline-block !important; 
+        font-size: 5pt !important; width: 15mm !important; display: inline-block !important; 
         opacity: 1 !important; color: #666 !important; font-weight: 700 !important; text-transform: uppercase;
     }
     .carteirinha-front .detail-value { 
         font-size: 6.5pt !important; font-weight: 600 !important; font-family: 'Arial', sans-serif !important; color: #000 !important;
     }
 
-    /* Rodapé Código Frente */
+    /* Rodapé Código */
     .cart-unique-code {
-        grid-row: 3; grid-column: 1;
+        height: 6mm !important;
         /* Fundo colorido na base */
-        background-image: linear-gradient(var(--card-color, #2563eb), var(--card-color, #2563eb)) !important;
         background-color: var(--card-color, #2563eb) !important;
+        background-image: linear-gradient(var(--card-color, #2563eb), var(--card-color, #2563eb)) !important;
         
         display: flex !important; align-items: center; justify-content: center;
         font-size: 6pt !important; font-weight: 700 !important; color: white !important;
         letter-spacing: 1px; margin: 0 !important; border-radius: 0 !important;
+        flex-shrink: 0 !important;
     }
     .cart-unique-code span { 
         font-family: 'Courier New', monospace !important; font-size: 8pt !important; margin-left: 5px; color: white !important;
@@ -568,13 +562,13 @@ input[type="file"] { display: none; }
     /* --- VERSO: LAYOUT OFICIAL --- */
     .carteirinha-back {
         background: white !important; 
-        box-shadow: inset 0 0 0 1000px white !important;
+        /* Borda Colorida */
+        border: 2px solid var(--card-color, #2563eb) !important;
+        
         display: grid !important;
-        /* Header (8mm) | QR+Val (Resto) | Footer (10mm) */
         grid-template-rows: 8mm 1fr 10mm !important;
         grid-template-columns: 1fr !important;
         padding: 0 !important;
-        border: 1px solid var(--card-color, #ccc) !important;
     }
 
     /* Header Verso */
@@ -585,28 +579,28 @@ input[type="file"] { display: none; }
         border-bottom: 0.5pt solid #eee !important; color: white !important;
         
         /* Cor de Fundo */
-        background-image: linear-gradient(var(--card-color, #2563eb), var(--card-color, #2563eb)) !important;
         background-color: var(--card-color, #2563eb) !important; 
+        background-image: linear-gradient(var(--card-color, #2563eb), var(--card-color, #2563eb)) !important;
         
         margin: 0 !important; padding: 0 !important;
         text-transform: uppercase; letter-spacing: 1px;
     }
     
-    /* QR Code - Esquerda do Verso */
+    /* QR Code */
     .carteirinha-back .qr-code-box {
         position: absolute !important;
-        top: 12mm !important; left: 6mm !important;
-        width: 26mm !important; height: 26mm !important; 
+        top: 13mm !important; left: 5mm !important;
+        width: 25mm !important; height: 25mm !important; 
         background: white !important; padding: 0 !important;
         border-radius: 0 !important; margin: 0 !important;
         border: none !important;
     }
     .qr-code-box img { width: 100%; height: 100%; object-fit: contain; }
     
-    /* Validade - Direita do Verso */
+    /* Validade */
     .carteirinha-back .validity-box {
         position: absolute !important;
-        top: 14mm !important; right: 6mm !important;
+        top: 15mm !important; right: 5mm !important;
         width: 40mm !important;
         text-align: center !important;
         margin: 0 !important;
@@ -617,11 +611,11 @@ input[type="file"] { display: none; }
     }
     .carteirinha-back .validity-year { 
         font-size: 24pt !important; font-weight: 900 !important; 
-        color: var(--card-color, #000) !important; /* Ano segue a cor da carteira */
+        color: var(--card-color, #000) !important; 
         line-height: 1 !important; 
     }
     
-    /* Rodapé Assinatura Verso */
+    /* Rodapé Assinatura */
     .carteirinha-back .cart-footer {
         grid-row: 3;
         font-size: 6pt !important; border-top: 0.5pt solid #ccc !important;
@@ -631,7 +625,7 @@ input[type="file"] { display: none; }
     }
     .carteirinha-back .cart-sec-name { 
         font-size: 8pt !important; font-weight: 700 !important; margin-bottom: 1mm !important; text-transform: uppercase;
-        font-family: inherit !important; /* Fonte normal (Poppins/Arial) */
+        font-family: inherit !important; 
     }
 }
 
