@@ -368,7 +368,7 @@ input[type="file"] { display: none; }
 
 /* ==========================================================================
    IMPRESSÃO: CARTEIRA DE ESTUDANTE OFICIAL (FÍSICA)
-   Padrão ID-1: 85.6mm x 53.98mm | Layout Flat para Cor e Dados
+   Padrão ID-1: 85.6mm x 53.98mm | Estratégia de Blocos Empilhados
    ========================================================================== */
 @media print {
     @page { 
@@ -426,41 +426,39 @@ input[type="file"] { display: none; }
         min-width: 85.6mm !important; min-height: 53.98mm !important;
         border-radius: 3mm !important; margin: 0 !important; padding: 0 !important;
         border: 1px dashed #999 !important; /* Guia de corte */
-        background: white !important; /* Base branca */
+        background: white !important; /* Fundo base branco */
         overflow: hidden !important;
         display: block !important;
     }
 
     /* --- FRENTE --- */
     .carteirinha-front {
-        /* Borda interna colorida simulando fundo */
-        box-shadow: inset 0 0 0 100mm var(--card-color, #2563eb) !important;
-        background-color: var(--card-color, #2563eb) !important;
-        display: block !important;
-    }
-
-    /* 1. Área Branca Central (FUNDO PARA DADOS) */
-    .carteirinha-front::after {
-        content: '';
-        position: absolute !important;
-        top: 9mm !important; 
-        left: 0 !important; right: 0 !important;
-        height: 39mm !important; /* Altura exata para o meio */
+        /* Removemos o background-color do container principal 
+           para pintar CADA BLOCO separadamente */
         background: white !important;
-        z-index: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
     }
 
-    /* 2. Cabeçalho (FLUTUANTE) */
+    /* 1. Cabeçalho (Bloco Sólido Colorido) */
     .carteirinha-front .cart-header {
-        position: absolute !important; top: 0; left: 0; width: 100%; height: 9mm;
+        position: relative !important;
+        width: 100%; height: 10mm;
         display: flex !important; align-items: center; padding-left: 3mm;
         z-index: 10 !important; border-bottom: none !important;
-        background: transparent !important; box-shadow: none !important;
+        
+        /* COR EXPLÍCITA NESTE BLOCO */
+        background-color: var(--card-color, #2563eb) !important;
+        background-image: linear-gradient(var(--card-color, #2563eb), var(--card-color, #2563eb)) !important;
+        
+        margin: 0 !important;
+        box-shadow: none !important;
     }
+    
     .carteirinha-front .cart-logo {
-        width: 6mm !important; height: 6mm !important;
-        background: white !important; border-radius: 50%; padding: 0.5mm; z-index: 11;
-        margin-right: 2mm;
+        width: 7mm !important; height: 7mm !important;
+        background: white !important; border-radius: 50%; padding: 0.5mm; 
+        margin-right: 2mm; box-shadow: none !important;
     }
     .carteirinha-front .cart-org-info h3 {
         font-size: 7pt !important; color: white !important; text-transform: uppercase; font-weight: 900; margin: 0; line-height: 1;
@@ -469,28 +467,38 @@ input[type="file"] { display: none; }
         font-size: 4.5pt !important; color: white !important; display: block; opacity: 0.9; margin-top: 0.5mm;
     }
 
-    /* 3. Corpo (Foto e Dados - SEM FUNDO PRÓPRIO) */
+    /* 2. Corpo (Bloco Central Branco com Bordas Coloridas) */
     .carteirinha-front .cart-body {
-        position: absolute !important; top: 9mm; left: 0; width: 100%; height: 39mm;
-        z-index: 10 !important; background: transparent !important;
-        padding: 0 !important; display: block !important;
+        position: relative !important;
+        width: 100%; height: 38mm;
+        z-index: 5 !important;
+        
+        /* Fundo Branco */
+        background: white !important;
+        
+        /* BORDAS LATERAIS COLORIDAS */
+        border-left: 3mm solid var(--card-color, #2563eb) !important;
+        border-right: 3mm solid var(--card-color, #2563eb) !important;
+        
+        padding: 0 1mm !important;
+        display: flex !important; flex-direction: row !important; align-items: start !important;
+        gap: 3mm !important;
     }
 
     .carteirinha-front .cart-photo-frame {
-        position: absolute !important; top: 3mm; left: 3mm;
         width: 22mm !important; height: 28mm !important;
         border: 0.5pt solid #999 !important; background: #eee !important;
-        margin: 0 !important; padding: 0 !important;
+        margin-top: 3mm !important; margin-left: 1mm !important;
+        box-shadow: none !important; flex-shrink: 0;
     }
     .carteirinha-front .cart-photo-frame img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* Dados alinhados absolutamente */
+    /* Dados */
     .carteirinha-front .cart-info-main {
-        position: absolute !important; top: 3mm; left: 28mm; right: 2mm;
-        text-align: left !important; background: transparent !important; margin: 0 !important;
+        flex: 1 !important; text-align: left !important;
+        margin-top: 3mm !important; padding: 0 !important; display: block !important;
     }
     
-    /* Curso */
     .carteirinha-front .cart-course {
         font-size: 8pt !important; color: var(--card-color, #2563eb) !important;
         font-weight: 800 !important; text-transform: uppercase;
@@ -498,20 +506,17 @@ input[type="file"] { display: none; }
         background: transparent !important; padding: 0 !important; border-radius: 0 !important;
     }
     
-    /* Nome */
     .carteirinha-front .cart-info-main h2 {
         font-size: 9pt !important; color: #000 !important;
         font-weight: 700 !important; text-transform: uppercase;
         margin: 0 0 2mm 0 !important; line-height: 1.1;
     }
 
-    /* Detalhes (CPF, Nasc, Matrícula) */
     .carteirinha-front .cart-details-grid {
-        position: absolute !important; top: 18mm; left: 28mm; right: 2mm;
-        display: block !important; background: transparent !important; margin: 0 !important;
+        display: block !important; margin-top: 0 !important; gap: 0 !important;
     }
     .carteirinha-front .detail-item {
-        margin-bottom: 1mm !important; background: transparent !important; padding: 0 !important;
+        background: transparent !important; padding: 0 !important; margin-bottom: 0.5mm !important;
         display: flex !important;
     }
     .carteirinha-front .detail-label {
@@ -522,13 +527,20 @@ input[type="file"] { display: none; }
         font-size: 7pt !important; color: #000 !important; font-weight: 600 !important;
     }
 
-    /* 4. Rodapé (Código - FLUTUANTE) */
+    /* 3. Rodapé (Bloco Sólido Colorido) */
     .carteirinha-front .cart-unique-code {
-        position: absolute !important; bottom: 0; left: 0; width: 100%; height: 6mm;
+        position: relative !important;
+        width: 100%; height: 6mm;
         display: flex !important; align-items: center; justify-content: center;
-        background: transparent !important; z-index: 10 !important;
+        z-index: 10 !important;
+        
+        /* COR EXPLÍCITA NESTE BLOCO */
+        background-color: var(--card-color, #2563eb) !important;
+        background-image: linear-gradient(var(--card-color, #2563eb), var(--card-color, #2563eb)) !important;
+        
         color: white !important; font-size: 6pt !important; font-weight: 700;
         margin: 0 !important; padding: 0 !important;
+        border-radius: 0 !important;
     }
     .carteirinha-front .cart-unique-code span {
         font-family: monospace !important; font-size: 9pt !important; margin-left: 5px;
@@ -537,23 +549,24 @@ input[type="file"] { display: none; }
     /* --- VERSO --- */
     .carteirinha-back {
         background: white !important;
+        display: flex !important; flex-direction: column !important;
         border: 2px solid var(--card-color, #2563eb) !important;
     }
 
-    /* Header Verso */
+    /* Header Verso (Bloco Sólido Colorido) */
     .carteirinha-back .cart-back-header {
-        position: absolute !important; top: 0; left: 0; width: 100%; height: 8mm;
-        /* Cor de Fundo Forçada */
+        position: relative !important; width: 100%; height: 8mm;
+        
+        /* COR EXPLÍCITA */
         background-color: var(--card-color, #2563eb) !important; 
         background-image: linear-gradient(var(--card-color, #2563eb), var(--card-color, #2563eb)) !important;
-        box-shadow: inset 0 0 0 100mm var(--card-color, #2563eb) !important;
         
         color: white !important; font-size: 6pt !important; font-weight: 700;
         display: flex !important; align-items: center; justify-content: center;
         text-transform: uppercase; margin: 0 !important; padding: 0 !important; border: none !important;
     }
     
-    /* QR Code */
+    /* Corpo Verso (Posicionamento Absoluto porque aqui é fundo branco) */
     .carteirinha-back .qr-code-box {
         position: absolute !important; top: 12mm; left: 5mm;
         width: 25mm !important; height: 25mm !important;
@@ -561,7 +574,6 @@ input[type="file"] { display: none; }
     }
     .qr-code-box img { width: 100%; height: 100%; object-fit: contain; }
 
-    /* Validade */
     .carteirinha-back .validity-box {
         position: absolute !important; top: 14mm; right: 5mm; width: 40mm !important;
         text-align: center !important; margin: 0 !important;
@@ -575,7 +587,7 @@ input[type="file"] { display: none; }
         color: var(--card-color, #000) !important;
     }
 
-    /* Footer Assinatura */
+    /* Footer Assinatura (Fundo Branco Padrão) */
     .carteirinha-back .cart-footer {
         position: absolute !important; bottom: 0; left: 0; width: 100%; height: 10mm;
         border-top: 0.5pt solid #ccc !important;
