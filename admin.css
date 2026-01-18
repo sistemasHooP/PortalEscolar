@@ -379,28 +379,35 @@ html, body {
 }
 
 .carteirinha-card-inner {
-    position: relative; width: 100%; height: 100%;
-    text-align: center; transition: transform 0.8s;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.8s;
     transform-style: preserve-3d;
     /* Correção Crítica para Mobile: */
     -webkit-transform-style: preserve-3d;
     cursor: pointer;
 }
-.carteirinha-card-inner.is-flipped { 
-    transform: rotateY(180deg); 
+
+.carteirinha-card-inner.is-flipped {
+    transform: rotateY(180deg);
     -webkit-transform: rotateY(180deg);
 }
 
 .carteirinha-face {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     /* Correção Crítica: Ocultar o verso em todos os browsers */
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     /* Hack para estabilidade no iOS */
     transform: translateZ(0); 
     -webkit-transform: translateZ(0);
-
-    border-radius: 20px; overflow: hidden;
+    
+    border-radius: 20px;
+    overflow: hidden;
     box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.4);
     background-color: #0f172a; 
     color: white;
@@ -415,42 +422,92 @@ html, body {
         radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
         linear-gradient(135deg, var(--card-color, #2563eb), #0f172a);
     background-size: 15px 15px, 100% 100%;
-    display: flex; flex-direction: column; padding: 20px;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
     /* Rotação inicial explicita */
     transform: rotateY(0deg);
     -webkit-transform: rotateY(0deg);
 }
 
 .cart-header {
-    display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
-    position: relative; z-index: 2; text-align: left; padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 2;
+    text-align: left;
+    padding-bottom: 10px;
     border-bottom: 1px solid rgba(255,255,255,0.2);
 }
+
 .cart-logo {
-    width: 45px; height: 45px; background: white; border-radius: 50%;
-    padding: 3px; object-fit: contain; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    width: 45px; height: 45px;
+    background: white;
+    border-radius: 50%;
+    padding: 3px;
+    object-fit: contain;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
+
 .cart-org-info h3 { font-size: 0.85rem; font-weight: 800; letter-spacing: 0.5px; line-height: 1.2; text-transform: uppercase; margin: 0; }
 .cart-org-info small { font-size: 0.7rem; text-transform: uppercase; opacity: 0.9; font-weight: 300; display: block; margin-top: 2px;}
 
-.cart-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 2; gap: 15px; }
+.cart-body { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center;
+    justify-content: center;
+    position: relative; 
+    z-index: 2; 
+    gap: 15px;
+}
+
 .cart-photo-frame {
-    width: 110px; height: 140px; background: #e2e8f0; border: 3px solid white;
-    border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.2); margin-bottom: 5px;
+    width: 110px; height: 140px;
+    background: #e2e8f0;
+    border: 3px solid white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    margin-bottom: 5px;
 }
 .cart-photo-frame img { width: 100%; height: 100%; object-fit: cover; }
 
 .cart-info-main { width: 100%; text-align: center; }
-.cart-info-main h2 { font-size: 1.1rem; text-transform: uppercase; font-weight: 700; margin-bottom: 5px; line-height: 1.2; text-shadow: 0 2px 2px rgba(0,0,0,0.2); }
+.cart-info-main h2 { 
+    font-size: 1.1rem; 
+    text-transform: uppercase; 
+    font-weight: 700;
+    margin-bottom: 5px; 
+    line-height: 1.2; 
+    text-shadow: 0 2px 2px rgba(0,0,0,0.2);
+}
 .cart-info-main .cart-course {
-    font-size: 0.85rem; background: rgba(255,255,255,0.15); padding: 4px 10px;
-    border-radius: 15px; display: inline-block; margin-bottom: 10px;
+    font-size: 0.85rem;
+    background: rgba(255,255,255,0.15);
+    padding: 4px 10px;
+    border-radius: 15px;
+    display: inline-block;
+    margin-bottom: 10px;
 }
 
 .cart-details-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    margin-top: 10px;
 }
-.detail-item { background: rgba(0,0,0,0.2); padding: 5px; border-radius: 6px; text-align: center; }
+
+.detail-item {
+    background: rgba(0,0,0,0.2);
+    padding: 5px;
+    border-radius: 6px;
+    text-align: center;
+}
 .detail-label { display: block; font-size: 0.6rem; text-transform: uppercase; opacity: 0.7; }
 .detail-value { display: block; font-size: 0.75rem; font-weight: 600; font-family: monospace; }
 
@@ -458,33 +515,60 @@ html, body {
 .carteirinha-back {
     transform: rotateY(180deg);
     -webkit-transform: rotateY(180deg);
-    display: flex; flex-direction: column; padding: 20px;
-    background: linear-gradient(135deg, var(--card-color, #1e293b), #0f172a);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    background: linear-gradient(135deg, var(--card-color, #1e293b), #000000);
 }
+
 .cart-back-header {
-    text-align: center; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px;
-    opacity: 0.6; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;
+    text-align: center;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    opacity: 0.6;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 10px;
 }
+
 .qr-code-box {
-    width: 160px; height: 160px; background: white; padding: 10px;
-    border-radius: 12px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;
+    width: 160px; height: 160px;
+    background: white;
+    padding: 10px;
+    border-radius: 12px;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .qr-code-box img { width: 100%; height: 100%; object-fit: contain; }
 
-.validity-box { text-align: center; margin-bottom: 20px; }
+.validity-box {
+    text-align: center;
+    margin-bottom: 20px;
+}
 .validity-label { font-size: 0.8rem; opacity: 0.8; text-transform: uppercase; display: block; }
 .validity-year { 
-    font-size: 3.5rem; font-weight: 800; line-height: 1; color: var(--accent); 
-    text-shadow: 0 4px 10px rgba(0,0,0,0.3); display: block;
+    font-size: 3.5rem; 
+    font-weight: 800; 
+    line-height: 1;
+    color: var(--accent); /* Destaque no ano */
+    text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    display: block;
 }
 
 .cart-footer {
-    margin-top: auto; text-align: center; font-size: 0.65rem; opacity: 0.6;
-    border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;
+    margin-top: auto;
+    text-align: center;
+    font-size: 0.65rem;
+    opacity: 0.6;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 10px;
 }
 .cart-sec-name { font-weight: 600; display: block; margin-bottom: 2px; text-transform: uppercase; }
 
-/* Botões do Modal Cart (CORRIGIDO PARA SEREM REDONDOS) */
+/* Botões do Modal Cart (REDONDOS E BONITOS) */
 .cart-actions { margin-top: 25px; display: flex; justify-content: center; gap: 15px; }
 
 .btn-action-pri { 
@@ -521,15 +605,12 @@ html, body {
 
     /* Regra B: Se o Modal de Carteirinha Admin estiver aberto */
     #modal-carteirinha-admin:not(.hidden) {
-        display: flex !important;
+        display: block !important; 
         position: absolute; top: 0; left: 0; width: 100%; height: auto;
-        background: white;
-        z-index: 9999;
-        align-items: flex-start;
-        justify-content: center;
+        background: white; z-index: 9999; margin: 0; padding: 0;
+        visibility: visible;
     }
     
-    /* Garante visibilidade dos filhos do modal */
     #modal-carteirinha-admin:not(.hidden) * { visibility: visible; }
 
     /* Remove estilos de modal para impressão */
@@ -556,7 +637,9 @@ html, body {
         box-shadow: none; border: 1px solid #ddd;
         -webkit-print-color-adjust: exact; print-color-adjust: exact;
         font-size: 0.8em; margin-bottom: 20px;
-        /* Força fundo branco se necessário, mas mantendo imagem */
+        /* Força fundo colorido e texto branco */
+        color: white !important;
+        background: linear-gradient(135deg, var(--card-color, #2563eb), #0f172a) !important;
     }
 
     /* Ajustes específicos para caber no tamanho físico */
@@ -566,7 +649,7 @@ html, body {
     #modal-carteirinha-admin:not(.hidden) .validity-year { font-size: 2em; }
     
     /* Esconder botões na impressão */
-    .cart-actions, .modal-actions-row, .btn-close-modern { display: none !important; }
+    .cart-actions, .modal-actions-row, .btn-close-modern, .btn-action-pri, .btn-action-sec, .btn-flip { display: none !important; }
 
     /* Layout da Ficha A4 (Mantido) */
     .ficha-container { font-family: Arial, sans-serif; color: #000; width: 100%; max-width: 210mm; margin: 0 auto; }
