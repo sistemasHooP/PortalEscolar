@@ -381,53 +381,56 @@ input[type="file"] { display: none; }
         margin: 0; 
     }
 
-    /* Remove padding do body para não deslocar */
-    body {
-        padding: 0 !important; 
+    /* CRÍTICO: RESET COMPLETO PARA CENTRALIZAÇÃO */
+    html, body {
+        width: 100%;
+        height: 100%;
         margin: 0 !important;
-        box-sizing: border-box;
-        height: 100% !important;
-        overflow: visible !important;
-        background: white !important;
+        padding: 0 !important;
+        overflow: hidden;
+        background: white;
+        
+        /* Flexbox no body para centralizar o wrapper na página */
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 
     /* Ocultar elementos interativos */
     body > *:not(#modal-carteirinha):not(#modal-carteirinha-admin) { display: none !important; }
     .modal-actions-row, .cart-actions, .btn-close-modern, .btn-action-pri, .btn-action-sec, .btn-flip { display: none !important; }
 
-    /* Container Principal */
+    /* Modal se torna um container transparente e estático */
     #modal-carteirinha, #modal-carteirinha-admin {
         display: block !important; 
-        position: absolute !important;
-        top: 0; left: 0;
-        width: 100% !important; 
-        height: 100% !important; 
-        background: white !important; 
-        z-index: 9999; 
+        position: static !important; /* Remove absolute */
+        width: auto !important; 
+        height: auto !important; 
+        background: transparent !important; 
         margin: 0 !important; 
         padding: 0 !important;
-        overflow: visible !important;
-        visibility: visible;
         border: none !important;
+        visibility: visible;
     }
     
     #modal-carteirinha *, #modal-carteirinha-admin * { visibility: visible; }
     
+    /* Remove estilos de modal */
     .modal-content, .modal-content-cart { 
         box-shadow: none !important; 
         padding: 0 !important; 
         margin: 0 !important; 
         background: transparent !important; 
-        max-height: none !important;
-        overflow: visible !important;
         border: none !important;
+        width: auto !important;
+        max-width: none !important;
     }
     
-    /* Layout Lado a Lado (Frente | Verso) */
+    /* Wrapper que contém os dois lados */
     .carteirinha-wrapper {
         perspective: none; 
-        height: 100vh !important;
-        width: 100% !important;
+        width: auto !important;
+        height: auto !important;
         max-width: none !important;
         display: flex; 
         flex-direction: row; 
@@ -457,7 +460,9 @@ input[type="file"] { display: none; }
         box-sizing: border-box;
         -webkit-print-color-adjust: exact; print-color-adjust: exact;
         font-size: 8pt; 
-        margin: 5mm; /* Margem de segurança externa */
+        
+        /* Sem margem externa que desloque o layout */
+        margin: 0; 
         
         color: white !important;
         background: linear-gradient(135deg, var(--card-color, #2563eb), #0f172a) !important;
@@ -469,7 +474,8 @@ input[type="file"] { display: none; }
     /* --- FRENTE: LAYOUT (Foto Esq | Dados Dir) --- */
     .carteirinha-front {
         padding: 2mm !important; 
-        padding-left: 4mm !important; /* Segurança Esquerda */
+        /* Padding extra na esquerda para compensar margem mecânica se necessário */
+        padding-left: 5mm !important; 
         display: grid;
         grid-template-columns: 22mm 1fr;
         grid-template-rows: 10mm 1fr auto;
@@ -519,18 +525,18 @@ input[type="file"] { display: none; }
         text-align: left; margin-left: 2mm; margin-top: 1mm;
         display: flex; flex-direction: column; justify-content: flex-start;
         overflow: visible; 
-        padding-right: 2mm; /* Segurança Direita para não cortar o nome */
+        /* Padding na direita para evitar corte no final da linha */
+        padding-right: 2mm;
     }
     
     .carteirinha-front .cart-info-main h2 { 
         font-size: 8pt; margin-bottom: 1mm; line-height: 1.1; 
         text-transform: uppercase; font-weight: 800;
         
-        /* Quebra de Nome Longo */
+        /* QUEBRA DE NOME LONGO */
         white-space: normal; 
         word-wrap: break-word; 
         overflow-wrap: break-word;
-        max-width: 95%; /* Garante que não encoste na borda */
         
         color: #fff;
     }
