@@ -62,7 +62,6 @@
                     <button id="btn-dashboard" class="nav-item active" onclick="switchTab('tab-dashboard')">
                         <i class="fa-solid fa-gauge-high"></i> Dashboard
                     </button>
-                    <!-- NOVA ABA RELATÓRIOS -->
                     <button id="btn-relatorios" class="nav-item" onclick="switchTab('tab-relatorios')">
                         <i class="fa-solid fa-file-contract"></i> Relatórios
                     </button>
@@ -138,7 +137,7 @@
                     </section>
 
                     <!-- ========================================= -->
-                    <!-- NOVA ABA: RELATÓRIOS -->
+                    <!-- ABA 2: RELATÓRIOS -->
                     <!-- ========================================= -->
                     <section id="tab-relatorios" class="tab-content hidden">
                         <div class="page-header">
@@ -183,7 +182,7 @@
                     </section>
 
                     <!-- ========================================= -->
-                    <!-- ABA 2: EVENTOS -->
+                    <!-- ABA 3: EVENTOS -->
                     <!-- ========================================= -->
                     <section id="tab-eventos" class="tab-content hidden">
                         <div class="page-header">
@@ -217,7 +216,7 @@
                     </section>
 
                     <!-- ========================================= -->
-                    <!-- ABA 3: INSCRIÇÕES -->
+                    <!-- ABA 4: INSCRIÇÕES -->
                     <!-- ========================================= -->
                     <section id="tab-inscricoes" class="tab-content hidden">
                         <div class="page-header">
@@ -280,7 +279,7 @@
                     </section>
 
                     <!-- ========================================= -->
-                    <!-- ABA 4: CONFIGURAÇÕES -->
+                    <!-- ABA 5: CONFIGURAÇÕES -->
                     <!-- ========================================= -->
                     <section id="tab-config" class="tab-content hidden">
                         <div class="page-header">
@@ -313,6 +312,8 @@
                                 </div>
                                 <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
                                     Todos os arquivos enviados pelos alunos (fotos e documentos) serão organizados nesta pasta. Se vazio, salvará na raiz.
+                                    <br><br>
+                                    <strong>Nota:</strong> Configurações visuais (Cores, Secretaria, etc) devem ser alteradas diretamente na aba 'Config' da planilha.
                                 </p>
                             </div>
                         </div>
@@ -336,6 +337,94 @@
         <button class="btn-icon" style="background: transparent; border: 1px solid rgba(255,255,255,0.5);" onclick="desmarcarTudo()">
             <i class="fa-solid fa-times"></i>
         </button>
+    </div>
+
+    <!-- MODAL CARTEIRINHA ADMIN (NOVO V2.0) -->
+    <div id="modal-carteirinha-admin" class="modal-overlay hidden" style="z-index: 3000;">
+        <div class="modal-content-cart transparent-modal">
+            
+            <div class="carteirinha-wrapper">
+                <!-- Inner container que gira -->
+                <div class="carteirinha-card-inner" id="cart-admin-flip-container" onclick="this.classList.toggle('is-flipped')">
+                    
+                    <!-- FRENTE -->
+                    <div class="carteirinha-face carteirinha-front">
+                        <div class="cart-header">
+                            <img src="logo.png" alt="Logo" class="cart-logo" id="cart-admin-logo">
+                            <div class="cart-org-info">
+                                <h3 id="cart-admin-sys-name">TRANSPORTE ESCOLAR</h3>
+                                <small>Secretaria de Educação</small>
+                            </div>
+                        </div>
+
+                        <div class="cart-body">
+                            <div class="cart-photo-frame">
+                                <img id="cart-admin-img" src="" alt="Foto">
+                            </div>
+                            
+                            <div class="cart-info-main">
+                                <h2 id="cart-admin-nome">Nome do Aluno</h2>
+                                <span class="cart-course" id="cart-admin-course">Curso do Aluno</span>
+                            </div>
+
+                            <div class="cart-details-grid">
+                                <div class="detail-item">
+                                    <span class="detail-label">Instituição</span>
+                                    <span class="detail-value" id="cart-admin-inst">Instituição</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">CPF</span>
+                                    <span class="detail-value" id="cart-admin-cpf">000.000.000-00</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Nascimento</span>
+                                    <span class="detail-value" id="cart-admin-nasc">--/--/----</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Matrícula</span>
+                                    <span class="detail-value" id="cart-admin-mat">000000</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VERSO -->
+                    <div class="carteirinha-face carteirinha-back">
+                        <div class="cart-back-header">
+                            Documento de Identificação Estudantil
+                        </div>
+
+                        <div class="qr-code-box">
+                            <img id="cart-admin-qr-img" src="" alt="QR Code Validação">
+                        </div>
+
+                        <div class="validity-box">
+                            <span class="validity-label">Válido até Dezembro de</span>
+                            <span class="validity-year" id="cart-admin-validade-ano">2025</span>
+                        </div>
+
+                        <div class="cart-footer">
+                            <span class="cart-sec-name" id="cart-admin-sec-name">Secretário</span>
+                            Secretário(a) de Educação
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <div class="cart-actions">
+                <button class="btn-action-sec" onclick="document.getElementById('modal-carteirinha-admin').classList.add('hidden')">
+                    Fechar
+                </button>
+                <button class="btn-flip" onclick="document.getElementById('cart-admin-flip-container').classList.toggle('is-flipped')">
+                    <i class="fa-solid fa-rotate"></i> Virar
+                </button>
+                <button class="btn-action-pri" onclick="window.print()">
+                    <i class="fa-solid fa-print"></i> Imprimir
+                </button>
+            </div>
+
+        </div>
     </div>
 
     <!-- Scripts -->
