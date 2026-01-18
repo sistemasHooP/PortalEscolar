@@ -566,7 +566,7 @@ input[type="file"] { display: none; }
 }
 .btn-ver-cart:hover { background: #1e40af; }
 
-/* --- CARTEIRINHA DIGITAL (CORRIGIDA) --- */
+/* --- CARTEIRINHA DIGITAL (CORRIGIDA PARA MOBILE) --- */
 .transparent-modal {
     background: transparent !important;
     box-shadow: none !important;
@@ -579,6 +579,8 @@ input[type="file"] { display: none; }
     height: 520px; /* Altura fixa */
     margin: 0 auto;
     perspective: 1200px;
+    /* Correção para iPhone/Safari */
+    -webkit-perspective: 1200px;
 }
 
 .carteirinha-card-inner {
@@ -588,29 +590,38 @@ input[type="file"] { display: none; }
     text-align: center;
     transition: transform 0.8s;
     transform-style: preserve-3d;
+    /* Correção Crítica para Mobile: */
+    -webkit-transform-style: preserve-3d;
     cursor: pointer;
 }
 
 .carteirinha-card-inner.is-flipped {
     transform: rotateY(180deg);
+    -webkit-transform: rotateY(180deg);
 }
 
 .carteirinha-face {
     position: absolute;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    -webkit-backface-visibility: hidden; backface-visibility: hidden;
+    /* Correção Crítica: Ocultar o verso em todos os browsers */
+    -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    /* Hack para estabilidade no iOS */
+    transform: translateZ(0); 
+    -webkit-transform: translateZ(0);
+    
     border-radius: 20px;
     overflow: hidden;
     box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.4);
-    /* Fundo dinâmico baseado na variável */
     background-color: #0f172a; 
     color: white;
 }
 
-/* Frente - CORREÇÃO DE FUNDO */
+/* Frente */
 .carteirinha-front {
-    /* Gradiente de pontos E Gradiente de cor juntos */
+    /* Z-index maior para garantir que ela começa na frente */
+    z-index: 2;
     background: 
         radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
         linear-gradient(135deg, var(--card-color, #2563eb), #0f172a);
@@ -618,6 +629,9 @@ input[type="file"] { display: none; }
     display: flex;
     flex-direction: column;
     padding: 20px;
+    /* Rotação inicial explicita */
+    transform: rotateY(0deg);
+    -webkit-transform: rotateY(0deg);
 }
 
 .cart-header {
@@ -704,10 +718,10 @@ input[type="file"] { display: none; }
 /* Verso */
 .carteirinha-back {
     transform: rotateY(180deg);
+    -webkit-transform: rotateY(180deg);
     display: flex;
     flex-direction: column;
     padding: 20px;
-    /* Também usa a cor, mas misturada com preto para ficar mais escura no verso */
     background: linear-gradient(135deg, var(--card-color, #1e293b), #000000);
 }
 
@@ -874,4 +888,8 @@ input[type="file"] { display: none; }
     
     /* Esconder botões na impressão */
     .modal-actions-row, .btn-close-modern { display: none !important; }
+}
+
+@media (max-width: 1200px) {
+    .charts-wrapper { grid-template-columns: 1fr; height: auto; }
 }
