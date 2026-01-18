@@ -302,19 +302,36 @@
                                 </div>
                             </div>
 
-                            <!-- Card Drive -->
+                            <!-- Card Configurações Gerais -->
                             <div class="card-widget">
-                                <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text-main);">Integração Google Drive</h3>
-                                <label class="swal-label">ID da Pasta de Uploads</label>
-                                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                                    <input type="text" id="config-drive-id" class="swal-input-custom" placeholder="ID da Pasta (ex: 1AbCd...)">
-                                    <button class="btn btn-primary" onclick="salvarConfigDrive()"><i class="fa-solid fa-save"></i></button>
+                                <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text-main);">Carteirinha & Sistema</h3>
+                                
+                                <div style="margin-bottom: 15px;">
+                                    <label class="swal-label">Cor da Carteirinha (Hex ou Nome)</label>
+                                    <div style="display:flex; gap:10px;">
+                                        <input type="color" id="config-cor-picker" class="swal-input-custom" style="width:50px; padding:0; height:38px;" onchange="document.getElementById('config-cor').value = this.value">
+                                        <input type="text" id="config-cor" class="swal-input-custom" placeholder="#2563eb">
+                                    </div>
                                 </div>
-                                <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
-                                    Todos os arquivos enviados pelos alunos (fotos e documentos) serão organizados nesta pasta. Se vazio, salvará na raiz.
-                                    <br><br>
-                                    <strong>Nota:</strong> Configurações visuais (Cores, Secretaria, etc) devem ser alteradas diretamente na aba 'Config' da planilha.
-                                </p>
+
+                                <div style="margin-bottom: 15px;">
+                                    <label class="swal-label">Nome da Secretaria</label>
+                                    <input type="text" id="config-nome-sec" class="swal-input-custom" placeholder="Secretaria Mun. de Educação">
+                                </div>
+
+                                <div style="margin-bottom: 15px;">
+                                    <label class="swal-label">Nome do Secretário(a)</label>
+                                    <input type="text" id="config-nome-resp" class="swal-input-custom" placeholder="João da Silva">
+                                </div>
+
+                                <div style="margin-bottom: 15px;">
+                                    <label class="swal-label">ID da Pasta Google Drive</label>
+                                    <input type="text" id="config-drive-id" class="swal-input-custom" placeholder="ID da Pasta (ex: 1AbCd...)">
+                                </div>
+
+                                <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="salvarConfigGeral()">
+                                    <i class="fa-solid fa-save"></i> Salvar Todas as Configurações
+                                </button>
                             </div>
                         </div>
                     </section>
@@ -395,6 +412,7 @@
                         </div>
 
                         <div class="qr-code-box">
+                            <!-- QR Code agora gerado via JS -->
                             <img id="cart-admin-qr-img" src="" alt="QR Code Validação">
                         </div>
 
@@ -430,6 +448,8 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Adicionando biblioteca QRious para QR Code seguro -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <script src="admin.js"></script>
 </body>
 </html>
