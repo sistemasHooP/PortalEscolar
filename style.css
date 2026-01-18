@@ -329,7 +329,7 @@ input[type="file"] { display: none; }
 .cart-footer { margin-top: auto; text-align: center; font-size: 0.65rem; opacity: 0.6; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
 .cart-sec-name { font-weight: 600; display: block; margin-bottom: 2px; text-transform: uppercase; }
 
-/* BOTÕES DO MODAL (Restaurados) */
+/* BOTÕES DO MODAL */
 .modal-actions-row { margin-top: 25px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
 .btn-action-pri { 
     background: white; color: var(--primary); padding: 12px 24px; border-radius: 30px; 
@@ -446,7 +446,7 @@ input[type="file"] { display: none; }
         align-items: stretch; /* Garante que ambos tenham a mesma altura */
     }
     
-    /* CARTÃO FÍSICO (85.6mm x 53.98mm) */
+    /* CARTÃO FÍSICO (85.6mm x 53.98mm) - CONFIGURAÇÃO BASE */
     .carteirinha-face {
         position: relative; transform: none !important;
         width: 85.6mm !important; 
@@ -475,31 +475,28 @@ input[type="file"] { display: none; }
         flex: 0 0 auto !important;
     }
 
-    /* --- FRENTE: LAYOUT (Foto Esq | Dados Dir) --- */
+    /* --- FRENTE: LAYOUT --- */
     .carteirinha-front {
         width: 100% !important;
         height: 100% !important;
+        border-radius: 3mm !important;
         
         /* FALLBACK PARA COR DE FUNDO + GRADIENTE */
         background-color: var(--card-color, #2563eb) !important;
         background-image: linear-gradient(135deg, var(--card-color, #2563eb), #0f172a) !important;
         
-        padding: 4mm !important; 
-        padding-left: 6mm !important; 
+        padding: 4mm !important; /* Margem de Segurança Interna AUMENTADA */
+        padding-left: 6mm !important; /* Segurança Esquerda Extra */
         display: grid;
         grid-template-columns: 22mm 1fr;
-        grid-template-rows: 10mm auto 1fr; 
+        grid-template-rows: 10mm auto 1fr; /* Header aumentado */
         gap: 1mm;
-        
-        /* Bordas Arredondadas */
-        border-radius: 3mm !important;
-        overflow: hidden;
     }
 
     /* HEADER */
     .carteirinha-front .cart-header {
         grid-column: 1 / -1; grid-row: 1;
-        display: flex; align-items: center; gap: 3mm; 
+        display: flex; align-items: center; gap: 3mm; /* Espaço maior */
         border-bottom: 0.5pt solid rgba(255,255,255,0.4);
         margin: 0; padding-bottom: 1mm; height: 100%;
         overflow: visible; 
@@ -595,6 +592,7 @@ input[type="file"] { display: none; }
         width: 100% !important;
         height: 100% !important;
         min-height: 100% !important;
+        border-radius: 3mm !important;
         
         /* FALLBACK PARA COR DE FUNDO + GRADIENTE */
         background-color: var(--card-color, #1e293b) !important;
@@ -606,10 +604,6 @@ input[type="file"] { display: none; }
         grid-template-rows: 6mm 1fr 6mm;
         align-items: center;
         gap: 2mm;
-        
-        /* Bordas Arredondadas */
-        border-radius: 3mm !important;
-        overflow: hidden;
     }
     .carteirinha-back .cart-back-header {
         grid-column: 1 / -1; grid-row: 1;
