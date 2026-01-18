@@ -114,33 +114,44 @@ function switchTab(tabId) {
     if(tabId === 'tab-inscricoes') carregarInscricoes();
     if(tabId === 'tab-config') {
         carregarInstituicoes();
-        carregarConfigDrive(); 
+        carregarConfigGeral(); 
     }
 }
 
-// --- CONFIGURAÇÃO DRIVE ---
-function carregarConfigDrive() {
+// --- CONFIGURAÇÃO GERAL (Atualizado para salvar Cores e Nomes) ---
+function carregarConfigGeral() {
     fetch(`${URL_API}?action=getConfigDrive&token=${sessionStorage.getItem('admin_token')}`)
     .then(r => r.json())
     .then(json => {
         if(json.status === 'success') {
             document.getElementById('config-drive-id').value = json.idPasta || '';
+            document.getElementById('config-cor').value = json.corCard || '#2563eb';
+            document.getElementById('config-cor-picker').value = json.corCard || '#2563eb';
+            document.getElementById('config-nome-sec').value = json.nomeSec || '';
+            document.getElementById('config-nome-resp').value = json.nomeResp || '';
         }
     });
 }
 
-function salvarConfigDrive() {
+function salvarConfigGeral() {
     const id = document.getElementById('config-drive-id').value;
+    const cor = document.getElementById('config-cor').value;
+    const sec = document.getElementById('config-nome-sec').value;
+    const resp = document.getElementById('config-nome-resp').value;
+
     showLoading('Salvando...');
     fetch(URL_API, { 
         method: 'POST', 
         body: JSON.stringify({ 
-            action: 'salvarConfigDrive', 
+            action: 'salvarConfigGeral', 
             senha: sessionStorage.getItem('admin_token'),
-            idPasta: id 
+            idPasta: id,
+            corCard: cor,
+            nomeSec: sec,
+            nomeResp: resp
         }) 
     }).then(() => {
-        Swal.fire({icon: 'success', title: 'Configuração Salva!', timer: 1500, showConfirmButton: false});
+        Swal.fire({icon: 'success', title: 'Configurações Salvas!', timer: 1500, showConfirmButton: false});
     });
 }
 
@@ -1078,7 +1089,7 @@ function gerarFicha(chave) {
     }
 }
 
-// --- IMPRIMIR CARTEIRINHA ADMIN (NOVA VERSÃO - MODAL 3D) ---
+// --- IMPRIMIR CARTEIRINHA ADMIN (NOVA VERSÃO - MODAL 3D & QR CODE) ---
 function imprimirCarteirinhaAdmin(chave) {
     showLoading('Gerando Carteirinha...');
     
@@ -1137,12 +1148,20 @@ function imprimirCarteirinhaAdmin(chave) {
             document.documentElement.style.setProperty('--card-color', config.corCarteirinha);
         }
 
-        // Validade & QR Code
+        // Validade
         document.getElementById('cart-admin-validade-ano').innerText = aluno.ano_vigencia || new Date().getFullYear();
         
+        // Geração do QR Code usando QRious (Client-side)
         const linkValidacao = `${URL_API}?action=validar&chave=${chave}`;
-        const qrUrl = `https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=${encodeURIComponent(linkValidacao)}`;
-        document.getElementById('cart-admin-qr-img').src = qrUrl;
+        const qr = new QRious({
+          element: document.getElementById('cart-admin-qr-img'), 
+          value: linkValidacao,
+          size: 150,
+          backgroundAlpha: 0,
+          foreground: 'black'
+        });
+        // Atualiza a imagem com o DataURL gerado pelo canvas do QRious
+        document.getElementById('cart-admin-qr-img').src = qr.toDataURL();
 
         // Exibe o Modal
         document.getElementById('modal-carteirinha-admin').classList.remove('hidden');
