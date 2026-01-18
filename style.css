@@ -329,7 +329,7 @@ input[type="file"] { display: none; }
 .cart-footer { margin-top: auto; text-align: center; font-size: 0.65rem; opacity: 0.6; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
 .cart-sec-name { font-weight: 600; display: block; margin-bottom: 2px; text-transform: uppercase; }
 
-/* BOTÕES DO MODAL */
+/* BOTÕES DO MODAL (Restaurados) */
 .modal-actions-row { margin-top: 25px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
 .btn-action-pri { 
     background: white; color: var(--primary); padding: 12px 24px; border-radius: 30px; 
@@ -469,7 +469,10 @@ input[type="file"] { display: none; }
         margin: 0; 
         padding: 2mm; /* Margem de sangria interna */
         
+        /* TEXTO VISÍVEL MESMO SEM FUNDO */
         color: white !important;
+        text-shadow: 0px 0px 1px #000; /* SOMBRA DE SEGURANÇA */
+        
         background: transparent !important; /* Fundo transparente no container */
         overflow: hidden; 
         
@@ -564,13 +567,21 @@ input[type="file"] { display: none; }
         display: flex; flex-direction: column; justify-content: flex-start;
         overflow: visible; 
         padding-right: 2mm;
+        
+        /* GARANTIA DE VISIBILIDADE */
+        visibility: visible !important;
+        opacity: 1 !important;
     }
     
     .carteirinha-front .cart-info-main h2 { 
         font-size: 8pt; margin-bottom: 1mm; line-height: 1.1; 
         text-transform: uppercase; font-weight: 800;
+        
+        /* Quebra de Nome Longo */
         white-space: normal; 
-        word-wrap: break-word; overflow-wrap: break-word;
+        word-wrap: break-word; 
+        overflow-wrap: break-word;
+        
         color: #fff;
     }
     .carteirinha-front .cart-info-main .cart-course { 
@@ -585,6 +596,10 @@ input[type="file"] { display: none; }
         display: block; 
         grid-column: 2; grid-row: 3; /* Força para a linha de baixo */
         margin-top: 2mm; margin-left: 2mm;
+        
+        /* GARANTIA DE VISIBILIDADE */
+        visibility: visible !important;
+        opacity: 1 !important;
     }
     .carteirinha-front .detail-item {
         background: transparent; padding: 0; border: none; text-align: left;
