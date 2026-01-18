@@ -442,19 +442,23 @@ input[type="file"] { display: none; }
     /* --- FRENTE: LAYOUT TIPO RG --- */
     .carteirinha-front {
         display: grid !important;
-        /* Cabeçalho (12mm) | Corpo (Resto) | Rodapé Código (5mm) */
-        grid-template-rows: 12mm 1fr 6mm !important;
+        /* Cabeçalho (10mm) | Corpo (Resto) | Rodapé Código (5mm) */
+        grid-template-rows: 10mm 1fr 5mm !important;
         grid-template-columns: 1fr !important;
         padding: 0 !important;
-        background: white !important;
+        
+        /* COR DO CARTÃO NO FUNDO */
+        background-color: var(--card-color, #2563eb) !important;
+        /* Gradiente suave */
+        background-image: linear-gradient(135deg, var(--card-color, #2563eb) 0%, rgba(255,255,255,0.1) 100%) !important;
     }
 
     /* Header Frente (Fundo Colorido) */
     .carteirinha-front .cart-header {
         grid-row: 1; grid-column: 1;
-        display: flex; align-items: center; gap: 3mm;
+        display: flex; align-items: center; gap: 2mm;
         /* Usa cor do sistema para o fundo do cabeçalho */
-        background-color: var(--card-color, #2563eb) !important;
+        background-color: rgba(0,0,0,0.1) !important;
         color: white !important;
         padding: 0 3mm !important;
         border-bottom: none !important;
@@ -462,15 +466,15 @@ input[type="file"] { display: none; }
         height: 100% !important;
     }
     .carteirinha-front .cart-logo { 
-        width: 9mm; height: 9mm; object-fit: contain;
+        width: 7mm; height: 7mm; object-fit: contain;
         background: white; border-radius: 50%; padding: 0.5mm; border: none; box-shadow: none;
     }
     .carteirinha-front .cart-org-info h3 { 
-        font-size: 7pt !important; margin: 0; line-height: 1.1; 
+        font-size: 6pt !important; margin: 0; line-height: 1; 
         text-transform: uppercase; font-weight: 800; color: white !important;
     }
     .carteirinha-front .cart-org-info small { 
-        font-size: 5pt !important; margin-top: 0.5mm; display: block; color: rgba(255,255,255,0.9) !important;
+        font-size: 4.5pt !important; margin-top: 0.5mm; display: block; color: rgba(255,255,255,0.9) !important;
     }
 
     /* Corpo Frente */
@@ -478,23 +482,24 @@ input[type="file"] { display: none; }
         grid-row: 2; grid-column: 1;
         display: grid !important;
         /* Foto (24mm) | Dados (Resto) */
-        grid-template-columns: 26mm 1fr !important;
+        grid-template-columns: 24mm 1fr !important;
         padding: 2mm 3mm !important;
         align-items: start !important;
         gap: 3mm !important;
+        background: white !important; /* Corpo Branco para contraste */
     } 
 
     /* Foto */
     .carteirinha-front .cart-photo-frame {
-        width: 24mm !important; height: 32mm !important; 
+        width: 22mm !important; height: 30mm !important; 
         margin: 0 !important; border: 1pt solid #ccc !important;
         background: #eee !important; box-shadow: none !important;
         border-radius: 2px !important;
+        margin-top: 1mm !important;
     }
     .cart-photo-frame img { width: 100%; height: 100%; object-fit: cover; }
 
     /* Container de Dados (Direita da Foto) */
-    /* Precisamos agrupar Nome, Curso e Detalhes num container virtual, mas como o HTML é plano, vamos usar grid area */
     
     /* 1. Nome e Curso */
     .carteirinha-front .cart-info-main { 
@@ -502,20 +507,24 @@ input[type="file"] { display: none; }
         text-align: left !important; margin: 0 !important; padding: 0 !important;
         display: block !important;
     }
-    .carteirinha-front .cart-info-main h2 { 
-        font-size: 9pt !important; margin-bottom: 1mm !important; line-height: 1.1; 
-        text-transform: uppercase; color: #000 !important; font-weight: 800 !important;
-    }
+    
+    /* CURSO EM DESTAQUE NO TOPO */
     .carteirinha-front .cart-info-main .cart-course { 
-        font-size: 8pt !important; color: #333 !important; 
-        background: transparent !important; padding: 0 !important; margin: 0 !important;
-        font-weight: 600 !important; display: block !important; border-radius: 0 !important;
+        font-size: 8pt !important; color: var(--card-color, #2563eb) !important; 
+        background: transparent !important; padding: 0 !important; margin: 0 0 1mm 0 !important;
+        font-weight: 800 !important; display: block !important; border-radius: 0 !important;
+        text-transform: uppercase; border-bottom: 1pt solid #eee !important;
+    }
+
+    .carteirinha-front .cart-info-main h2 { 
+        font-size: 9pt !important; margin-bottom: 2mm !important; line-height: 1.1; 
+        text-transform: uppercase; color: #000 !important; font-weight: 700 !important;
     }
 
     /* 2. Detalhes (Lista) */
     .carteirinha-front .cart-details-grid { 
         grid-column: 2;
-        display: block !important; margin-top: 2mm !important;
+        display: block !important; margin-top: 0 !important;
         gap: 0 !important;
     }
     .carteirinha-front .detail-item {
@@ -526,6 +535,7 @@ input[type="file"] { display: none; }
     .carteirinha-front .detail-label { 
         font-size: 5pt !important; width: 16mm !important; display: inline-block !important; 
         opacity: 1 !important; color: #666 !important; font-weight: 600 !important;
+        text-transform: uppercase;
     }
     .carteirinha-front .detail-value { 
         font-size: 7pt !important; font-weight: 600 !important; font-family: 'Courier New', monospace !important;
@@ -535,44 +545,42 @@ input[type="file"] { display: none; }
     /* 3. Rodapé Frente (CÓDIGO ÚNICO) */
     .cart-unique-code {
         grid-row: 3; grid-column: 1;
-        background: #f1f5f9 !important;
-        border-top: 1pt solid #ccc !important;
+        background: var(--card-color, #2563eb) !important;
         display: flex !important; align-items: center; justify-content: center;
-        font-size: 7pt !important; font-weight: 700 !important; color: #000 !important;
+        font-size: 6pt !important; font-weight: 700 !important; color: white !important;
         letter-spacing: 1px;
     }
     .cart-unique-code span { 
-        font-family: 'Courier New', monospace !important; font-size: 9pt !important; margin-left: 5px;
+        font-family: 'Courier New', monospace !important; font-size: 8pt !important; margin-left: 5px; color: white !important;
     }
 
     /* --- VERSO: LAYOUT OFICIAL --- */
     .carteirinha-back {
-        background: white !important; /* Fundo branco para contraste do QR */
+        background: white !important; 
         display: grid !important;
         /* Header | QR + Validade | Assinatura */
         grid-template-rows: 8mm 1fr 10mm !important;
         grid-template-columns: 1fr !important;
         padding: 0 !important;
+        border: 1px solid var(--card-color, #ccc) !important; /* Borda fina da cor */
     }
 
     .carteirinha-back .cart-back-header {
         grid-row: 1;
         display: flex; align-items: center; justify-content: center;
         font-size: 6pt !important; font-weight: 700 !important;
-        border-bottom: 1pt solid #eee !important; color: #333 !important;
-        background: #f8fafc !important; margin: 0 !important; padding: 0 !important;
+        border-bottom: 1pt solid #eee !important; color: white !important;
+        background: var(--card-color, #2563eb) !important; margin: 0 !important; padding: 0 !important;
     }
     
     /* Container Central (QR e Validade lado a lado) */
-    /* Como no HTML eles são irmãos, vamos posicionar via Grid */
-    
     .carteirinha-back .qr-code-box {
         grid-row: 2;
         width: 24mm !important; height: 24mm !important; 
         background: white !important; padding: 0 !important;
         border-radius: 0 !important; margin: 0 auto !important;
         align-self: center !important;
-        /* Hack para posicionar à esquerda */
+        /* Posiciona à esquerda */
         transform: translateX(-15mm);
     }
     
@@ -580,7 +588,7 @@ input[type="file"] { display: none; }
         grid-row: 2;
         text-align: center !important;
         align-self: center !important;
-        /* Hack para posicionar à direita */
+        /* Posiciona à direita */
         transform: translateX(15mm);
         margin: 0 !important;
     }
@@ -588,7 +596,7 @@ input[type="file"] { display: none; }
         font-size: 6pt !important; display: block; margin-bottom: 1mm !important; color: #666 !important;
     }
     .carteirinha-back .validity-year { 
-        font-size: 20pt !important; font-weight: 900 !important; color: #000 !important; line-height: 1 !important; 
+        font-size: 20pt !important; font-weight: 900 !important; color: var(--card-color, #000) !important; line-height: 1 !important; 
     }
     
     .carteirinha-back .cart-footer {
