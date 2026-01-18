@@ -256,7 +256,7 @@ input[type="file"] { display: none; }
 }
 .btn-ver-cart:hover { background: #1e40af; }
 
-/* --- CARTEIRINHA DIGITAL (ESTRUTURA) --- */
+/* --- CARTEIRINHA DIGITAL (ESTRUTURA DE VISUALIZAÇÃO WEB) --- */
 .transparent-modal { background: transparent !important; box-shadow: none !important; padding: 0; }
 .carteirinha-wrapper {
     width: 100%; max-width: 350px; height: 520px; margin: 0 auto;
@@ -313,11 +313,6 @@ input[type="file"] { display: none; }
 .detail-item { background: rgba(0,0,0,0.2); padding: 5px; border-radius: 6px; text-align: center; }
 .detail-label { display: block; font-size: 0.6rem; text-transform: uppercase; opacity: 0.7; }
 .detail-value { display: block; font-size: 0.75rem; font-weight: 600; font-family: monospace; }
-
-/* Placeholder Chave (Visível só impressão ou se classe .cart-key existir no HTML) */
-.cart-key-container {
-    display: none; /* Por padrão oculta na visualização normal se não houver HTML, ou ajustar conforme necessidade */
-}
 
 /* VERSO */
 .carteirinha-back {
@@ -383,8 +378,9 @@ input[type="file"] { display: none; }
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes zoomIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 
-/* IMPRESSÃO PADRONIZADA E MILIMÉTRICA */
+/* --- IMPRESSÃO REESTRUTURADA PARA CABER TUDO (ESTILO CR-80) --- */
 @media print {
+    /* Esconder tudo exceto os modais de carteirinha */
     body > *:not(#modal-carteirinha):not(#modal-carteirinha-admin) { display: none !important; }
     
     #modal-carteirinha, #modal-carteirinha-admin {
@@ -406,23 +402,26 @@ input[type="file"] { display: none; }
         display: flex; gap: 5mm;
     }
     
-    /* DIMENSÕES CARTÃO ISO ID-1: 85.60mm x 53.98mm */
+    /* DIMENSÕES CARTÃO ISO ID-1: 85.60mm x 53.98mm com MARGEM DE CORTE */
     .carteirinha-face {
         position: relative; transform: none !important;
         width: 85.6mm; height: 53.98mm; 
-        border: 1px solid #ccc;
+        /* Borda pontilhada para guia de corte */
+        border: 1px dashed #999;
+        /* Padding interno para não colar na borda de corte */
+        box-sizing: border-box;
         -webkit-print-color-adjust: exact; print-color-adjust: exact;
-        font-size: 8pt; /* Fonte base reduzida para caber */
+        font-size: 8pt; 
         margin-bottom: 0;
         color: white !important;
         background: linear-gradient(135deg, var(--card-color, #2563eb), #0f172a) !important;
-        overflow: hidden;
-        border-radius: 3mm;
+        overflow: visible; /* Permitir que nada suma */
+        border-radius: 0; /* Reto para corte fácil */
     }
 
     /* --- FRENTE: LAYOUT HÍBRIDO (Foto Esq / Dados Dir) --- */
     .carteirinha-front {
-        padding: 2mm !important;
+        padding: 3mm !important;
         display: grid;
         grid-template-columns: 24mm 1fr; /* Coluna Foto | Coluna Dados */
         grid-template-rows: 10mm 1fr auto; /* Header | Corpo | Rodapé (Chave) */
@@ -437,8 +436,8 @@ input[type="file"] { display: none; }
         margin: 0; padding-bottom: 1mm; height: 100%;
     }
     .carteirinha-front .cart-logo { width: 8mm; height: 8mm; padding: 0.5mm; }
-    .carteirinha-front .cart-org-info h3 { font-size: 6pt; line-height: 1; margin: 0; font-weight: 800; }
-    .carteirinha-front .cart-org-info small { font-size: 4.5pt; line-height: 1; display: block; margin-top: 0.5mm; }
+    .carteirinha-front .cart-org-info h3 { font-size: 7pt; line-height: 1; margin: 0; font-weight: 800; white-space: normal; }
+    .carteirinha-front .cart-org-info small { font-size: 5pt; line-height: 1; display: block; margin-top: 0.5mm; white-space: normal; }
 
     /* CORPO */
     .carteirinha-front .cart-body { display: contents; } /* Remove wrapper flex */
@@ -448,24 +447,27 @@ input[type="file"] { display: none; }
         width: 22mm; height: 28mm;
         margin: 0; border: 1pt solid white;
         grid-column: 1; grid-row: 2;
-        align-self: start; margin-top: 1mm;
+        align-self: center; margin-top: 1mm;
     }
 
     /* DADOS À DIREITA */
     .carteirinha-front .cart-info-main { 
         grid-column: 2; grid-row: 2;
         text-align: left; margin-left: 2mm; margin-top: 1mm;
+        display: flex; flex-direction: column; justify-content: center;
     }
     
     .carteirinha-front .cart-info-main h2 { 
         font-size: 9pt; margin-bottom: 1mm; line-height: 1.1; 
         text-transform: uppercase; font-weight: 800;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 55mm;
+        /* Permitir quebra de linha para nomes longos */
+        white-space: normal; overflow: visible; 
     }
     .carteirinha-front .cart-info-main .cart-course { 
-        padding: 0.5mm 2mm; font-size: 6pt; border-radius: 2mm; 
+        padding: 0.5mm 2mm; font-size: 6.5pt; border-radius: 2mm; 
         margin-bottom: 2mm; display: inline-block;
         background: rgba(255,255,255,0.2);
+        white-space: normal;
     }
 
     /* LISTA DE DETALHES */
@@ -478,21 +480,24 @@ input[type="file"] { display: none; }
         margin-bottom: 0.5mm; display: flex; align-items: baseline;
     }
     .carteirinha-front .detail-label { 
-        font-size: 4.5pt; text-transform: uppercase; opacity: 0.8; 
+        font-size: 5pt; text-transform: uppercase; opacity: 0.8; 
         width: 15mm; flex-shrink: 0; display: inline-block;
     }
     .carteirinha-front .detail-value { 
         font-size: 6.5pt; font-weight: 700; font-family: monospace;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40mm;
+        white-space: normal; /* Permitir quebra */
     }
 
-    /* CHAVE ÚNICA (RODAPÉ FRENTE) */
-    .cart-key-display {
+    /* CHAVE ÚNICA (RODAPÉ FRENTE) - VISÍVEL APENAS NA IMPRESSÃO */
+    #cart-key-print {
+        display: block !important;
         grid-column: 1 / -1; grid-row: 3;
         text-align: center; font-family: monospace; font-size: 6pt;
         background: rgba(0,0,0,0.3); padding: 1mm; border-radius: 1mm;
-        margin-top: auto; display: block !important;
+        margin-top: auto; 
     }
+    /* Ocultar elementos de chave não usados */
+    .cart-key-container { display: none; }
 
     /* --- VERSO: LAYOUT OTIMIZADO --- */
     .carteirinha-back {
@@ -506,14 +511,14 @@ input[type="file"] { display: none; }
     /* Header Verso */
     .carteirinha-back .cart-back-header {
         grid-column: 1 / -1; grid-row: 1;
-        font-size: 5pt; border-bottom: 0.5pt solid rgba(255,255,255,0.3);
-        margin: 0; padding-bottom: 1mm; position: static;
+        font-size: 6pt; border-bottom: 0.5pt solid rgba(255,255,255,0.3);
+        margin: 0; padding-bottom: 1mm; position: static; white-space: nowrap;
     }
 
     /* QR Code */
     .carteirinha-back .qr-code-box {
         grid-column: 1; grid-row: 2;
-        width: 26mm; height: 26mm; padding: 1mm; margin: 0;
+        width: 26mm; height: 26mm; padding: 1mm; margin: 0; background: white;
     }
 
     /* Validade e Assinatura */
@@ -522,7 +527,7 @@ input[type="file"] { display: none; }
         text-align: center; margin: 0;
     }
     .carteirinha-back .validity-label { font-size: 6pt; display: block; margin-bottom: 1mm; }
-    .carteirinha-back .validity-year { font-size: 22pt; font-weight: 900; line-height: 1; display: block; }
+    .carteirinha-back .validity-year { font-size: 24pt; font-weight: 900; line-height: 1; display: block; }
 
     /* Footer Verso */
     .carteirinha-back .cart-footer {
@@ -530,7 +535,7 @@ input[type="file"] { display: none; }
         position: static; padding: 0; margin: 0; border: none;
         font-size: 5pt; align-self: end;
     }
-    .carteirinha-back .cart-sec-name { font-size: 6pt; margin-bottom: 0.5mm; }
+    .carteirinha-back .cart-sec-name { font-size: 6.5pt; margin-bottom: 0.5mm; }
 
     /* Esconder botões */
     .modal-actions-row, .cart-actions, .btn-close-modern, .btn-action-pri, .btn-action-sec, .btn-flip { display: none !important; }
