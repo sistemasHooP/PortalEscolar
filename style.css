@@ -1,4 +1,4 @@
-/* --- UTILS CRÍTICOS (No topo para garantir carregamento) --- */
+/* --- UTILS CRÍTICOS --- */
 .hidden, #loader-overlay.hidden { 
     display: none !important; 
     visibility: hidden !important; 
@@ -6,29 +6,22 @@
     pointer-events: none !important;
 }
 
-/* --- Variáveis de Design (Modern Edu Theme) --- */
+/* --- Variáveis de Design --- */
 :root {
     --primary: #2563eb;        
     --primary-dark: #1e40af;   
     --primary-light: #eff6ff; 
     --secondary: #0ea5e9;      
     --accent: #f59e0b;        
-    
-    /* Variável Dinâmica da Carteirinha (Padrão) */
     --card-color: #2563eb;    
-
-    /* Cores de Fundo e Texto */
     --bg-body: #f1f5f9;       
     --bg-card: #ffffff;       
     --text-main: #1e293b;     
     --text-muted: #64748b;    
-    
-    /* Sombras e Bordas */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
     --shadow-float: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    
     --radius-sm: 8px;
     --radius-md: 16px;
     --radius-lg: 24px;
@@ -44,7 +37,7 @@ body {
     color: var(--text-main);
     margin: 0;
     padding: 0;
-    padding-bottom: 100px; /* Espaço para FAB */
+    padding-bottom: 100px;
     line-height: 1.5;
     -webkit-tap-highlight-color: transparent;
 }
@@ -53,7 +46,7 @@ h1, h2, h3, p { margin: 0; }
 a { text-decoration: none; color: inherit; }
 button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 
-/* --- HERO SECTION --- */
+/* --- HERO SECTION (Original Restaurado) --- */
 .hero-header {
     position: relative; width: 100%; height: 320px;
     background-color: var(--primary-dark); background-size: cover; background-position: center;
@@ -199,7 +192,7 @@ input[type="file"] { display: none; }
 }
 .btn-submit:active { transform: scale(0.98); }
 
-/* --- FAB --- */
+/* --- FAB (MENU FLUTUANTE) --- */
 #fab-consulta {
     position: fixed; bottom: 25px; right: 25px; background: var(--primary-dark);
     color: white; border-radius: var(--radius-pill); padding: 16px 28px;
@@ -256,7 +249,7 @@ input[type="file"] { display: none; }
 }
 .btn-ver-cart:hover { background: #1e40af; }
 
-/* --- CARTEIRINHA DIGITAL (ESTRUTURA DE VISUALIZAÇÃO WEB) --- */
+/* --- CARTEIRINHA DIGITAL (ESTRUTURA DE TELA) --- */
 .transparent-modal { background: transparent !important; box-shadow: none !important; padding: 0; }
 .carteirinha-wrapper {
     width: 100%; max-width: 350px; height: 520px; margin: 0 auto;
@@ -278,7 +271,7 @@ input[type="file"] { display: none; }
     background-color: #0f172a; color: white;
 }
 
-/* FRENTE WEB */
+/* FRENTE (TELA) */
 .carteirinha-front {
     z-index: 2;
     background: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(135deg, var(--card-color, #2563eb), #0f172a);
@@ -314,7 +307,7 @@ input[type="file"] { display: none; }
 .detail-label { display: block; font-size: 0.6rem; text-transform: uppercase; opacity: 0.7; }
 .detail-value { display: block; font-size: 0.75rem; font-weight: 600; font-family: monospace; }
 
-/* VERSO WEB */
+/* VERSO (TELA) */
 .carteirinha-back {
     transform: rotateY(180deg); -webkit-transform: rotateY(180deg);
     display: flex; flex-direction: column; padding: 20px;
@@ -336,37 +329,73 @@ input[type="file"] { display: none; }
 .cart-footer { margin-top: auto; text-align: center; font-size: 0.65rem; opacity: 0.6; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
 .cart-sec-name { font-weight: 600; display: block; margin-bottom: 2px; text-transform: uppercase; }
 
-/* Ocultar elementos interativos */
-.modal-actions-row, .cart-actions, .btn-close-modern, .btn-action-pri, .btn-action-sec, .btn-flip { display: none !important; }
+/* BOTÕES DO MODAL (Restaurados) */
+.modal-actions-row { margin-top: 25px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+.btn-action-pri { 
+    background: white; color: var(--primary); padding: 12px 24px; border-radius: 30px; 
+    font-weight: 700; box-shadow: var(--shadow-md); border: none; cursor: pointer; display: flex; align-items: center; gap: 8px;
+}
+.btn-action-sec { 
+    background: rgba(255,255,255,0.1); color: white; padding: 12px 24px; border-radius: 30px; 
+    border: 1px solid rgba(255,255,255,0.3); cursor: pointer; display: flex; align-items: center; gap: 8px;
+}
+.btn-flip {
+    background: var(--accent); color: white; padding: 12px 24px; border-radius: 30px;
+    font-weight: 700; border: none; cursor: pointer; box-shadow: var(--shadow-md); display: flex; align-items: center; gap: 8px;
+}
+
+/* --- FOOTER --- */
+#main-footer { text-align: center; margin-top: 50px; color: var(--text-muted); font-size: 0.9rem; }
+.footer-links a { font-size: 0.8rem; color: var(--primary); opacity: 0.8; }
+
+/* --- LOADER --- */
+#loader-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--bg-body); z-index: 9999;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.loader-logo { width: 80px; margin-bottom: 20px; animation: pulse 1.5s infinite; }
+.spinner-ring {
+    width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top: 4px solid var(--primary);
+    border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+/* Animações */
+.fade-in { animation: fadeIn 0.6s ease-out forwards; opacity: 0; }
+.fade-in-down { animation: fadeInDown 0.8s ease-out forwards; opacity: 0; }
+.fade-in-up { animation: fadeInUp 0.6s ease-out forwards; opacity: 0; }
+.zoom-in { animation: zoomIn 0.3s ease-out forwards; }
+@keyframes fadeIn { to { opacity: 1; } }
+@keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes zoomIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 
 /* ==========================================================================
-   IMPRESSÃO OTIMIZADA (OFICIAL + GUIAS DE CORTE)
-   Tamanho alvo: 85.60mm x 53.98mm (Padrão ISO ID-1 / Cartão de Crédito)
+   IMPRESSÃO OTIMIZADA (ISOLADA)
    ========================================================================== */
 @media print {
     @page { 
-        size: landscape;  /* FORÇA A PÁGINA NA HORIZONTAL */
+        size: landscape; 
         margin: 0; 
     }
 
-    /* Padding de Segurança Global na Impressão */
+    /* Padding de Segurança para Impressora */
     body {
-        padding-left: 15mm !important; /* Empurra tudo para a direita para fugir da borda física */
+        padding-left: 15mm !important; 
         padding-right: 5mm !important;
         box-sizing: border-box;
-    }
-
-    /* Oculta tudo que não for o modal da carteirinha */
-    body > *:not(#modal-carteirinha):not(#modal-carteirinha-admin) { display: none !important; }
-    
-    /* RESET DE OVERFLOW CRÍTICO PARA IMPRESSÃO */
-    html, body {
         height: 100% !important;
         overflow: visible !important;
         background: white !important;
-        margin: 0 !important;
     }
 
+    /* Ocultar elementos interativos */
+    body > *:not(#modal-carteirinha):not(#modal-carteirinha-admin) { display: none !important; }
+    .modal-actions-row, .cart-actions, .btn-close-modern, .btn-action-pri, .btn-action-sec, .btn-flip { display: none !important; }
+
+    /* Container Principal */
     #modal-carteirinha, #modal-carteirinha-admin {
         display: block !important; 
         position: absolute !important;
@@ -384,7 +413,6 @@ input[type="file"] { display: none; }
     
     #modal-carteirinha *, #modal-carteirinha-admin * { visibility: visible; }
     
-    /* Remove estilos de modal que causam scroll */
     .modal-content, .modal-content-cart { 
         box-shadow: none !important; 
         padding: 0 !important; 
@@ -395,60 +423,56 @@ input[type="file"] { display: none; }
         border: none !important;
     }
     
-    /* Layout Container: Lado a Lado (Frente | Verso) */
+    /* Layout Lado a Lado (Frente | Verso) */
     .carteirinha-wrapper {
         perspective: none; 
-        height: 100vh !important; /* Ocupa toda a altura para centralizar */
+        height: 100vh !important;
         width: 100% !important;
         max-width: none !important;
         display: flex; 
         flex-direction: row; 
-        gap: 5mm; /* Espaço entre os cartões */
+        gap: 5mm; 
         justify-content: center; 
-        align-items: center; /* Centraliza verticalmente na folha horizontal */
+        align-items: center;
         margin: 0;
     }
     
     .carteirinha-card-inner {
         transform: none !important; 
         position: relative; 
-        height: auto; 
-        width: auto;
+        height: auto; width: auto;
         display: flex; 
-        gap: 10mm; /* Espaço maior entre frente e verso para dobrar ou cortar */
+        gap: 10mm; /* Espaço entre cartões */
     }
     
-    /* DEFINIÇÃO DO CARTÃO FÍSICO */
+    /* CARTÃO FÍSICO (85.6mm x 53.98mm) */
     .carteirinha-face {
         position: relative; transform: none !important;
-        width: 85.6mm; height: 53.98mm; /* Tamanho Exato */
+        width: 85.6mm; height: 53.98mm; 
         
-        /* GUIAS DE CORTE (Borda Tracejada Fina) */
+        /* LINHA DE CORTE */
         border: 1px dashed #94a3b8 !important; 
         outline: none; 
         
         box-sizing: border-box;
         -webkit-print-color-adjust: exact; print-color-adjust: exact;
         font-size: 8pt; 
-        
-        /* Margem externa para não cortar no limite da borda física */
-        margin: 5mm; 
+        margin: 5mm; /* Margem de segurança externa */
         
         color: white !important;
-        /* Fundo impresso: SIMPLIFICADO para evitar barras */
         background: linear-gradient(135deg, var(--card-color, #2563eb), #0f172a) !important;
         background-image: linear-gradient(135deg, var(--card-color, #2563eb), #0f172a) !important;
         overflow: hidden; 
         border-radius: 3mm; 
     }
 
-    /* --- FRENTE: LAYOUT OFICIAL (Foto Esq | Dados Dir) --- */
+    /* --- FRENTE: LAYOUT (Foto Esq | Dados Dir) --- */
     .carteirinha-front {
         padding: 2mm !important; 
-        padding-left: 4mm !important; /* Margem extra na esquerda interna */
+        padding-left: 4mm !important; /* Segurança Esquerda */
         display: grid;
-        grid-template-columns: 22mm 1fr; /* Coluna Foto ajustada */
-        grid-template-rows: 10mm 1fr auto; /* Header maior para o texto */
+        grid-template-columns: 22mm 1fr;
+        grid-template-rows: 10mm 1fr auto;
         gap: 1mm;
     }
 
@@ -467,8 +491,7 @@ input[type="file"] { display: none; }
     }
     .carteirinha-front .cart-org-info h3 { 
         font-size: 6.5pt; line-height: 1.1; margin: 0; font-weight: 800; 
-        white-space: nowrap; /* Título curto em uma linha */
-        overflow: hidden; text-overflow: ellipsis;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .carteirinha-front .cart-org-info small { 
         font-size: 5pt; line-height: 1; display: block; margin-top: 0.5mm; 
@@ -478,27 +501,24 @@ input[type="file"] { display: none; }
     /* CORPO */
     .carteirinha-front .cart-body { display: contents; } 
 
-    /* FOTO À ESQUERDA */
+    /* FOTO */
     .carteirinha-front .cart-photo-frame {
-        width: 20mm; height: 26mm; /* Ajustado proporção 3x4 */
+        width: 20mm; height: 26mm; 
         margin: 0; border: 1pt solid white;
         grid-column: 1; grid-row: 2;
         align-self: flex-start; margin-top: 1mm;
-        box-shadow: none;
-        overflow: hidden; 
+        box-shadow: none; overflow: hidden; 
     }
     .cart-photo-frame img { 
-        width: 100%; height: 100%; 
-        object-fit: cover; 
-        object-position: top center; 
+        width: 100%; height: 100%; object-fit: cover; object-position: top center; 
     }
 
-    /* DADOS À DIREITA */
+    /* DADOS */
     .carteirinha-front .cart-info-main { 
         grid-column: 2; grid-row: 2;
         text-align: left; margin-left: 2mm; margin-top: 1mm;
         display: flex; flex-direction: column; justify-content: flex-start;
-        overflow: visible; /* Permite ver o nome completo */
+        overflow: visible; 
     }
     
     .carteirinha-front .cart-info-main h2 { 
@@ -519,11 +539,8 @@ input[type="file"] { display: none; }
         white-space: normal;
     }
 
-    /* LISTA DE DETALHES (Grid Interno) */
-    .carteirinha-front .cart-details-grid {
-        display: block; 
-        margin-top: 0;
-    }
+    /* LISTA DETALHES */
+    .carteirinha-front .cart-details-grid { display: block; margin-top: 0; }
     .carteirinha-front .detail-item {
         background: transparent; padding: 0; border: none; text-align: left;
         margin-bottom: 0.5mm; display: flex; align-items: baseline;
@@ -538,31 +555,25 @@ input[type="file"] { display: none; }
         white-space: normal; overflow: hidden; text-overflow: ellipsis;
     }
 
-    /* --- VERSO: LAYOUT OFICIAL --- */
+    /* --- VERSO --- */
     .carteirinha-back {
         padding: 3mm !important;
         display: grid;
-        grid-template-columns: 24mm 1fr; /* QR Code | Validade */
-        grid-template-rows: 6mm 1fr 6mm; /* Header | Corpo | Footer */
+        grid-template-columns: 24mm 1fr;
+        grid-template-rows: 6mm 1fr 6mm;
         align-items: center;
         gap: 2mm;
     }
-
-    /* Header Verso */
     .carteirinha-back .cart-back-header {
         grid-column: 1 / -1; grid-row: 1;
         font-size: 5.5pt; border-bottom: 0.5pt solid rgba(255,255,255,0.3);
         margin: 0; padding-bottom: 1mm; position: static; white-space: nowrap;
     }
-
-    /* QR Code (Esquerda) */
     .carteirinha-back .qr-code-box {
         grid-column: 1; grid-row: 2;
         width: 22mm; height: 22mm; padding: 1mm; background: white; margin: 0;
         border-radius: 2mm;
     }
-
-    /* Validade (Direita) */
     .carteirinha-back .validity-box {
         grid-column: 2; grid-row: 2;
         text-align: center; margin: 0;
@@ -570,17 +581,12 @@ input[type="file"] { display: none; }
     }
     .carteirinha-back .validity-label { font-size: 6pt; display: block; margin-bottom: 1mm; opacity: 0.9; }
     .carteirinha-back .validity-year { font-size: 24pt; font-weight: 900; line-height: 1; display: block; color: var(--accent); }
-
-    /* Footer Verso */
     .carteirinha-back .cart-footer {
         grid-column: 1 / -1; grid-row: 3;
         position: static; padding: 0; margin: 0; border: none;
         font-size: 5pt; align-self: end; opacity: 0.8;
     }
     .carteirinha-back .cart-sec-name { font-size: 5.5pt; margin-bottom: 0; }
-
-    /* Ocultar elementos interativos */
-    .modal-actions-row, .cart-actions, .btn-close-modern, .btn-action-pri, .btn-action-sec, .btn-flip { display: none !important; }
 }
 
 @media(max-width: 400px) {
