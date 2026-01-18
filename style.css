@@ -362,16 +362,6 @@ input[type="file"] { display: none; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
-/* Animações */
-.fade-in { animation: fadeIn 0.6s ease-out forwards; opacity: 0; }
-.fade-in-down { animation: fadeInDown 0.8s ease-out forwards; opacity: 0; }
-.fade-in-up { animation: fadeInUp 0.6s ease-out forwards; opacity: 0; }
-.zoom-in { animation: zoomIn 0.3s ease-out forwards; }
-@keyframes fadeIn { to { opacity: 1; } }
-@keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes zoomIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-
 /* ==========================================================================
    IMPRESSÃO OTIMIZADA (ISOLADA)
    ========================================================================== */
@@ -463,32 +453,38 @@ input[type="file"] { display: none; }
         
         /* Margem externa para não cortar no limite da borda física */
         margin: 0; 
+        padding: 2mm; /* Margem de sangria interna */
         
         color: white !important;
-        background: linear-gradient(135deg, var(--card-color, #2563eb), #0f172a) !important;
-        background-image: linear-gradient(135deg, var(--card-color, #2563eb), #0f172a) !important;
+        background: transparent !important; /* Fundo transparente no container */
         overflow: hidden; 
-        border-radius: 3mm; 
     }
 
     /* --- FRENTE: LAYOUT (Foto Esq | Dados Dir) --- */
     .carteirinha-front {
+        width: 100%;
+        height: 100%;
+        border-radius: 3mm;
+        background: linear-gradient(135deg, var(--card-color, #2563eb), #0f172a) !important;
+        background-image: linear-gradient(135deg, var(--card-color, #2563eb), #0f172a) !important;
+        
         padding: 4mm !important; /* Margem de Segurança Interna AUMENTADA */
+        padding-left: 6mm !important; /* Segurança Esquerda Extra */
         display: grid;
         grid-template-columns: 22mm 1fr;
-        grid-template-rows: 8mm auto 1fr; /* Header | Name/Course | Details */
+        grid-template-rows: 10mm auto 1fr; /* Header aumentado */
         gap: 1mm;
     }
 
     /* HEADER */
     .carteirinha-front .cart-header {
         grid-column: 1 / -1; grid-row: 1;
-        display: flex; align-items: center; gap: 2mm;
+        display: flex; align-items: center; gap: 3mm; /* Espaço maior */
         border-bottom: 0.5pt solid rgba(255,255,255,0.4);
         margin: 0; padding-bottom: 1mm; height: 100%;
         overflow: hidden;
     }
-    .carteirinha-front .cart-logo { width: 8mm; height: 8mm; padding: 0.5mm; box-shadow: none; flex-shrink: 0; }
+    .carteirinha-front .cart-logo { width: 9mm; height: 9mm; padding: 0.5mm; box-shadow: none; flex-shrink: 0; }
     
     .carteirinha-front .cart-org-info {
         display: flex; flex-direction: column; justify-content: center; overflow: hidden;
@@ -563,6 +559,11 @@ input[type="file"] { display: none; }
 
     /* --- VERSO --- */
     .carteirinha-back {
+        width: 100%;
+        height: 100%;
+        border-radius: 3mm;
+        background: linear-gradient(135deg, var(--card-color, #1e293b), #000000);
+        
         padding: 4mm !important; /* Margem de Segurança Interna */
         display: grid;
         grid-template-columns: 24mm 1fr;
