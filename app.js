@@ -154,6 +154,7 @@ function validarCPF(cpf) {
 }
 
 function aplicarMascaraCPF(v) { 
+    if(!v) return '';
     return v.replace(/\D/g, '').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})/, '$1-$2').replace(/(-\d{2})\d+?$/, '$1'); 
 }
 
@@ -465,7 +466,11 @@ function abrirCarteirinha(aluno) {
     document.getElementById('cart-nome').innerText = aluno.nome || 'Aluno';
     document.getElementById('cart-inst').innerText = aluno.instituicao || 'Instituição';
     document.getElementById('cart-course').innerText = aluno.curso || 'Curso não informado';
-    document.getElementById('cart-cpf').innerText = aluno.cpf || '---';
+    
+    // CPF com máscara e Chave
+    document.getElementById('cart-cpf').innerText = aplicarMascaraCPF(aluno.cpf) || '---';
+    document.getElementById('cart-chave').innerText = aluno.chave || '----';
+    
     document.getElementById('cart-mat').innerText = aluno.matricula || '-';
     
     // Tratamento Data Nascimento
