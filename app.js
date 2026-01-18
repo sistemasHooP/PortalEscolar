@@ -54,7 +54,7 @@ function aplicarConfiguracoes(config) {
         document.getElementById('footer-sys-name').innerText = config.nomeSistema;
         document.title = config.nomeSistema;
         
-        // Nome na carteirinha digital
+        // Nome na carteirinha digital (Frente e Verso)
         const cartSys = document.getElementById('cart-sys-name');
         if(cartSys) cartSys.innerText = config.nomeSistema.toUpperCase();
     }
@@ -82,7 +82,7 @@ function aplicarConfiguracoes(config) {
         document.getElementById('hero-section').style.backgroundImage = `url('${capaUrl}')`;
     }
 
-    // 4. Cor da Carteirinha (NOVO)
+    // 4. Cor da Carteirinha (CRÍTICO PARA IMPRESSÃO)
     if(config.corCarteirinha) {
         document.documentElement.style.setProperty('--card-color', config.corCarteirinha);
     }
@@ -489,13 +489,23 @@ function abrirCarteirinha(aluno) {
     }
     img.onerror = function() { this.src = 'https://via.placeholder.com/150?text=FOTO'; };
 
-    // 3. Dados Institucionais (Verso)
+    // 3. Dados Institucionais (Verso e Frente - Cabeçalho)
     if(configSistemaCache) {
+        // Nome do sistema (Topo frente e verso)
         if(configSistemaCache.nomeSistema) document.getElementById('cart-sys-name').innerText = configSistemaCache.nomeSistema.toUpperCase();
+        
+        // Secretaria e Secretário
         if(configSistemaCache.nomeSecretaria) {
-             // Ajusta no verso e na frente (small)
-             document.getElementById('cart-sec-name').innerText = configSistemaCache.nomeSecretario || "Responsável";
              document.querySelector('.cart-org-info small').innerText = configSistemaCache.nomeSecretaria;
+             // Se tiver ID para o verso:
+             // OBS: No HTML público o verso pode ter texto fixo, mas vamos tentar atualizar se existir o ID
+             const versoSec = document.querySelector('.cart-back-header');
+             if(versoSec) versoSec.innerText = configSistemaCache.nomeSistema + " - " + configSistemaCache.nomeSecretaria;
+        }
+        
+        // Assinatura (Secretário)
+        if(configSistemaCache.nomeSecretario) {
+             document.getElementById('cart-sec-name').innerText = configSistemaCache.nomeSecretario;
         }
     }
     
