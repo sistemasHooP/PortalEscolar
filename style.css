@@ -488,16 +488,17 @@ input[type="file"] { display: none; }
         display: flex; align-items: center; gap: 3mm; /* Espaço maior */
         border-bottom: 0.5pt solid rgba(255,255,255,0.4);
         margin: 0; padding-bottom: 1mm; height: 100%;
-        overflow: hidden;
+        overflow: visible; /* Deixar visível para garantir a logo */
     }
     /* Logo Ajustada */
     .carteirinha-front .cart-logo { 
-        width: 10mm; /* Diminuído para garantir ajuste */
-        height: 10mm; /* Diminuído para garantir ajuste */
-        padding: 0; /* Removido padding interno */
+        width: 12mm; /* Aumentada para ocupar todo o espaço */
+        height: 12mm; /* Aumentada */
+        padding: 0; /* Remove padding interno da logo */
         box-shadow: none; 
         flex-shrink: 0;
-        object-fit: contain; /* Garante que a imagem caiba */ 
+        object-fit: cover; /* Cobre o container sem distorção */
+        object-position: center; /* Centraliza a imagem */
         border: 2px solid white; /* Borda branca */
         border-radius: 50%;
         background-color: white;
