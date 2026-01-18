@@ -1,606 +1,283 @@
-/* --- UTILS CRÍTICOS --- */
-.hidden, #loader-overlay.hidden { 
-    display: none !important; 
-    visibility: hidden !important; 
-    opacity: 0 !important;
-    pointer-events: none !important;
-}
-
-/* --- Variáveis de Design --- */
-:root {
-    --primary: #2563eb;        
-    --primary-dark: #1e40af;   
-    --primary-light: #eff6ff; 
-    --secondary: #0ea5e9;       
-    --accent: #f59e0b;        
-    --card-color: #2563eb; /* Cor dinâmica injetada pelo JS */    
-    --bg-body: #f1f5f9;        
-    --bg-card: #ffffff;        
-    --text-main: #1e293b;      
-    --text-muted: #64748b;    
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --shadow-float: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    --radius-sm: 8px;
-    --radius-md: 16px;
-    --radius-lg: 24px;
-    --radius-pill: 50px;
-}
-
-/* --- Configurações Globais --- */
-* { box-sizing: border-box; }
-
-body {
-    font-family: 'Poppins', sans-serif;
-    background-color: var(--bg-body);
-    color: var(--text-main);
-    margin: 0;
-    padding: 0;
-    padding-bottom: 100px;
-    line-height: 1.5;
-    -webkit-tap-highlight-color: transparent;
-}
-
-h1, h2, h3, p { margin: 0; }
-a { text-decoration: none; color: inherit; }
-button { font-family: inherit; cursor: pointer; border: none; outline: none; }
-
-/* --- HERO SECTION --- */
-.hero-header {
-    position: relative; width: 100%; height: 320px;
-    background-color: var(--primary-dark); background-size: cover; background-position: center;
-    border-bottom-left-radius: 30px; border-bottom-right-radius: 30px;
-    overflow: hidden; box-shadow: var(--shadow-md);
-    display: flex; align-items: center; justify-content: center; text-align: center; color: white;
-}
-.hero-bg-overlay {
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(to bottom, rgba(30, 58, 138, 0.6), rgba(30, 58, 138, 0.9)); z-index: 1;
-}
-.hero-content {
-    position: relative; z-index: 2; padding: 20px; display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 800px;
-}
-.logo-container { margin-bottom: 15px; }
-.sys-logo {
-    width: 100px; height: 100px; object-fit: contain; background: white;
-    border-radius: 50%; padding: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border: 3px solid rgba(255,255,255,0.3);
-}
-.text-container h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-.sys-phrase { font-size: 0.95rem; font-weight: 300; opacity: 0.9; max-width: 90%; margin: 0 auto; }
-
-/* --- CONTEÚDO PRINCIPAL --- */
-main { max-width: 900px; margin: -40px auto 0; padding: 0 20px; position: relative; z-index: 10; }
-
-.section-title {
-    margin-bottom: 25px; display: flex; flex-direction: column; align-items: flex-start;
-    width: 100%; background: white; padding: 15px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm);
-}
-.section-title h2 { font-size: 1.2rem; color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 10px; line-height: 1.4; flex-wrap: wrap; }
-.title-bar { width: 50px; height: 4px; background: var(--accent); border-radius: 2px; margin-top: 8px; }
-
-/* --- CARDS DE EVENTOS --- */
-.cards-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
-@media(min-width: 768px) { .cards-grid { grid-template-columns: 1fr 1fr; } }
-
-.card-event {
-    background: var(--bg-card); border-radius: var(--radius-md); box-shadow: var(--shadow-md);
-    padding: 20px; transition: all 0.3s ease; border: 1px solid rgba(0,0,0,0.05);
-    display: flex; flex-direction: column; position: relative; overflow: visible;
-}
-.card-event:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); border-color: var(--secondary); }
-
-.card-status {
-    align-self: flex-start; font-size: 0.75rem; font-weight: 700; padding: 6px 12px;
-    border-radius: 20px; text-transform: uppercase; margin-bottom: 15px; display: inline-block;
-    letter-spacing: 0.5px; position: relative;
-}
-.status-ativo { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-
-.card-title { font-size: 1.25rem; color: var(--primary-dark); font-weight: 700; margin-bottom: 12px; line-height: 1.4; display: block; }
-.card-desc { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 20px; flex-grow: 1; }
-.card-dates {
-    display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-main);
-    background: var(--primary-light); padding: 10px 15px; border-radius: 8px; margin-bottom: 20px;
-    font-weight: 600; border: 1px solid #dbeafe;
-}
-
-.btn-inscrever {
-    width: 100%; padding: 14px; background: linear-gradient(90deg, var(--primary), #3b82f6);
-    color: white; font-weight: 600; border-radius: var(--radius-sm); display: flex;
-    justify-content: space-between; align-items: center; transition: all 0.3s;
-    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
-}
-.btn-inscrever:hover { opacity: 1; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3); }
-.btn-inscrever i { transition: transform 0.3s; }
-.btn-inscrever:hover i { transform: translateX(5px); }
-
-/* --- FORMULÁRIO --- */
-#area-inscricao { position: relative; padding-top: 40px; }
-.nav-bar { margin-bottom: 25px; display: flex; justify-content: flex-start; }
-.btn-back {
-    background: white; padding: 12px 24px; border-radius: var(--radius-pill); font-weight: 600;
-    box-shadow: var(--shadow-md); color: var(--text-main); transition: all 0.2s;
-    border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px; cursor: pointer;
-}
-.btn-back:hover { color: var(--primary); border-color: var(--primary); background: var(--primary-light); }
-
-.form-card-container { width: 100%; }
-.form-card {
-    background: var(--bg-card); border-radius: var(--radius-lg); padding: 25px;
-    box-shadow: var(--shadow-lg); border: 1px solid rgba(0,0,0,0.05);
-}
-.form-header {
-    display: flex; align-items: flex-start; gap: 15px; margin-bottom: 30px;
-    padding-bottom: 20px; border-bottom: 1px solid #e2e8f0;
-}
-.header-icon {
-    width: 50px; height: 50px; background: var(--primary-light); color: var(--primary);
-    border-radius: 12px; display: flex; align-items: center; justify-content: center;
-    font-size: 1.4rem; flex-shrink: 0;
-}
-.subtitle { font-size: 0.9rem; color: var(--text-muted); margin-top: 5px; }
-
-.grid-form { display: grid; grid-template-columns: 1fr; gap: 20px; }
-@media(min-width: 600px) { .grid-form { grid-template-columns: 1fr 1fr; } }
-
-label { display: block; margin-bottom: 8px; font-size: 0.95rem; font-weight: 600; color: var(--text-main); }
-input, select {
-    width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: var(--radius-sm);
-    font-size: 1rem; background: #f8fafc; transition: all 0.3s; color: var(--text-main);
-}
-input:focus, select:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
-
-.upload-section {
-    background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: var(--radius-md);
-    padding: 25px; margin-top: 30px;
-}
-.upload-info {
-    font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;
-    display: flex; align-items: center; gap: 10px; font-weight: 500;
-}
-.file-input-wrapper { margin-bottom: 15px; }
-.file-label {
-    display: flex; align-items: center; gap: 15px; background: white; padding: 15px;
-    border-radius: var(--radius-sm); border: 1px solid #e2e8f0; cursor: pointer;
-    transition: all 0.2s; box-shadow: var(--shadow-sm);
-}
-.file-label:hover { border-color: var(--primary); background: var(--primary-light); transform: translateY(-2px); }
-.icon-box {
-    width: 45px; height: 45px; background: #f1f5f9; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 1.2rem;
-}
-.text-box { flex: 1; }
-.text-box strong { display: block; font-size: 1rem; color: var(--text-main); margin-bottom: 2px; }
-.text-box small { font-size: 0.85rem; color: var(--text-muted); }
-.status-icon { color: var(--accent); font-size: 1.2rem; }
-input[type="file"] { display: none; }
-
-.divider-form {
-    display: flex; align-items: center; text-align: center; margin: 40px 0 30px 0;
-    color: var(--text-muted); font-size: 0.85rem; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 1px;
-}
-.divider-form::before, .divider-form::after { content: ''; flex: 1; border-bottom: 1px solid #e2e8f0; }
-.divider-form span { padding: 0 15px; background: var(--bg-card); }
-
-.btn-submit {
-    width: 100%; padding: 18px; background: var(--primary); color: white;
-    font-size: 1.15rem; font-weight: 700; border-radius: var(--radius-pill);
-    box-shadow: var(--shadow-float); display: flex; align-items: center; justify-content: center;
-    gap: 12px; transition: transform 0.2s; margin-top: 10px;
-}
-.btn-submit:active { transform: scale(0.98); }
-
-/* --- FAB (MENU FLUTUANTE) --- */
-#fab-consulta {
-    position: fixed; bottom: 25px; right: 25px; background: var(--primary-dark);
-    color: white; border-radius: var(--radius-pill); padding: 16px 28px;
-    display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow-float);
-    z-index: 1000; transition: transform 0.2s;
-}
-#fab-consulta:hover { transform: translateY(-3px); background: var(--primary); }
-.fab-text { font-weight: 600; font-size: 1rem; }
-.fab-icon { font-size: 1.3rem; }
-
-/* --- MODAIS MODERNOS --- */
-.modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(5px); z-index: 2000;
-    display: flex; align-items: center; justify-content: center;
-}
-.modal-content {
-    background: white; width: 90%; max-width: 480px; border-radius: var(--radius-lg);
-    padding: 30px; box-shadow: var(--shadow-float); position: relative;
-    max-height: 90vh; overflow-y: auto;
-}
-.modal-header-modern {
-    display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;
-}
-.modal-header-modern h3 { font-size: 1.4rem; color: var(--primary); font-weight: 700; }
-.btn-close-modern {
-    background: #f1f5f9; width: 40px; height: 40px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center; color: var(--text-muted);
-    transition: background 0.2s; font-size: 1.2rem;
-}
-.btn-close-modern:hover { background: #e2e8f0; color: var(--text-main); }
-.modal-body-centered { text-align: center; }
-.icon-circle {
-    width: 90px; height: 90px; background: var(--primary-light); color: var(--primary);
-    font-size: 2.5rem; border-radius: 50%; display: flex; align-items: center;
-    justify-content: center; margin: 0 auto 25px;
-}
-.input-group-modern { display: flex; margin-top: 25px; gap: 10px; }
-.input-group-modern input { border-radius: var(--radius-md); padding: 16px; border: 2px solid #e2e8f0; }
-.input-group-modern input:focus { border-color: var(--primary); }
-.input-group-modern button {
-    background: var(--primary); color: white; border-radius: var(--radius-md);
-    padding: 0 25px; font-size: 1.4rem;
-}
-.result-card {
-    margin-top: 25px; padding: 20px; border-radius: var(--radius-md); text-align: left;
-    background: #f8fafc; border-left: 6px solid #ccc; box-shadow: var(--shadow-sm);
-}
-.result-success { border-color: #10b981; background: #ecfdf5; }
-.result-pending { border-color: #f59e0b; background: #fffbeb; }
-.btn-ver-cart {
-    width: 100%; margin-top: 15px; padding: 12px; background: #2563eb; color: white;
-    border-radius: 10px; font-weight: 600; transition: background 0.2s;
-}
-.btn-ver-cart:hover { background: #1e40af; }
-
-/* --- CARTEIRINHA DIGITAL (TELA - MANTIDA) --- */
-.transparent-modal { background: transparent !important; box-shadow: none !important; padding: 0; }
-.carteirinha-wrapper {
-    width: 100%; max-width: 350px; height: 520px; margin: 0 auto;
-    perspective: 1200px; -webkit-perspective: 1200px;
-}
-.carteirinha-card-inner {
-    position: relative; width: 100%; height: 100%; text-align: center;
-    transition: transform 0.8s; transform-style: preserve-3d; -webkit-transform-style: preserve-3d;
-    cursor: pointer;
-}
-.carteirinha-card-inner.is-flipped { transform: rotateY(180deg); -webkit-transform: rotateY(180deg); }
-
-.carteirinha-face {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    -webkit-backface-visibility: hidden; backface-visibility: hidden;
-    transform: translateZ(0); -webkit-transform: translateZ(0);
-    border-radius: 20px; overflow: hidden;
-    box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.4);
-    background-color: #0f172a; color: white;
-}
-
-/* FRENTE VIRTUAL */
-.carteirinha-front {
-    z-index: 2;
-    background: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(135deg, var(--card-color, #2563eb), #0f172a);
-    background-size: 15px 15px, 100% 100%;
-    display: flex; flex-direction: column; padding: 20px;
-    transform: rotateY(0deg); -webkit-transform: rotateY(0deg);
-}
-.cart-header {
-    display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
-    position: relative; z-index: 2; text-align: left; padding-bottom: 10px;
-    border-bottom: 1px solid rgba(255,255,255,0.2);
-}
-.cart-logo {
-    width: 45px; height: 45px; background: white; border-radius: 50%;
-    padding: 3px; object-fit: contain; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-.cart-org-info h3 { font-size: 0.85rem; font-weight: 800; letter-spacing: 0.5px; line-height: 1.2; text-transform: uppercase; margin: 0; }
-.cart-org-info small { font-size: 0.7rem; text-transform: uppercase; opacity: 0.9; font-weight: 300; display: block; margin-top: 2px;}
-.cart-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 2; gap: 15px; }
-.cart-photo-frame {
-    width: 110px; height: 140px; background: #e2e8f0; border: 3px solid white;
-    border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.2); margin-bottom: 5px;
-}
-.cart-photo-frame img { width: 100%; height: 100%; object-fit: cover; }
-.cart-info-main { width: 100%; text-align: center; }
-.cart-info-main h2 { font-size: 1.1rem; text-transform: uppercase; font-weight: 700; margin-bottom: 5px; line-height: 1.2; text-shadow: 0 2px 2px rgba(0,0,0,0.2); }
-.cart-info-main .cart-course {
-    font-size: 0.85rem; background: rgba(255,255,255,0.15); padding: 4px 10px;
-    border-radius: 15px; display: inline-block; margin-bottom: 10px;
-}
-.cart-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 10px; }
-.detail-item { background: rgba(0,0,0,0.2); padding: 5px; border-radius: 6px; text-align: center; }
-.detail-label { display: block; font-size: 0.6rem; text-transform: uppercase; opacity: 0.7; }
-.detail-value { display: block; font-size: 0.75rem; font-weight: 600; font-family: monospace; }
-.cart-unique-code { 
-    background: rgba(0,0,0,0.2); padding: 5px 10px; border-radius: 8px; margin-top: 10px; 
-    font-family: 'Courier New', monospace; font-weight: 700; font-size: 0.8rem;
-}
-
-/* VERSO VIRTUAL */
-.carteirinha-back {
-    transform: rotateY(180deg); -webkit-transform: rotateY(180deg);
-    display: flex; flex-direction: column; padding: 20px;
-    background: linear-gradient(135deg, var(--card-color, #1e293b), #000000);
-}
-.cart-back-header {
-    text-align: center; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px;
-    opacity: 0.6; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;
-}
-.qr-code-box {
-    width: 160px; height: 160px; background: white; padding: 10px;
-    border-radius: 12px; margin: 0 auto 20px; display: flex; align-items: center;
-    justify-content: center;
-}
-.qr-code-box img { width: 100%; height: 100%; object-fit: contain; }
-.validity-box { text-align: center; margin-bottom: 20px; }
-.validity-label { font-size: 0.8rem; opacity: 0.8; text-transform: uppercase; display: block; }
-.validity-year { font-size: 3.5rem; font-weight: 800; line-height: 1; color: var(--accent); text-shadow: 0 4px 10px rgba(0,0,0,0.3); display: block; }
-.cart-footer { margin-top: auto; text-align: center; font-size: 0.65rem; opacity: 0.6; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
-.cart-sec-name { font-weight: 600; display: block; margin-bottom: 2px; text-transform: uppercase; }
-
-/* BOTÕES DO MODAL */
-.modal-actions-row { margin-top: 25px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
-.btn-action-pri { 
-    background: white; color: var(--primary); padding: 12px 24px; border-radius: 30px; 
-    font-weight: 700; box-shadow: var(--shadow-md); border: none; cursor: pointer; display: flex; align-items: center; gap: 8px;
-}
-.btn-action-sec { 
-    background: rgba(255,255,255,0.1); color: white; padding: 12px 24px; border-radius: 30px; 
-    border: 1px solid rgba(255,255,255,0.3); cursor: pointer; display: flex; align-items: center; gap: 8px;
-}
-.btn-flip {
-    background: var(--accent); color: white; padding: 12px 24px; border-radius: 30px;
-    font-weight: 700; border: none; cursor: pointer; box-shadow: var(--shadow-md); display: flex; align-items: center; gap: 8px;
-}
-
-/* --- FOOTER --- */
-#main-footer { text-align: center; margin-top: 50px; color: var(--text-muted); font-size: 0.9rem; }
-.footer-links a { font-size: 0.8rem; color: var(--primary); opacity: 0.8; }
-
-/* --- LOADER --- */
-#loader-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: var(--bg-body); z-index: 9999;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-}
-.loader-logo { width: 80px; margin-bottom: 20px; animation: pulse 1.5s infinite; }
-.spinner-ring {
-    width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top: 4px solid var(--primary);
-    border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px;
-}
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-
-/* ==========================================================================
-   IMPRESSÃO: CARTEIRA DE ESTUDANTE OFICIAL (FÍSICA)
-   Padrão ID-1: 85.6mm x 53.98mm | Estratégia de Blocos Empilhados
-   ========================================================================== */
-@media print {
-    @page { 
-        size: landscape; 
-        margin: 0; 
-    }
-
-    * {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-        color-adjust: exact !important;
-        box-sizing: border-box !important;
-        padding: 0; margin: 0;
-    }
-
-    html, body {
-        width: 100%; height: 100%; 
-        overflow: hidden !important; background: white;
-        display: flex; justify-content: center; align-items: center;
-    }
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Portal Educacional</title>
     
-    body > *:not(#modal-carteirinha):not(#modal-carteirinha-admin) { display: none !important; }
-    .modal-actions-row, .cart-actions, .btn-close-modern, .btn-action-pri, .btn-action-sec, .btn-flip { display: none !important; }
-
-    #modal-carteirinha, #modal-carteirinha-admin {
-        display: block !important; position: static !important;
-        width: auto !important; height: auto !important;
-        background: transparent !important; border: none !important;
-        visibility: visible; margin: 0 !important; padding: 0 !important;
-    }
-
-    .modal-content, .modal-content-cart { 
-        box-shadow: none !important; padding: 0 !important; margin: 0 !important; 
-        background: transparent !important; width: auto !important; max-width: none !important;
-        border: none !important;
-    }
+    <!-- Fontes e Ícones (Google Fonts - Poppins) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    /* WRAPPER PRINCIPAL */
-    .carteirinha-wrapper {
-        perspective: none; width: auto !important; height: auto !important; max-width: none !important;
-        display: flex !important; flex-direction: row !important;
-        gap: 5mm; 
-        justify-content: center; align-items: center; margin: 0;
-    }
+    <!-- Importação de Ícones (FontAwesome) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    .carteirinha-card-inner {
-        transform: none !important; position: relative; height: auto; width: auto;
-        display: flex !important; flex-direction: row !important; gap: 0;
-    }
-
-    /* FACE DO CARTÃO (Base) */
-    .carteirinha-face {
-        position: relative !important; transform: none !important;
-        width: 85.6mm !important; height: 53.98mm !important;
-        min-width: 85.6mm !important; min-height: 53.98mm !important;
-        border-radius: 3mm !important; margin: 0 !important; padding: 0 !important;
-        border: 1px dashed #999 !important; /* Guia de corte */
-        background: white !important; /* Fundo base branco */
-        overflow: hidden !important;
-        display: block !important;
-    }
-
-    /* --- FRENTE --- */
-    .carteirinha-front {
-        /* Removemos o background-color do container principal 
-           para pintar CADA BLOCO separadamente */
-        background: white !important;
-        display: flex !important;
-        flex-direction: column !important;
-    }
-
-    /* 1. Cabeçalho (Bloco Sólido Colorido) */
-    .carteirinha-front .cart-header {
-        position: relative !important;
-        width: 100%; height: 10mm;
-        display: flex !important; align-items: center; padding-left: 3mm;
-        z-index: 10 !important; border-bottom: none !important;
-        
-        /* COR EXPLÍCITA NESTE BLOCO */
-        background-color: var(--card-color, #2563eb) !important;
-        background-image: linear-gradient(var(--card-color, #2563eb), var(--card-color, #2563eb)) !important;
-        
-        margin: 0 !important;
-        box-shadow: none !important;
-    }
+    <!-- Arquivo de Estilos Principal -->
+    <link rel="stylesheet" href="style.css">
     
-    .carteirinha-front .cart-logo {
-        width: 7mm !important; height: 7mm !important;
-        background: white !important; border-radius: 50%; padding: 0.5mm; 
-        margin-right: 2mm; box-shadow: none !important;
-    }
-    .carteirinha-front .cart-org-info h3 {
-        font-size: 7pt !important; color: white !important; text-transform: uppercase; font-weight: 900; margin: 0; line-height: 1;
-    }
-    .carteirinha-front .cart-org-info small {
-        font-size: 4.5pt !important; color: white !important; display: block; opacity: 0.9; margin-top: 0.5mm;
-    }
+    <!-- Manifesto para PWA -->
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
 
-    /* 2. Corpo (Bloco Central Branco com Bordas Coloridas) */
-    .carteirinha-front .cart-body {
-        position: relative !important;
-        width: 100%; height: 38mm;
-        z-index: 5 !important;
+    <!-- Overlay de Carregamento (Loader) -->
+    <div id="loader-overlay" class="hidden">
+        <!-- Logo pulsante no loader (será substituída via JS se houver logo personalizada) -->
+        <img src="logo.png" alt="Carregando..." class="loader-logo" id="loader-img-tag" onerror="this.style.display='none'">
+        <div class="spinner-ring"></div>
+        <p id="loader-text">Processando...</p>
+    </div>
+
+    <!-- HERO SECTION (Capa + Logo + Títulos) -->
+    <!-- Os IDs abaixo serão preenchidos pelo app.js buscando da planilha -->
+    <header id="hero-section" class="hero-header">
+        <div class="hero-bg-overlay"></div> <!-- Camada escura para legibilidade -->
+        <div class="hero-content fade-in-down">
+            <div class="logo-container">
+                <img src="logo.png" alt="Logo do Sistema" id="sys-logo" class="sys-logo" onerror="this.style.display='none'">
+            </div>
+            <div class="text-container">
+                <h1 id="sys-name">Portal Educacional</h1>
+                <p id="sys-phrase" class="sys-phrase">Inovação e compromisso com o futuro.</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main>
         
-        /* Fundo Branco */
-        background: white !important;
-        
-        /* BORDAS LATERAIS COLORIDAS */
-        border-left: 3mm solid var(--card-color, #2563eb) !important;
-        border-right: 3mm solid var(--card-color, #2563eb) !important;
-        
-        padding: 0 1mm !important;
-        display: flex !important; flex-direction: row !important; align-items: start !important;
-        gap: 3mm !important;
-    }
+        <!-- SEÇÃO 1: Lista de Eventos (Tela Inicial) -->
+        <section id="lista-eventos" class="fade-in">
+            <div class="section-title">
+                <h2><i class="fa-regular fa-calendar-check"></i> Inscrições Abertas</h2>
+                <div class="title-bar"></div>
+            </div>
+            
+            <!-- O JavaScript vai inserir os cards REESTILIZADOS aqui -->
+            <div id="cards-container" class="cards-grid"></div>
+        </section>
 
-    .carteirinha-front .cart-photo-frame {
-        width: 22mm !important; height: 28mm !important;
-        border: 0.5pt solid #999 !important; background: #eee !important;
-        margin-top: 3mm !important; margin-left: 1mm !important;
-        box-shadow: none !important; flex-shrink: 0;
-    }
-    .carteirinha-front .cart-photo-frame img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* Dados */
-    .carteirinha-front .cart-info-main {
-        flex: 1 !important; text-align: left !important;
-        margin-top: 3mm !important; padding: 0 !important; display: block !important;
-    }
-    
-    .carteirinha-front .cart-course {
-        font-size: 8pt !important; color: var(--card-color, #2563eb) !important;
-        font-weight: 800 !important; text-transform: uppercase;
-        display: block !important; margin-bottom: 1mm !important;
-        background: transparent !important; padding: 0 !important; border-radius: 0 !important;
-    }
-    
-    .carteirinha-front .cart-info-main h2 {
-        font-size: 9pt !important; color: #000 !important;
-        font-weight: 700 !important; text-transform: uppercase;
-        margin: 0 0 2mm 0 !important; line-height: 1.1;
-    }
+        <!-- SEÇÃO 2: Formulário de Inscrição (Escondido inicialmente) -->
+        <section id="area-inscricao" class="hidden fade-in-up">
+            <!-- Botão de Voltar Flutuante no Topo da Seção -->
+            <div class="nav-bar">
+                <button class="btn-back" onclick="voltarHome()">
+                    <i class="fa-solid fa-arrow-left"></i> Voltar
+                </button>
+            </div>
+            
+            <div class="form-card-container">
+                <div class="form-card">
+                    <!-- Título do Evento Selecionado -->
+                    <div class="form-header">
+                        <div class="header-icon"><i class="fa-solid fa-pen-nib"></i></div>
+                        <div>
+                            <h2 id="titulo-evento">Nome do Evento</h2>
+                            <p class="subtitle">Preencha seus dados corretamente.</p>
+                        </div>
+                    </div>
+                    
+                    <form id="form-inscricao" onsubmit="enviarInscricao(event)">
+                        
+                        <!-- ÁREA DE MENSAGENS E ALERTAS DO EVENTO -->
+                        <div id="area-avisos"></div>
 
-    .carteirinha-front .cart-details-grid {
-        display: block !important; margin-top: 0 !important; gap: 0 !important;
-    }
-    .carteirinha-front .detail-item {
-        background: transparent !important; padding: 0 !important; margin-bottom: 0.5mm !important;
-        display: flex !important;
-    }
-    .carteirinha-front .detail-label {
-        width: 20mm !important; font-size: 5pt !important; color: #666 !important; 
-        font-weight: 700 !important; text-transform: uppercase;
-    }
-    .carteirinha-front .detail-value {
-        font-size: 7pt !important; color: #000 !important; font-weight: 600 !important;
-    }
+                        <!-- CAMPOS DO FORMULÁRIO (Injetados via JS) -->
+                        <div id="campos-dinamicos" class="grid-form"></div>
+                        
+                        <div class="divider-form">
+                            <span>Documentação</span>
+                        </div>
 
-    /* 3. Rodapé (Bloco Sólido Colorido) */
-    .carteirinha-front .cart-unique-code {
-        position: relative !important;
-        width: 100%; height: 6mm;
-        display: flex !important; align-items: center; justify-content: center;
-        z-index: 10 !important;
-        
-        /* COR EXPLÍCITA NESTE BLOCO */
-        background-color: var(--card-color, #2563eb) !important;
-        background-image: linear-gradient(var(--card-color, #2563eb), var(--card-color, #2563eb)) !important;
-        
-        color: white !important; font-size: 6pt !important; font-weight: 700;
-        margin: 0 !important; padding: 0 !important;
-        border-radius: 0 !important;
-    }
-    .carteirinha-front .cart-unique-code span {
-        font-family: monospace !important; font-size: 9pt !important; margin-left: 5px;
-    }
+                        <!-- Área de Upload de Documentos -->
+                        <div class="upload-section">
+                            <p class="upload-info"><i class="fa-solid fa-circle-info"></i> Anexe os arquivos solicitados abaixo (Formatos: JPG, PNG ou PDF).</p>
+                            
+                            <!-- Upload Foto -->
+                            <div id="div-upload-foto" class="file-input-wrapper hidden">
+                                <label for="file-foto" class="file-label">
+                                    <div class="icon-box"><i class="fa-solid fa-user"></i></div>
+                                    <div class="text-box">
+                                        <strong>Foto 3x4</strong>
+                                        <small>Rosto visível e fundo claro</small>
+                                    </div>
+                                    <div class="status-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                                </label>
+                                <input type="file" id="file-foto" accept="image/*" onchange="previewArquivo(this)">
+                            </div>
 
-    /* --- VERSO --- */
-    .carteirinha-back {
-        background: white !important;
-        display: flex !important; flex-direction: column !important;
-        border: 2px solid var(--card-color, #2563eb) !important;
-    }
+                            <!-- Upload Documento -->
+                            <div id="div-upload-doc" class="file-input-wrapper hidden">
+                                <label for="file-doc" class="file-label">
+                                    <div class="icon-box"><i class="fa-solid fa-file-contract"></i></div>
+                                    <div class="text-box">
+                                        <strong>Comprovante / Declaração</strong>
+                                        <small>Arquivo PDF legível</small>
+                                    </div>
+                                    <div class="status-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                                </label>
+                                <input type="file" id="file-doc" accept="application/pdf" onchange="previewArquivo(this)">
+                            </div>
+                        </div>
 
-    /* Header Verso (Bloco Sólido Colorido) */
-    .carteirinha-back .cart-back-header {
-        position: relative !important; width: 100%; height: 8mm;
-        
-        /* COR EXPLÍCITA */
-        background-color: var(--card-color, #2563eb) !important; 
-        background-image: linear-gradient(var(--card-color, #2563eb), var(--card-color, #2563eb)) !important;
-        
-        color: white !important; font-size: 6pt !important; font-weight: 700;
-        display: flex !important; align-items: center; justify-content: center;
-        text-transform: uppercase; margin: 0 !important; padding: 0 !important; border: none !important;
-    }
-    
-    /* Corpo Verso (Posicionamento Absoluto porque aqui é fundo branco) */
-    .carteirinha-back .qr-code-box {
-        position: absolute !important; top: 12mm; left: 5mm;
-        width: 25mm !important; height: 25mm !important;
-        background: white !important; padding: 0 !important; margin: 0 !important; border: none !important;
-    }
-    .qr-code-box img { width: 100%; height: 100%; object-fit: contain; }
+                        <!-- Botão de Envio -->
+                        <div class="form-actions">
+                            <button type="submit" class="btn-submit pulse-effect">
+                                Confirmar Inscrição <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
 
-    .carteirinha-back .validity-box {
-        position: absolute !important; top: 14mm; right: 5mm; width: 40mm !important;
-        text-align: center !important; margin: 0 !important;
-    }
-    .carteirinha-back .validity-label {
-        font-size: 5pt !important; color: #666 !important; font-weight: 600; 
-        text-transform: uppercase; display: block !important; margin-bottom: 2mm !important;
-    }
-    .carteirinha-back .validity-year {
-        font-size: 24pt !important; font-weight: 900 !important; line-height: 1 !important;
-        color: var(--card-color, #000) !important;
-    }
+    </main>
 
-    /* Footer Assinatura (Fundo Branco Padrão) */
-    .carteirinha-back .cart-footer {
-        position: absolute !important; bottom: 0; left: 0; width: 100%; height: 10mm;
-        border-top: 0.5pt solid #ccc !important;
-        display: flex !important; flex-direction: column; justify-content: center; align-items: center;
-        background: white !important; margin: 0 !important; padding: 0 !important;
-    }
-    .carteirinha-back .cart-sec-name {
-        font-size: 8pt !important; font-weight: 700 !important; text-transform: uppercase;
-        margin-bottom: 1mm !important; font-family: inherit !important;
-    }
-}
+    <!-- BOTÃO FLUTUANTE (FAB) PARA CONSULTA -->
+    <button id="fab-consulta" onclick="abrirModalConsulta()" title="Consultar Minha Inscrição">
+        <span class="fab-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
+        <span class="fab-text">Consultar</span>
+    </button>
 
-@media(max-width: 400px) {
-    .hero-header { height: 260px; }
-    .text-container h1 { font-size: 1.4rem; }
-}
+    <!-- MODAL DE CONSULTA (Overlay) -->
+    <div id="modal-consulta" class="modal-overlay hidden">
+        <div class="modal-content zoom-in">
+            <div class="modal-header-modern">
+                <h3>Minha Inscrição</h3>
+                <button class="btn-close-modern" onclick="fecharModalConsulta()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body-centered">
+                <div class="icon-circle"><i class="fa-solid fa-ticket"></i></div>
+                <p>Digite sua <strong>Chave de Acesso</strong> para verificar o status ou obter sua carteirinha.</p>
+                
+                <div class="input-group-modern">
+                    <input type="text" id="busca-chave" placeholder="Ex: A1B2C3D4">
+                    <button onclick="consultarChave()"><i class="fa-solid fa-arrow-right"></i></button>
+                </div>
+                
+                <!-- Resultado da busca aparecerá aqui -->
+                <div id="resultado-busca" class="result-area"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DA CARTEIRINHA DIGITAL (ATUALIZADO V3.0 - Layout Clean Block) -->
+    <div id="modal-carteirinha" class="modal-overlay hidden" style="z-index: 3000;">
+        <div class="modal-content zoom-in transparent-modal">
+            
+            <div class="carteirinha-wrapper">
+                <!-- Inner container que gira -->
+                <div class="carteirinha-card-inner" id="cart-flip-container" onclick="this.classList.toggle('is-flipped')">
+                    
+                    <!-- FRENTE -->
+                    <div class="carteirinha-face carteirinha-front">
+                        <div class="cart-body"> <!-- Novo Container Branco -->
+                            <div class="cart-header">
+                                <img src="logo.png" alt="Logo" class="cart-logo" id="cart-logo-img">
+                                <div class="cart-org-info">
+                                    <h3 id="cart-sys-name">TRANSPORTE ESCOLAR</h3>
+                                    <small>Secretaria de Educação</small>
+                                </div>
+                            </div>
+
+                            <div class="content-row"> <!-- Linha de Conteúdo -->
+                                <div class="cart-photo-frame">
+                                    <img id="cart-img" src="" alt="Foto">
+                                </div>
+                                
+                                <div class="cart-info-main">
+                                    <span class="cart-course" id="cart-course">Curso do Aluno</span>
+                                    <h2 id="cart-nome">Nome do Aluno</h2>
+                                    
+                                    <div class="cart-details-grid">
+                                        <div class="detail-item">
+                                            <span class="detail-label">Instituição</span>
+                                            <span class="detail-value" id="cart-inst">Instituição</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">CPF</span>
+                                            <span class="detail-value" id="cart-cpf">000.000.000-00</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Nascimento</span>
+                                            <span class="detail-value" id="cart-nasc">--/--/----</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Matrícula</span>
+                                            <span class="detail-value" id="cart-mat">000000</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="cart-unique-code">
+                                CÓDIGO: <span id="cart-chave">----</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VERSO -->
+                    <div class="carteirinha-face carteirinha-back">
+                        <div> <!-- Novo Container Branco -->
+                            <div class="cart-back-header">
+                                Documento de Identificação Estudantil
+                            </div>
+
+                            <div class="body-verso">
+                                <div class="qr-code-box">
+                                    <!-- QR Code gerado dinamicamente via JS (QRious) -->
+                                    <img id="cart-qrcode-img" src="" alt="QR Code Validação">
+                                </div>
+
+                                <div class="validity-box">
+                                    <span class="validity-label">Válido até Dezembro de</span>
+                                    <span class="validity-year" id="cart-validade-ano">2026</span>
+                                </div>
+                            </div>
+
+                            <div class="cart-footer">
+                                <span class="cart-sec-name" id="cart-sec-name">Secretário de Educação</span>
+                                Secretário(a) de Educação
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <div class="modal-actions-row">
+                <button class="btn-action-sec" onclick="document.getElementById('modal-carteirinha').classList.add('hidden')">
+                    Fechar
+                </button>
+                <button class="btn-flip" onclick="document.getElementById('cart-flip-container').classList.toggle('is-flipped')">
+                    <i class="fa-solid fa-rotate"></i> Virar
+                </button>
+                <button class="btn-action-pri" onclick="window.print()">
+                    <i class="fa-solid fa-print"></i> Imprimir
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Rodapé -->
+    <footer id="main-footer">
+        <p>&copy; <span id="year">2025</span> <span id="footer-sys-name">Sistema Educacional</span></p>
+        <div class="footer-links">
+            <a href="admin.html"><i class="fa-solid fa-lock"></i> Área Administrativa</a>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Adicionando biblioteca QRious para QR Code seguro -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script src="app.js"></script>
+
+</body>
+</html>
