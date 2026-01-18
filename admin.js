@@ -34,7 +34,7 @@ const LABELS_TODOS_CAMPOS = {
 let mapaEventos = {}; 
 let cacheEventos = {}; 
 let chartEventosInstance = null; let chartStatusInstance = null;
-let todasInscricoes = [];       
+let todasInscricoes = [];        
 let inscricoesFiltradas = []; 
 let dashboardData = []; 
 let paginaAtual = 1;
@@ -628,7 +628,7 @@ function modalNovoEvento() {
 
             return {
                 titulo: titulo, descricao: document.getElementById('swal-desc').value,
-                inicio: i, fim: f,
+                inicio: inicio, fim: fim,
                 config: { 
                     camposTexto: sels, 
                     camposPersonalizados: extras, 
@@ -715,7 +715,6 @@ function renderizarProximaPagina() {
         let d = {}; try { d = JSON.parse(ins.dadosJson); } catch(e){}
         const checked = selecionados.has(ins.chave) ? 'checked' : '';
         
-        // Botão de Ficha: Agora chama a nova função LOCAL
         let btnFicha = `<button class="btn-icon bg-view" style="background:#6366f1;" onclick="gerarFicha('${ins.chave}')" title="Gerar Ficha"><i class="fa-solid fa-print"></i></button>`;
         
         let btnCartAdm = '';
@@ -765,12 +764,8 @@ function abrirEdicaoInscricao(chave) {
     // Tratamento de imagem para o modal (Sidebar Esquerda)
     let fotoUrl = 'https://via.placeholder.com/150?text=Sem+Foto';
     if(dados.linkFoto) {
-        if(dados.linkFoto.includes('drive.google.com')) {
-             let id = dados.linkFoto.split(/\/d\/|id=/)[1].split(/\/|&/)[0];
-             fotoUrl = `https://lh3.googleusercontent.com/d/${id}`;
-        } else {
-             fotoUrl = dados.linkFoto;
-        }
+        fotoUrl = formatarUrlDrive(dados.linkFoto);
+        if(!fotoUrl) fotoUrl = 'https://via.placeholder.com/150?text=Sem+Foto';
     }
 
     // Tratamento de Documento (Sidebar Esquerda - Card Melhorado)
@@ -907,7 +902,7 @@ function abrirEdicaoInscricao(chave) {
             
             const novoStatus = document.getElementById('novo_status_modal').value;
             
-            // Coleta Arquivos (Correção: Verifica diretamente se o input existe e tem arquivo)
+            // Coleta Arquivos
             const arqs = {};
             const inputFoto = document.getElementById('edit_upload_foto');
             const inputDoc = document.getElementById('edit_upload_doc');
@@ -943,7 +938,6 @@ function abrirEdicaoInscricao(chave) {
                     }) 
                 });
             }).then(() => {
-                // CORREÇÃO CRÍTICA: Recarregar TUDO para atualizar cache de imagem/docs
                 Swal.fire({icon: 'success', title: 'Dados Atualizados!', timer: 1500, showConfirmButton: false});
                 carregarInscricoes(); // Força reload completo
             });
@@ -966,9 +960,9 @@ function acaoEmMassa(s) {
     });
 }
 
-// --- GERAR FICHA CORRIGIDA (ESPERA IMAGEM) ---
+// --- GERAR FICHA CORRIGIDA ---
 function gerarFicha(chave) {
-    showLoading('Gerando Ficha...'); // Feedback inicial importante
+    showLoading('Gerando Ficha...');
 
     const inscricao = todasInscricoes.find(i => i.chave === chave);
     if (!inscricao) return Swal.fire('Erro', 'Inscrição não encontrada na memória.', 'error');
@@ -980,12 +974,7 @@ function gerarFicha(chave) {
 
     let fotoUrl = '';
     if(dados.linkFoto) {
-        if(dados.linkFoto.includes('drive.google.com')) {
-             let id = dados.linkFoto.split(/\/d\/|id=/)[1].split(/\/|&/)[0];
-             fotoUrl = `https://lh3.googleusercontent.com/d/${id}`;
-        } else {
-             fotoUrl = dados.linkFoto;
-        }
+        fotoUrl = formatarUrlDrive(dados.linkFoto);
     }
 
     const imgTag = fotoUrl 
@@ -997,13 +986,10 @@ function gerarFicha(chave) {
     camposPessoais.forEach(key => {
         const label = LABELS_TODOS_CAMPOS[key] || key;
         let val = dados[key] || '-';
-        
-        // CORREÇÃO: Formatar Data de Nascimento
         if(key === 'DataNascimento' && val !== '-') {
             const parts = val.split('-');
             if(parts.length === 3) val = `${parts[2]}/${parts[1]}/${parts[0]}`;
         }
-
         htmlPessoais += `<div class="ficha-row"><span class="ficha-label">${label}:</span> <span class="ficha-value">${val}</span></div>`;
     });
 
@@ -1065,97 +1051,123 @@ function gerarFicha(chave) {
         </div>
     `;
 
-    // Injeta no Print Layer
     const pl = document.getElementById('print-layer') || document.createElement('div');
     pl.id = 'print-layer';
     if(!pl.parentElement) document.body.appendChild(pl);
-    
     pl.innerHTML = htmlFicha;
     
-    // Lógica para aguardar a imagem carregar antes de imprimir
     const imgEl = pl.querySelector('.ficha-photo-box img');
-    
     const finalizeAndPrint = () => {
-        Swal.close(); // Garante que o loading feche
-        
-        // Atualiza status silenciosamente se ainda não foi emitida
+        Swal.close(); 
         if(inscricao.status !== 'Ficha Emitida') {
             fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'atualizarStatus', senha: sessionStorage.getItem('admin_token'), chave: chave, novoStatus: 'Ficha Emitida' }) });
             inscricao.status = 'Ficha Emitida'; 
         }
-        
-        // Pequeno delay para renderização final do navegador
         setTimeout(() => window.print(), 100);
     };
 
     if (imgEl) {
-        if (imgEl.complete) {
-            finalizeAndPrint();
-        } else {
-            // Mostra loading específico se a imagem demorar
-            if(Swal.isVisible()) {
-                 Swal.update({ title: 'Carregando foto...' });
-            }
+        if (imgEl.complete) { finalizeAndPrint(); } 
+        else {
+            if(Swal.isVisible()) Swal.update({ title: 'Carregando foto...' });
             imgEl.onload = finalizeAndPrint;
-            imgEl.onerror = finalizeAndPrint; // Imprime mesmo com erro na foto
+            imgEl.onerror = finalizeAndPrint; 
         }
     } else {
         finalizeAndPrint();
     }
 }
 
+// --- IMPRIMIR CARTEIRINHA ADMIN (NOVA VERSÃO - MODAL 3D) ---
 function imprimirCarteirinhaAdmin(chave) {
-    showLoading('Carregando Dados...');
-    fetch(`${URL_API}?action=consultarInscricao&chave=${chave}`)
-    .then(r => r.json())
-    .then(j => {
+    showLoading('Gerando Carteirinha...');
+    
+    // Busca dados detalhados + configurações em paralelo
+    Promise.all([
+        fetch(`${URL_API}?action=consultarInscricao&chave=${chave}`).then(r => r.json()),
+        fetch(`${URL_API}?action=getPublicConfig`).then(r => r.json())
+    ]).then(([jsonDados, jsonConfig]) => {
         Swal.close();
-        if(j.status !== 'success') return Swal.fire('Erro', 'Dados não encontrados.', 'error');
         
-        const aluno = j.data.aluno;
-        let imgSrc = 'https://via.placeholder.com/150?text=FOTO';
+        if(jsonDados.status !== 'success') return Swal.fire('Erro', 'Dados do aluno não encontrados.', 'error');
+        
+        const aluno = jsonDados.data.aluno;
+        const config = jsonConfig.config || {};
+        
+        // 1. Preenche Frente
+        document.getElementById('cart-admin-nome').innerText = aluno.nome || 'Aluno';
+        document.getElementById('cart-admin-inst').innerText = aluno.instituicao || '-';
+        document.getElementById('cart-admin-course').innerText = aluno.curso || 'Curso não informado';
+        document.getElementById('cart-admin-cpf').innerText = aluno.cpf || '---';
+        document.getElementById('cart-admin-mat').innerText = aluno.matricula || '---';
+        
+        // Formata Nascimento
+        let nasc = aluno.nascimento || '--/--/----';
+        if(nasc.includes('-')) { const p = nasc.split('-'); nasc = `${p[2]}/${p[1]}/${p[0]}`; }
+        document.getElementById('cart-admin-nasc').innerText = nasc;
+
+        // Foto
+        const img = document.getElementById('cart-admin-img');
+        img.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNlMmU4ZjAiLz48L3N2Zz4=';
         if (aluno.foto) {
-            if (aluno.foto.startsWith('data:image') || aluno.foto.startsWith('http')) {
-                if (aluno.foto.includes('drive.google.com') && !aluno.foto.startsWith('data:image')) {
-                     let id = ''; const parts = aluno.foto.split(/\/d\/|id=/);
-                     if (parts.length > 1) id = parts[1].split(/\/|&/)[0];
-                     imgSrc = id ? `https://lh3.googleusercontent.com/d/${id}` : aluno.foto;
-                } else { imgSrc = aluno.foto; }
-            }
+             if (aluno.foto.startsWith('data:image') || aluno.foto.startsWith('http')) {
+                  img.src = formatarUrlDrive(aluno.foto);
+             }
+        }
+        img.onerror = function() { this.src = 'https://via.placeholder.com/150?text=FOTO'; };
+
+        // 2. Preenche Verso & Estilo
+        if(config.nomeSistema) document.getElementById('cart-admin-sys-name').innerText = config.nomeSistema.toUpperCase();
+        
+        const secName = config.nomeSecretario || "Secretário";
+        const deptName = config.nomeSecretaria || "Secretaria de Educação";
+        
+        document.getElementById('cart-admin-sec-name').innerText = secName;
+        // Atualiza legenda da secretaria
+        const orgInfoSmall = document.querySelector('#cart-admin-sys-name + small');
+        if(orgInfoSmall) orgInfoSmall.innerText = deptName;
+        
+        // Logo
+        if(config.urlLogo) {
+            document.getElementById('cart-admin-logo').src = formatarUrlDrive(config.urlLogo);
         }
 
-        const htmlCarteirinha = `
-            <div class="carteirinha-container" style="page-break-inside: avoid; margin: 20px auto;">
-                <div class="carteirinha-card" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
-                    <div class="cart-header">
-                        <img src="${URL_LOGO}" alt="Logo" class="cart-logo" style="background:white; border-radius:50%;">
-                        <div><h3>TRANSPORTE ESCOLAR</h3><small>Secretaria de Educação</small></div>
-                    </div>
-                    <div class="cart-body">
-                        <div class="cart-photo"><img src="${imgSrc}" alt="Foto" style="width:100%; height:100%; object-fit:cover;"></div>
-                        <div class="cart-info">
-                            <h2 style="font-size:16px; margin:0 0 5px 0;">${aluno.nome}</h2>
-                            <p style="font-size:11px; margin:0;">${aluno.instituicao}</p>
-                            <p style="font-size:11px; margin:0;">${aluno.curso}</p>
-                            <div class="cart-meta">
-                                <span>Mat: <b>${aluno.matricula}</b></span>
-                                <span>Validade: <b>${aluno.validade}</b></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="cart-footer"><span>Uso Pessoal e Intransferível</span></div>
-                </div>
-            </div>
-        `;
-        let printLayer = document.getElementById('print-layer');
-        if (!printLayer) { printLayer = document.createElement('div'); printLayer.id = 'print-layer'; document.body.appendChild(printLayer); }
-        printLayer.innerHTML = htmlCarteirinha;
-        setTimeout(() => window.print(), 500);
+        // Cor Dinâmica
+        if(config.corCarteirinha) {
+            document.documentElement.style.setProperty('--card-color', config.corCarteirinha);
+        }
+
+        // Validade & QR Code
+        document.getElementById('cart-admin-validade-ano').innerText = aluno.ano_vigencia || new Date().getFullYear();
+        
+        const linkValidacao = `${URL_API}?action=validar&chave=${chave}`;
+        const qrUrl = `https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=${encodeURIComponent(linkValidacao)}`;
+        document.getElementById('cart-admin-qr-img').src = qrUrl;
+
+        // Exibe o Modal
+        document.getElementById('modal-carteirinha-admin').classList.remove('hidden');
+        document.getElementById('cart-admin-flip-container').classList.remove('is-flipped'); // Reseta posição
+        
+    }).catch(err => {
+        Swal.close();
+        console.error(err);
+        Swal.fire('Erro', 'Falha ao gerar carteirinha.', 'error');
     });
 }
 
 function carregarInstituicoes() { fetch(`${URL_API}?action=getInstituicoes`).then(r => r.json()).then(json => { const d = document.getElementById('lista-instituicoes'); d.innerHTML = ''; if(json.data) json.data.forEach(n => d.innerHTML += `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;"><span>${n}</span> <button onclick="removerInst('${n}')" class="btn-icon bg-delete" style="width:24px; height:24px;"><i class="fa-solid fa-times"></i></button></div>`); }); }
 function addInstituicao() { const n = document.getElementById('nova-inst').value; if(n) fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'adicionarInstituicao', nome: n, senha: sessionStorage.getItem('admin_token') }) }).then(() => { document.getElementById('nova-inst').value = ''; carregarInstituicoes(); }); }
 function removerInst(n) { fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'removerInstituicao', nome: n, senha: sessionStorage.getItem('admin_token') }) }).then(() => carregarInstituicoes()); }
+
+// --- HELPERS ---
+function formatarUrlDrive(url) {
+    if (!url) return '';
+    if (url.startsWith('data:')) return url;
+    let id = '';
+    const parts = url.split(/\/d\/|id=/);
+    if (parts.length > 1) id = parts[1].split(/\/|&/)[0];
+    if (id) return `https://lh3.googleusercontent.com/d/${id}`;
+    return url; 
+}
 
 const toBase64 = f => new Promise((r, j) => { const rd = new FileReader(); rd.readAsDataURL(f); rd.onload = () => r(rd.result.split(',')[1]); rd.onerror = e => j(e); });
