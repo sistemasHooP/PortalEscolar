@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- CARREGAR CONFIGURAÇÕES VISUAIS (CAPA, LOGO, NOME, CORES) ---
 function carregarConfiguracoesVisuais() {
-    // Tenta pegar do SessionStorage primeiro para não piscar
     const cached = sessionStorage.getItem('sys_config');
     if(cached) {
         configSistemaCache = JSON.parse(cached);
@@ -442,7 +441,6 @@ function consultarChave() {
                 
                 let btnCarteirinha = '';
                 if (aprovado && j.data.emiteCarteirinha) {
-                    // Passa o objeto aluno completo + chave para o modal
                     j.data.aluno.chave = j.data.chave;
                     btnCarteirinha = `<button class="btn-ver-cart" onclick='abrirCarteirinha(${JSON.stringify(j.data.aluno)})'><i class="fa-solid fa-id-card"></i> Ver Carteirinha Digital</button>`;
                 } else if (aprovado) {
@@ -490,24 +488,30 @@ function abrirCarteirinha(aluno) {
     if(configSistemaCache) {
         if(configSistemaCache.nomeSistema) document.getElementById('cart-sys-name').innerText = configSistemaCache.nomeSistema.toUpperCase();
         if(configSistemaCache.nomeSecretaria) {
-             const els = document.querySelectorAll('#cart-sec-name, .cart-org-info small');
              // Ajusta no verso e na frente (small)
              document.getElementById('cart-sec-name').innerText = configSistemaCache.nomeSecretario || "Responsável";
              document.querySelector('.cart-org-info small').innerText = configSistemaCache.nomeSecretaria;
         }
     }
     
-    // 4. Validade e QR Code
+    // 4. Validade e QR Code (USANDO QRIOUS)
     document.getElementById('cart-validade-ano').innerText = aluno.ano_vigencia || new Date().getFullYear();
 
     const linkValidacao = `${URL_API}?action=validar&chave=${aluno.chave}`;
-    // Usando API do Google Charts para gerar QR Code (Simples e Eficiente)
-    const qrUrl = `https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=${encodeURIComponent(linkValidacao)}`;
-    document.getElementById('cart-qrcode-img').src = qrUrl;
+    
+    // Gerar QR Code no cliente
+    const qr = new QRious({
+      element: document.getElementById('cart-qrcode-img'),
+      value: linkValidacao,
+      size: 150,
+      backgroundAlpha: 0,
+      foreground: 'black'
+    });
+    // Forçar a src do elemento img caso o QRious renderize em canvas
+    document.getElementById('cart-qrcode-img').src = qr.toDataURL();
 
     // 5. Exibir Modal
     document.getElementById('modal-carteirinha').classList.remove('hidden');
-    // Garante que comece exibindo a frente
     document.getElementById('cart-flip-container').classList.remove('is-flipped');
     fecharModalConsulta();
 }
