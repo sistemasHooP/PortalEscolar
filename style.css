@@ -450,8 +450,8 @@ input[type="file"] { display: none; }
         position: relative; transform: none !important;
         width: 85.6mm; height: 53.98mm; 
         
-        /* LINHA DE CORTE */
-        border: 1px dashed #94a3b8 !important; 
+        /* SEM BORDA OU MARGEM PARA CORTE LIMPO */
+        border: none !important; 
         outline: none; 
         
         box-sizing: border-box;
@@ -490,7 +490,15 @@ input[type="file"] { display: none; }
         margin: 0; padding-bottom: 1mm; height: 100%;
         overflow: hidden;
     }
-    .carteirinha-front .cart-logo { width: 9mm; height: 9mm; padding: 0.5mm; box-shadow: none; flex-shrink: 0; }
+    /* Logo Ajustada */
+    .carteirinha-front .cart-logo { 
+        width: 12mm; /* Aumentado */
+        height: 12mm; /* Aumentado */
+        padding: 1mm; /* Ajustado */
+        box-shadow: none; 
+        flex-shrink: 0;
+        object-fit: contain; /* Garante que a imagem caiba */ 
+    }
     
     .carteirinha-front .cart-org-info {
         display: flex; flex-direction: column; justify-content: center; overflow: hidden;
