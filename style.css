@@ -524,7 +524,8 @@ input[type="file"] { display: none; }
     color: var(--primary);
     font-size: 2.5rem;
     border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
+    display: flex; align-items: center;
+    justify-content: center;
     margin: 0 auto 25px;
 }
 
@@ -566,7 +567,7 @@ input[type="file"] { display: none; }
 }
 .btn-ver-cart:hover { background: #1e40af; }
 
-/* --- CARTEIRINHA DIGITAL (CORRIGIDA PARA MOBILE) --- */
+/* --- CARTEIRINHA DIGITAL (ESTRUTURA) --- */
 .transparent-modal {
     background: transparent !important;
     box-shadow: none !important;
@@ -618,10 +619,11 @@ input[type="file"] { display: none; }
     color: white;
 }
 
-/* Frente */
+/* Frente - CORREÇÃO DE FUNDO */
 .carteirinha-front {
     /* Z-index maior para garantir que ela começa na frente */
     z-index: 2;
+    /* Gradiente de pontos E Gradiente de cor juntos */
     background: 
         radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
         linear-gradient(135deg, var(--card-color, #2563eb), #0f172a);
@@ -840,54 +842,59 @@ input[type="file"] { display: none; }
     .btn-inscrever span { font-size: 0.9rem; }
 }
 
-/* IMPRESSÃO: Ajustes para imprimir frente e verso em página única */
+/* IMPRESSÃO PADRONIZADA (Frente e Verso lado a lado) */
 @media print {
-    body * { visibility: hidden; }
-    #modal-carteirinha, #modal-carteirinha * { visibility: visible; }
+    /* Esconder tudo exceto os modais de carteirinha */
+    body > *:not(#modal-carteirinha):not(#modal-carteirinha-admin) { display: none !important; }
     
-    #modal-carteirinha {
-        position: absolute; left: 0; top: 0; width: 100%; height: auto;
-        background: white; display: block;
+    /* Regra para ambos os modais (Aluno e Admin) */
+    #modal-carteirinha, #modal-carteirinha-admin {
+        display: block !important; 
+        position: absolute; top: 0; left: 0; width: 100%; height: auto;
+        background: white; z-index: 9999; margin: 0; padding: 0;
+        visibility: visible;
     }
-    .modal-content { 
+    
+    /* Mostrar conteúdo interno */
+    #modal-carteirinha *, #modal-carteirinha-admin * { visibility: visible; }
+
+    /* Remove estilos de modal */
+    .modal-content, .modal-content-cart { 
         box-shadow: none; width: 100%; max-width: 100%; padding: 0; margin: 0; 
-        overflow: visible; background: transparent; 
+        background: transparent; overflow: visible; 
     }
     
+    /* Layout Lado a Lado (Remove 3D) */
     .carteirinha-wrapper {
-        perspective: none; /* Remove 3D para impressão */
-        height: auto;
-        max-width: 100%;
-        display: flex;
-        flex-direction: row; /* Coloca lado a lado para impressão */
-        gap: 20px;
-        justify-content: center;
-        flex-wrap: wrap;
+        perspective: none; height: auto; max-width: 100%;
+        display: flex; flex-direction: row; gap: 20px;
+        justify-content: center; flex-wrap: wrap; margin-top: 20px;
     }
     
     .carteirinha-card-inner {
-        transform: none !important; /* Reseta rotação */
-        position: relative;
-        height: auto;
-        display: flex;
-        gap: 20px;
+        transform: none !important; position: relative; height: auto;
+        display: flex; gap: 20px;
     }
     
     .carteirinha-face {
-        position: relative;
-        width: 300px; /* Largura fixa para impressão */
-        height: 480px; /* Altura fixa para impressão */
-        page-break-inside: avoid;
-        transform: none !important; /* Reseta rotação do verso */
-        backface-visibility: visible;
-        margin-bottom: 20px;
-        /* Forçar impressão de background */
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+        position: relative; transform: none !important;
+        width: 85.6mm; height: 53.98mm; /* Tamanho Cartão Crédito */
+        box-shadow: none; border: 1px solid #ddd;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+        font-size: 0.8em; margin-bottom: 20px;
+        /* Garante que o fundo e o texto branco sejam impressos corretamente */
+        color: white !important;
+        background: linear-gradient(135deg, var(--card-color, #2563eb), #0f172a) !important;
     }
+
+    /* Ajustes específicos para caber no tamanho físico */
+    .cart-photo-frame { width: 25mm; height: 32mm; }
+    .cart-logo { width: 10mm; height: 10mm; }
+    .qr-code-box { width: 30mm; height: 30mm; padding: 2mm; }
+    .validity-year { font-size: 2em; }
     
     /* Esconder botões na impressão */
-    .modal-actions-row, .btn-close-modern { display: none !important; }
+    .modal-actions-row, .cart-actions, .btn-close-modern, .btn-action-pri, .btn-action-sec, .btn-flip { display: none !important; }
 }
 
 @media (max-width: 1200px) {
