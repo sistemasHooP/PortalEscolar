@@ -385,7 +385,7 @@ input[type="file"] { display: none; }
    ========================================================================== */
 @media print {
     @page { 
-        size: auto; 
+        size: landscape;  /* FORÇA A PÁGINA NA HORIZONTAL */
         margin: 0; 
     }
 
@@ -394,7 +394,7 @@ input[type="file"] { display: none; }
     
     /* RESET DE OVERFLOW CRÍTICO PARA IMPRESSÃO */
     html, body {
-        height: auto !important;
+        height: 100% !important;
         overflow: visible !important;
         background: white !important;
         margin: 0 !important;
@@ -403,14 +403,15 @@ input[type="file"] { display: none; }
 
     #modal-carteirinha, #modal-carteirinha-admin {
         display: block !important; 
-        position: relative !important; /* Mudei para relative para fluir na página */
+        position: absolute !important;
+        top: 0; left: 0;
         width: 100% !important; 
-        height: auto !important; 
+        height: 100% !important; 
         background: white !important; 
         z-index: 9999; 
         margin: 0 !important; 
         padding: 0 !important;
-        overflow: visible !important; /* Garante que nada corte */
+        overflow: visible !important;
         visibility: visible;
         border: none !important;
     }
@@ -423,23 +424,23 @@ input[type="file"] { display: none; }
         padding: 0 !important; 
         margin: 0 !important; 
         background: transparent !important; 
-        max-height: none !important; /* Remove limite de altura */
-        overflow: visible !important; /* Remove barra de rolagem */
+        max-height: none !important;
+        overflow: visible !important;
         border: none !important;
     }
     
     /* Layout Container: Lado a Lado (Frente | Verso) */
     .carteirinha-wrapper {
         perspective: none; 
-        height: auto !important; 
+        height: 100vh !important; /* Ocupa toda a altura para centralizar */
         width: 100% !important;
         max-width: none !important;
         display: flex; 
         flex-direction: row; 
         gap: 5mm; /* Espaço entre os cartões */
         justify-content: center; 
-        align-items: center;
-        margin-top: 10mm; /* Margem superior segura */
+        align-items: center; /* Centraliza verticalmente na folha horizontal */
+        margin: 0;
     }
     
     .carteirinha-card-inner {
@@ -448,7 +449,7 @@ input[type="file"] { display: none; }
         height: auto; 
         width: auto;
         display: flex; 
-        gap: 5mm;
+        gap: 10mm; /* Espaço maior entre frente e verso para dobrar ou cortar */
     }
     
     /* DEFINIÇÃO DO CARTÃO FÍSICO */
@@ -463,7 +464,10 @@ input[type="file"] { display: none; }
         box-sizing: border-box;
         -webkit-print-color-adjust: exact; print-color-adjust: exact;
         font-size: 8pt; 
-        margin: 0;
+        
+        /* Margem externa para não cortar no limite da borda física */
+        margin: 5mm; 
+        
         color: white !important;
         /* Fundo impresso: SIMPLIFICADO para evitar barras */
         background: linear-gradient(135deg, var(--card-color, #2563eb), #0f172a) !important;
@@ -474,7 +478,7 @@ input[type="file"] { display: none; }
 
     /* --- FRENTE: LAYOUT OFICIAL (Foto Esq | Dados Dir) --- */
     .carteirinha-front {
-        padding: 2mm !important; /* Padding reduzido para ganhar espaço */
+        padding: 2mm !important; 
         display: grid;
         grid-template-columns: 22mm 1fr; /* Coluna Foto ajustada */
         grid-template-rows: 10mm 1fr auto; /* Header maior para o texto */
@@ -496,7 +500,7 @@ input[type="file"] { display: none; }
     }
     .carteirinha-front .cart-org-info h3 { 
         font-size: 6.5pt; line-height: 1.1; margin: 0; font-weight: 800; 
-        white-space: normal; /* Permitir quebra */
+        white-space: nowrap; /* Título curto em uma linha */
         overflow: hidden; text-overflow: ellipsis;
     }
     .carteirinha-front .cart-org-info small { 
@@ -514,12 +518,12 @@ input[type="file"] { display: none; }
         grid-column: 1; grid-row: 2;
         align-self: flex-start; margin-top: 1mm;
         box-shadow: none;
-        overflow: hidden; /* Corta a imagem se exceder */
+        overflow: hidden; 
     }
     .cart-photo-frame img { 
         width: 100%; height: 100%; 
-        object-fit: cover; /* Cobre todo o espaço sem deformar */
-        object-position: top center; /* Foca no rosto */
+        object-fit: cover; 
+        object-position: top center; 
     }
 
     /* DADOS À DIREITA */
@@ -527,13 +531,18 @@ input[type="file"] { display: none; }
         grid-column: 2; grid-row: 2;
         text-align: left; margin-left: 2mm; margin-top: 1mm;
         display: flex; flex-direction: column; justify-content: flex-start;
-        overflow: hidden;
+        overflow: visible; /* Permite ver o nome completo */
     }
     
     .carteirinha-front .cart-info-main h2 { 
         font-size: 8pt; margin-bottom: 1mm; line-height: 1.1; 
         text-transform: uppercase; font-weight: 800;
-        white-space: normal; overflow: hidden; text-overflow: ellipsis;
+        
+        /* Quebra de Nome Longo */
+        white-space: normal; 
+        word-wrap: break-word; 
+        overflow-wrap: break-word;
+        
         color: #fff;
     }
     .carteirinha-front .cart-info-main .cart-course { 
