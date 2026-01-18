@@ -314,6 +314,11 @@ input[type="file"] { display: none; }
 .detail-label { display: block; font-size: 0.6rem; text-transform: uppercase; opacity: 0.7; }
 .detail-value { display: block; font-size: 0.75rem; font-weight: 600; font-family: monospace; }
 
+/* Placeholder Chave (Visível só impressão ou se classe .cart-key existir no HTML) */
+.cart-key-container {
+    display: none; /* Por padrão oculta na visualização normal se não houver HTML, ou ajustar conforme necessidade */
+}
+
 /* VERSO */
 .carteirinha-back {
     transform: rotateY(180deg); -webkit-transform: rotateY(180deg);
@@ -378,9 +383,8 @@ input[type="file"] { display: none; }
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes zoomIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 
-/* IMPRESSÃO PADRONIZADA (Layout Híbrido: Foto Esquerda / Dados Direita) */
+/* IMPRESSÃO PADRONIZADA E MILIMÉTRICA */
 @media print {
-    /* Esconder tudo exceto os modais de carteirinha */
     body > *:not(#modal-carteirinha):not(#modal-carteirinha-admin) { display: none !important; }
     
     #modal-carteirinha, #modal-carteirinha-admin {
@@ -391,106 +395,142 @@ input[type="file"] { display: none; }
     #modal-carteirinha *, #modal-carteirinha-admin * { visibility: visible; }
     .modal-content, .modal-content-cart { box-shadow: none; padding: 0; margin: 0; background: transparent; }
     
+    /* Layout Lado a Lado (Remove 3D) */
     .carteirinha-wrapper {
-        perspective: none; height: auto; max-width: 100%; margin-top: 10px;
-        display: flex; flex-direction: row; gap: 10px; justify-content: center;
+        perspective: none; height: auto; max-width: 100%; margin-top: 5mm;
+        display: flex; flex-direction: row; gap: 5mm; justify-content: center;
     }
     
     .carteirinha-card-inner {
         transform: none !important; position: relative; height: auto;
-        display: flex; gap: 10px;
+        display: flex; gap: 5mm;
     }
     
-    /* FRENTE - LAYOUT OTIMIZADO PARA IMPRESSÃO */
-    .carteirinha-front {
+    /* DIMENSÕES CARTÃO ISO ID-1: 85.60mm x 53.98mm */
+    .carteirinha-face {
         position: relative; transform: none !important;
-        width: 85.6mm; height: 53.98mm; /* Tamanho exato Cartão */
-        border: 1px solid #000;
+        width: 85.6mm; height: 53.98mm; 
+        border: 1px solid #ccc;
         -webkit-print-color-adjust: exact; print-color-adjust: exact;
-        font-size: 8pt; 
-        
-        display: grid;
-        grid-template-columns: 26mm 1fr; /* Coluna foto fixa, resto dados */
-        grid-template-rows: 12mm 1fr; /* Header fixo, resto corpo */
-        padding: 2mm !important;
-        
-        /* Cor de fundo forçada */
-        background: linear-gradient(135deg, var(--card-color, #2563eb), #0f172a) !important;
+        font-size: 8pt; /* Fonte base reduzida para caber */
+        margin-bottom: 0;
         color: white !important;
+        background: linear-gradient(135deg, var(--card-color, #2563eb), #0f172a) !important;
+        overflow: hidden;
+        border-radius: 3mm;
+    }
+
+    /* --- FRENTE: LAYOUT HÍBRIDO (Foto Esq / Dados Dir) --- */
+    .carteirinha-front {
+        padding: 2mm !important;
+        display: grid;
+        grid-template-columns: 24mm 1fr; /* Coluna Foto | Coluna Dados */
+        grid-template-rows: 10mm 1fr auto; /* Header | Corpo | Rodapé (Chave) */
+        gap: 1mm;
     }
 
     /* HEADER */
     .carteirinha-front .cart-header {
-        grid-column: 1 / -1; 
-        display: flex; align-items: center; gap: 5px;
-        border-bottom: 1px solid rgba(255,255,255,0.3);
-        margin: 0; padding-bottom: 2px; height: 100%;
+        grid-column: 1 / -1; grid-row: 1;
+        display: flex; align-items: center; gap: 2mm;
+        border-bottom: 0.5pt solid rgba(255,255,255,0.4);
+        margin: 0; padding-bottom: 1mm; height: 100%;
     }
-    .carteirinha-front .cart-logo { width: 8mm; height: 8mm; padding: 1px; }
-    .carteirinha-front .cart-org-info h3 { font-size: 7pt; line-height: 1; margin: 0; }
-    .carteirinha-front .cart-org-info small { font-size: 5pt; line-height: 1; display: block; }
+    .carteirinha-front .cart-logo { width: 8mm; height: 8mm; padding: 0.5mm; }
+    .carteirinha-front .cart-org-info h3 { font-size: 6pt; line-height: 1; margin: 0; font-weight: 800; }
+    .carteirinha-front .cart-org-info small { font-size: 4.5pt; line-height: 1; display: block; margin-top: 0.5mm; }
 
     /* CORPO */
-    .carteirinha-front .cart-body { display: contents; }
+    .carteirinha-front .cart-body { display: contents; } /* Remove wrapper flex */
 
-    /* FOTO */
+    /* FOTO À ESQUERDA */
     .carteirinha-front .cart-photo-frame {
-        width: 24mm; height: 32mm; margin: 2mm 0 0 0;
-        border: 2px solid white; grid-column: 1; grid-row: 2; align-self: center;
+        width: 22mm; height: 28mm;
+        margin: 0; border: 1pt solid white;
+        grid-column: 1; grid-row: 2;
+        align-self: start; margin-top: 1mm;
     }
 
-    /* Ocultar elementos originais do meio */
-    .carteirinha-front .cart-info-main { display: none; }
-    
-    /* DADOS (Lista à direita) */
-    .carteirinha-front .cart-details-grid {
+    /* DADOS À DIREITA */
+    .carteirinha-front .cart-info-main { 
         grid-column: 2; grid-row: 2;
-        display: flex; flex-direction: column; gap: 2px; 
-        margin-top: 2mm; margin-left: 3mm;
-        align-items: flex-start; text-align: left;
+        text-align: left; margin-left: 2mm; margin-top: 1mm;
+    }
+    
+    .carteirinha-front .cart-info-main h2 { 
+        font-size: 9pt; margin-bottom: 1mm; line-height: 1.1; 
+        text-transform: uppercase; font-weight: 800;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 55mm;
+    }
+    .carteirinha-front .cart-info-main .cart-course { 
+        padding: 0.5mm 2mm; font-size: 6pt; border-radius: 2mm; 
+        margin-bottom: 2mm; display: inline-block;
+        background: rgba(255,255,255,0.2);
     }
 
+    /* LISTA DE DETALHES */
+    .carteirinha-front .cart-details-grid {
+        display: block; /* Remove grid original */
+        margin-top: 1mm;
+    }
     .carteirinha-front .detail-item {
         background: transparent; padding: 0; border: none; text-align: left;
-        display: flex; gap: 4px; align-items: baseline; width: 100%;
-        line-height: 1.1;
+        margin-bottom: 0.5mm; display: flex; align-items: baseline;
     }
     .carteirinha-front .detail-label { 
-        font-size: 5pt; text-transform: uppercase; opacity: 0.8; width: 45px; flex-shrink: 0; 
+        font-size: 4.5pt; text-transform: uppercase; opacity: 0.8; 
+        width: 15mm; flex-shrink: 0; display: inline-block;
     }
     .carteirinha-front .detail-value { 
-        font-size: 7pt; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        font-size: 6.5pt; font-weight: 700; font-family: monospace;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40mm;
     }
 
-    /* VERSO */
+    /* CHAVE ÚNICA (RODAPÉ FRENTE) */
+    .cart-key-display {
+        grid-column: 1 / -1; grid-row: 3;
+        text-align: center; font-family: monospace; font-size: 6pt;
+        background: rgba(0,0,0,0.3); padding: 1mm; border-radius: 1mm;
+        margin-top: auto; display: block !important;
+    }
+
+    /* --- VERSO: LAYOUT OTIMIZADO --- */
     .carteirinha-back {
-        position: relative; transform: none !important;
-        width: 85.6mm; height: 53.98mm;
-        border: 1px solid #000;
-        -webkit-print-color-adjust: exact; print-color-adjust: exact;
-        display: flex; flex-direction: row; 
-        align-items: center; justify-content: space-between;
-        padding: 4mm !important;
-        background: linear-gradient(135deg, var(--card-color, #2563eb), #0f172a) !important;
-        color: white !important;
+        padding: 3mm !important;
+        display: grid;
+        grid-template-columns: 28mm 1fr; /* QR Code | Validade */
+        grid-template-rows: 6mm 1fr 6mm; /* Header | Corpo | Footer */
+        align-items: center;
     }
 
-    /* Header/Footer Verso */
-    .carteirinha-back .cart-back-header, .carteirinha-back .cart-footer { 
-        position: absolute; width: 100%; text-align: center;
+    /* Header Verso */
+    .carteirinha-back .cart-back-header {
+        grid-column: 1 / -1; grid-row: 1;
+        font-size: 5pt; border-bottom: 0.5pt solid rgba(255,255,255,0.3);
+        margin: 0; padding-bottom: 1mm; position: static;
     }
-    .carteirinha-back .cart-back-header { top: 3mm; left: 0; font-size: 6pt; border: none; }
-    .carteirinha-back .cart-footer { bottom: 3mm; left: 0; font-size: 5pt; border: none; padding: 0; }
 
     /* QR Code */
     .carteirinha-back .qr-code-box {
-        width: 28mm; height: 28mm; padding: 1mm; background: white; margin: 0;
+        grid-column: 1; grid-row: 2;
+        width: 26mm; height: 26mm; padding: 1mm; margin: 0;
     }
 
-    /* Validade */
-    .carteirinha-back .validity-box { margin: 0; text-align: center; flex: 1; }
-    .carteirinha-back .validity-label { font-size: 6pt; }
-    .carteirinha-back .validity-year { font-size: 24pt; line-height: 1; }
+    /* Validade e Assinatura */
+    .carteirinha-back .validity-box {
+        grid-column: 2; grid-row: 2;
+        text-align: center; margin: 0;
+    }
+    .carteirinha-back .validity-label { font-size: 6pt; display: block; margin-bottom: 1mm; }
+    .carteirinha-back .validity-year { font-size: 22pt; font-weight: 900; line-height: 1; display: block; }
+
+    /* Footer Verso */
+    .carteirinha-back .cart-footer {
+        grid-column: 1 / -1; grid-row: 3;
+        position: static; padding: 0; margin: 0; border: none;
+        font-size: 5pt; align-self: end;
+    }
+    .carteirinha-back .cart-sec-name { font-size: 6pt; margin-bottom: 0.5mm; }
 
     /* Esconder botões */
     .modal-actions-row, .cart-actions, .btn-close-modern, .btn-action-pri, .btn-action-sec, .btn-flip { display: none !important; }
