@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Portal Educacional1</title>
+    <title>Portal Educacional</title>
     
     <!-- Fontes e Ícones (Google Fonts - Poppins) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -166,7 +166,7 @@
         </div>
     </div>
 
-    <!-- MODAL DA CARTEIRINHA DIGITAL (ATUALIZADO V3.0 - Layout RG) -->
+    <!-- MODAL DA CARTEIRINHA DIGITAL (ATUALIZADO V3.0 - Layout Clean Block) -->
     <div id="modal-carteirinha" class="modal-overlay hidden" style="z-index: 3000;">
         <div class="modal-content zoom-in transparent-modal">
             
@@ -176,46 +176,45 @@
                     
                     <!-- FRENTE -->
                     <div class="carteirinha-face carteirinha-front">
-                        <div class="cart-header">
-                            <img src="logo.png" alt="Logo" class="cart-logo" id="cart-logo-img">
-                            <div class="cart-org-info">
-                                <h3 id="cart-sys-name">TRANSPORTE ESCOLAR</h3>
-                                <small>Secretaria de Educação</small>
-                            </div>
-                        </div>
-
-                        <div class="cart-body">
-                            <div class="cart-photo-frame">
-                                <img id="cart-img" src="" alt="Foto">
-                            </div>
-                            
-                            <!-- Área de Dados Principais -->
-                            <div class="cart-info-main">
-                                <h2 id="cart-nome">Nome do Aluno</h2>
-                                <span class="cart-course" id="cart-course">Curso do Aluno</span>
-                            </div>
-
-                            <!-- Grade de Detalhes -->
-                            <div class="cart-details-grid">
-                                <div class="detail-item">
-                                    <span class="detail-label">Instituição</span>
-                                    <span class="detail-value" id="cart-inst">Instituição</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">CPF</span>
-                                    <span class="detail-value" id="cart-cpf">000.000.000-00</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Nascimento</span>
-                                    <span class="detail-value" id="cart-nasc">--/--/----</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Matrícula</span>
-                                    <span class="detail-value" id="cart-mat">000000</span>
+                        <div class="cart-body"> <!-- Novo Container Branco -->
+                            <div class="cart-header">
+                                <img src="logo.png" alt="Logo" class="cart-logo" id="cart-logo-img">
+                                <div class="cart-org-info">
+                                    <h3 id="cart-sys-name">TRANSPORTE ESCOLAR</h3>
+                                    <small>Secretaria de Educação</small>
                                 </div>
                             </div>
 
-                            <!-- NOVO: Código Único na Frente -->
+                            <div class="content-row"> <!-- Linha de Conteúdo -->
+                                <div class="cart-photo-frame">
+                                    <img id="cart-img" src="" alt="Foto">
+                                </div>
+                                
+                                <div class="cart-info-main">
+                                    <span class="cart-course" id="cart-course">Curso do Aluno</span>
+                                    <h2 id="cart-nome">Nome do Aluno</h2>
+                                    
+                                    <div class="cart-details-grid">
+                                        <div class="detail-item">
+                                            <span class="detail-label">Instituição</span>
+                                            <span class="detail-value" id="cart-inst">Instituição</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">CPF</span>
+                                            <span class="detail-value" id="cart-cpf">000.000.000-00</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Nascimento</span>
+                                            <span class="detail-value" id="cart-nasc">--/--/----</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Matrícula</span>
+                                            <span class="detail-value" id="cart-mat">000000</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="cart-unique-code">
                                 CÓDIGO: <span id="cart-chave">----</span>
                             </div>
@@ -224,23 +223,27 @@
 
                     <!-- VERSO -->
                     <div class="carteirinha-face carteirinha-back">
-                        <div class="cart-back-header">
-                            Documento de Identificação Estudantil
-                        </div>
+                        <div> <!-- Novo Container Branco -->
+                            <div class="cart-back-header">
+                                Documento de Identificação Estudantil
+                            </div>
 
-                        <div class="qr-code-box">
-                            <!-- QR Code gerado dinamicamente via JS (QRious) -->
-                            <img id="cart-qrcode-img" src="" alt="QR Code Validação">
-                        </div>
+                            <div class="body-verso">
+                                <div class="qr-code-box">
+                                    <!-- QR Code gerado dinamicamente via JS (QRious) -->
+                                    <img id="cart-qrcode-img" src="" alt="QR Code Validação">
+                                </div>
 
-                        <div class="validity-box">
-                            <span class="validity-label">Válido até Dezembro de</span>
-                            <span class="validity-year" id="cart-validade-ano">2026</span>
-                        </div>
+                                <div class="validity-box">
+                                    <span class="validity-label">Válido até Dezembro de</span>
+                                    <span class="validity-year" id="cart-validade-ano">2026</span>
+                                </div>
+                            </div>
 
-                        <div class="cart-footer">
-                            <span class="cart-sec-name" id="cart-sec-name">Secretário de Educação</span>
-                            Secretário(a) de Educação
+                            <div class="cart-footer">
+                                <span class="cart-sec-name" id="cart-sec-name">Secretário de Educação</span>
+                                Secretário(a) de Educação
+                            </div>
                         </div>
                     </div>
 
@@ -278,4 +281,3 @@
 
 </body>
 </html>
-
