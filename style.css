@@ -492,12 +492,15 @@ input[type="file"] { display: none; }
     }
     /* Logo Ajustada */
     .carteirinha-front .cart-logo { 
-        width: 12mm; /* Aumentado */
-        height: 12mm; /* Aumentado */
-        padding: 1mm; /* Ajustado */
+        width: 10mm; /* Diminuído para garantir ajuste */
+        height: 10mm; /* Diminuído para garantir ajuste */
+        padding: 0; /* Removido padding interno */
         box-shadow: none; 
         flex-shrink: 0;
         object-fit: contain; /* Garante que a imagem caiba */ 
+        border: 2px solid white; /* Borda branca */
+        border-radius: 50%;
+        background-color: white;
     }
     
     .carteirinha-front .cart-org-info {
