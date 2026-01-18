@@ -249,7 +249,7 @@ input[type="file"] { display: none; }
 }
 .btn-ver-cart:hover { background: #1e40af; }
 
-/* --- CARTEIRINHA DIGITAL (TELA - MANTIDA) --- */
+/* --- CARTEIRINHA DIGITAL (TELA) --- */
 .transparent-modal { background: transparent !important; box-shadow: none !important; padding: 0; }
 .carteirinha-wrapper {
     width: 100%; max-width: 350px; height: 520px; margin: 0 auto;
@@ -367,7 +367,8 @@ input[type="file"] { display: none; }
 @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
 /* ==========================================================================
-   IMPRESSÃO: CARTEIRA DE ESTUDANTE OFICIAL (FÍSICA) - MODO TESTE DE FUNDO
+   IMPRESSÃO: CARTEIRA DE ESTUDANTE OFICIAL (FÍSICA)
+   Padrão ID-1: 85.6mm x 53.98mm | Layout Absoluto + Dados Habilitados
    ========================================================================== */
 @media print {
     @page { 
@@ -375,7 +376,6 @@ input[type="file"] { display: none; }
         margin: 0; 
     }
 
-    /* 1. RESET E LIMPEZA TOTAL */
     * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
@@ -410,7 +410,7 @@ input[type="file"] { display: none; }
     .carteirinha-wrapper {
         perspective: none; width: auto !important; height: auto !important; max-width: none !important;
         display: flex !important; flex-direction: row !important;
-        gap: 10mm; /* Distância entre os cartões */
+        gap: 5mm; 
         justify-content: center; align-items: center; margin: 0;
     }
     
@@ -422,47 +422,169 @@ input[type="file"] { display: none; }
     /* FACE DO CARTÃO (Base) */
     .carteirinha-face {
         position: relative !important; transform: none !important;
-        
         width: 85.6mm !important; height: 53.98mm !important;
-        min-width: 85.6mm !important; max-width: 85.6mm !important;
-        min-height: 53.98mm !important; max-height: 53.98mm !important;
-        
-        border-radius: 3mm !important;
-        margin: 0 !important; padding: 0 !important;
+        min-width: 85.6mm !important; min-height: 53.98mm !important;
+        border-radius: 3mm !important; margin: 0 !important; padding: 0 !important;
         border: 1px dashed #999 !important; /* Guia de corte */
-        
-        /* ----------------------------------------------------
-           FORÇAR COR DE FUNDO (TESTE RIGOROSO)
-           ---------------------------------------------------- */
+        background: white !important; /* Base branca */
+        overflow: hidden !important;
+        display: block !important;
+    }
+
+    /* --- FRENTE --- */
+    .carteirinha-front {
+        /* Gradiente como imagem para garantir a COR DE FUNDO */
         background-color: var(--card-color, #2563eb) !important;
-        /* Gradiente como imagem para garantir impressão */
         background-image: linear-gradient(var(--card-color, #2563eb), var(--card-color, #2563eb)) !important;
         
-        flex: 0 0 auto !important; display: block !important;
-        visibility: visible !important; opacity: 1 !important;
-        overflow: hidden !important;
+        display: block !important; /* Mudei para block para usar absolute dentro */
     }
 
-    /* --------------------------------------------------------
-       MODO TESTE: OCULTAR TODO O CONTEÚDO
-       Isso garante que NENHUM elemento branco tape a cor de fundo.
-       Se a cor aparecer, o problema era o conteúdo.
-       -------------------------------------------------------- */
-    .cart-header,
-    .cart-body,
-    .cart-unique-code,
-    .cart-back-header,
-    .qr-code-box,
-    .validity-box,
-    .cart-footer {
-        display: none !important;
+    /* 1. Área Branca Central (Overlay) - Onde ficam os dados */
+    .carteirinha-front::after {
+        content: '';
+        position: absolute !important;
+        top: 10mm !important; 
+        left: 0 !important; right: 0 !important;
+        height: 38mm !important;
+        background: white !important;
+        z-index: 0 !important;
     }
 
-    /* Remover Pseudo-elementos que possam causar overlay */
-    .carteirinha-front::after, .carteirinha-front::before,
-    .carteirinha-back::after, .carteirinha-back::before {
-        display: none !important;
-        content: none !important;
+    /* 2. Cabeçalho */
+    .carteirinha-front .cart-header {
+        position: absolute !important; top: 0; left: 0; width: 100%; height: 10mm;
+        display: flex !important; align-items: center; padding-left: 3mm;
+        z-index: 10 !important; border-bottom: none !important;
+        background: transparent !important; box-shadow: none !important;
+    }
+    .carteirinha-front .cart-logo {
+        width: 7mm !important; height: 7mm !important;
+        background: white !important; border-radius: 50%; padding: 0.5mm; z-index: 11;
+        margin-right: 2mm;
+    }
+    .carteirinha-front .cart-org-info h3 {
+        font-size: 7pt !important; color: white !important; text-transform: uppercase; font-weight: 900; margin: 0; line-height: 1;
+    }
+    .carteirinha-front .cart-org-info small {
+        font-size: 4.5pt !important; color: white !important; display: block; opacity: 0.9; margin-top: 0.5mm;
+    }
+
+    /* 3. Corpo (Foto e Dados) */
+    .carteirinha-front .cart-body {
+        position: absolute !important; top: 10mm; left: 0; width: 100%; height: 38mm;
+        z-index: 10 !important; background: transparent !important;
+        padding: 0 !important; display: block !important;
+    }
+
+    .carteirinha-front .cart-photo-frame {
+        position: absolute !important; top: 3mm; left: 3mm;
+        width: 22mm !important; height: 28mm !important;
+        border: 0.5pt solid #999 !important; background: #eee !important;
+        margin: 0 !important; padding: 0 !important;
+    }
+    .carteirinha-front .cart-photo-frame img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* Dados alinhados absolutamente */
+    .carteirinha-front .cart-info-main {
+        position: absolute !important; top: 3mm; left: 28mm; right: 2mm;
+        text-align: left !important; background: transparent !important; margin: 0 !important;
+    }
+    
+    /* Curso */
+    .carteirinha-front .cart-course {
+        font-size: 8pt !important; color: var(--card-color, #2563eb) !important;
+        font-weight: 800 !important; text-transform: uppercase;
+        display: block !important; margin-bottom: 1mm !important;
+        background: transparent !important; padding: 0 !important; border-radius: 0 !important;
+    }
+    
+    /* Nome */
+    .carteirinha-front .cart-info-main h2 {
+        font-size: 9pt !important; color: #000 !important;
+        font-weight: 700 !important; text-transform: uppercase;
+        margin: 0 0 2mm 0 !important; line-height: 1.1;
+    }
+
+    /* Detalhes (CPF, Nasc, Matrícula) */
+    .carteirinha-front .cart-details-grid {
+        position: absolute !important; top: 18mm; left: 28mm; right: 2mm;
+        display: block !important; background: transparent !important; margin: 0 !important;
+    }
+    .carteirinha-front .detail-item {
+        margin-bottom: 1mm !important; background: transparent !important; padding: 0 !important;
+        display: flex !important;
+    }
+    .carteirinha-front .detail-label {
+        width: 20mm !important; font-size: 5pt !important; color: #666 !important; 
+        font-weight: 700 !important; text-transform: uppercase;
+    }
+    .carteirinha-front .detail-value {
+        font-size: 7pt !important; color: #000 !important; font-weight: 600 !important;
+    }
+
+    /* 4. Rodapé (Código) */
+    .carteirinha-front .cart-unique-code {
+        position: absolute !important; bottom: 0; left: 0; width: 100%; height: 6mm;
+        display: flex !important; align-items: center; justify-content: center;
+        background: transparent !important; z-index: 10 !important;
+        color: white !important; font-size: 6pt !important; font-weight: 700;
+        margin: 0 !important; padding: 0 !important;
+    }
+    .carteirinha-front .cart-unique-code span {
+        font-family: monospace !important; font-size: 9pt !important; margin-left: 5px;
+    }
+
+    /* --- VERSO --- */
+    .carteirinha-back {
+        background: white !important;
+        border: 2px solid var(--card-color, #2563eb) !important;
+    }
+
+    /* Header Verso */
+    .carteirinha-back .cart-back-header {
+        position: absolute !important; top: 0; left: 0; width: 100%; height: 8mm;
+        /* Cor de Fundo Forçada */
+        background-color: var(--card-color, #2563eb) !important; 
+        background-image: linear-gradient(var(--card-color, #2563eb), var(--card-color, #2563eb)) !important;
+        
+        color: white !important; font-size: 6pt !important; font-weight: 700;
+        display: flex !important; align-items: center; justify-content: center;
+        text-transform: uppercase; margin: 0 !important; padding: 0 !important; border: none !important;
+    }
+    
+    /* QR Code */
+    .carteirinha-back .qr-code-box {
+        position: absolute !important; top: 12mm; left: 5mm;
+        width: 25mm !important; height: 25mm !important;
+        background: white !important; padding: 0 !important; margin: 0 !important; border: none !important;
+    }
+    .qr-code-box img { width: 100%; height: 100%; object-fit: contain; }
+
+    /* Validade */
+    .carteirinha-back .validity-box {
+        position: absolute !important; top: 14mm; right: 5mm; width: 40mm !important;
+        text-align: center !important; margin: 0 !important;
+    }
+    .carteirinha-back .validity-label {
+        font-size: 5pt !important; color: #666 !important; font-weight: 600; 
+        text-transform: uppercase; display: block !important; margin-bottom: 2mm !important;
+    }
+    .carteirinha-back .validity-year {
+        font-size: 24pt !important; font-weight: 900 !important; line-height: 1 !important;
+        color: var(--card-color, #000) !important;
+    }
+
+    /* Footer Assinatura */
+    .carteirinha-back .cart-footer {
+        position: absolute !important; bottom: 0; left: 0; width: 100%; height: 10mm;
+        border-top: 0.5pt solid #ccc !important;
+        display: flex !important; flex-direction: column; justify-content: center; align-items: center;
+        background: white !important; margin: 0 !important; padding: 0 !important;
+    }
+    .carteirinha-back .cart-sec-name {
+        font-size: 8pt !important; font-weight: 700 !important; text-transform: uppercase;
+        margin-bottom: 1mm !important; font-family: inherit !important;
     }
 }
 
