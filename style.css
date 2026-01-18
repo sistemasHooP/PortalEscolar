@@ -363,7 +363,7 @@ input[type="file"] { display: none; }
 @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
 /* ==========================================================================
-   IMPRESSÃO OTIMIZADA (ISOLADA)
+   IMPRESSÃO COM GUIAS DE CORTE (Versão Oficial ID-1)
    ========================================================================== */
 @media print {
     @page { 
@@ -371,297 +371,192 @@ input[type="file"] { display: none; }
         margin: 0; 
     }
 
-    /* REGRAS GLOBAIS DE IMPRESSÃO - FORÇAR CORES */
+    /* FORÇAR CORES DE FUNDO */
     * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
         color-adjust: exact !important;
     }
 
-    /* CRÍTICO: RESET COMPLETO PARA CENTRALIZAÇÃO E REMOÇÃO DE BARRAS */
+    /* 1. RESET DA PÁGINA */
     html, body {
-        width: 100%;
-        height: 100%;
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow: hidden !important; /* ELIMINA BARRAS DE ROLAGEM */
-        background: white;
-        
-        /* Flexbox no body para centralizar o wrapper na página */
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        width: 100%; height: 100%; margin: 0 !important; padding: 0 !important;
+        overflow: hidden !important; background: white;
+        display: flex; justify-content: center; align-items: center;
     }
 
-    /* Ocultar elementos interativos */
+    /* 2. OCULTAR ELEMENTOS DA TELA */
     body > *:not(#modal-carteirinha):not(#modal-carteirinha-admin) { display: none !important; }
     .modal-actions-row, .cart-actions, .btn-close-modern, .btn-action-pri, .btn-action-sec, .btn-flip { display: none !important; }
 
-    /* Modal se torna um container transparente e estático */
+    /* 3. CONFIGURAÇÃO DO MODAL PARA IMPRESSÃO */
     #modal-carteirinha, #modal-carteirinha-admin {
-        display: block !important; 
-        position: static !important; /* Remove absolute */
-        width: auto !important; 
-        height: auto !important; 
-        background: transparent !important; 
-        margin: 0 !important; 
-        padding: 0 !important;
-        border: none !important;
-        visibility: visible;
+        display: block !important; position: static !important;
+        width: auto !important; height: auto !important;
+        background: transparent !important; border: none !important;
+        visibility: visible; margin: 0 !important; padding: 0 !important;
     }
-    
-    #modal-carteirinha *, #modal-carteirinha-admin * { visibility: visible; }
-    
-    /* Remove estilos de modal */
+
     .modal-content, .modal-content-cart { 
-        box-shadow: none !important; 
-        padding: 0 !important; 
-        margin: 0 !important; 
-        background: transparent !important; 
+        box-shadow: none !important; padding: 0 !important; margin: 0 !important; 
+        background: transparent !important; width: auto !important; max-width: none !important;
         border: none !important;
-        width: auto !important;
-        max-width: none !important;
     }
     
-    /* Wrapper que contém os dois lados - FORÇAR LINHA */
+    /* 4. WRAPPER LADO A LADO COM ESPAÇAMENTO PARA CORTE */
     .carteirinha-wrapper {
-        perspective: none; 
-        width: auto !important;
-        height: auto !important;
-        max-width: none !important;
-        display: flex !important; /* GARANTE FLEX */
-        flex-direction: row !important; /* GARANTE LADO A LADO */
-        gap: 5mm; 
-        justify-content: center; 
-        align-items: center;
-        margin: 0;
+        perspective: none; width: auto !important; height: auto !important; max-width: none !important;
+        display: flex !important; flex-direction: row !important;
+        gap: 15mm; /* Espaço generoso entre Frente e Verso */
+        justify-content: center; align-items: center; margin: 0;
     }
     
     .carteirinha-card-inner {
-        transform: none !important; 
-        position: relative; 
-        height: auto; width: auto;
-        display: flex !important; /* GARANTE FLEX */
-        flex-direction: row !important; /* GARANTE LADO A LADO */
-        gap: 10mm; /* Espaço entre cartões */
-        align-items: center !important; 
-    }
-    
-    /* CARTÃO FÍSICO (85.6mm x 53.98mm) - CONFIGURAÇÃO BASE */
-    .carteirinha-face {
-        position: relative !important; 
-        transform: none !important;
-        /* DIMENSÕES TRAVADAS */
-        width: 85.6mm !important; 
-        min-width: 85.6mm !important;
-        max-width: 85.6mm !important;
-        height: 53.98mm !important;
-        min-height: 53.98mm !important;
-        max-height: 53.98mm !important;
-        
-        /* SEM BORDA OU MARGEM PARA CORTE LIMPO */
-        border: none !important; 
-        outline: none; 
-        
-        box-sizing: border-box !important;
-        
-        /* Margem externa para não cortar no limite da borda física */
-        margin: 0; 
-        padding: 2mm; /* Margem de sangria interna */
-        
-        /* TEXTO VISÍVEL MESMO SEM FUNDO */
-        color: white !important;
-        text-shadow: 0px 0px 1px #000; /* SOMBRA DE SEGURANÇA */
-        
-        background: transparent !important; /* Fundo transparente no container */
-        overflow: hidden; 
-        
-        /* Força bordas arredondadas iguais */
-        border-radius: 3mm !important;
-        
-        /* Impede encolhimento no flex - CRÍTICO */
-        flex: 0 0 auto !important; 
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
+        transform: none !important; position: relative; height: auto; width: auto;
+        display: flex !important; flex-direction: row !important; gap: 0; /* Gap zero, controlado pelo wrapper */
     }
 
-    /* --- FRENTE: LAYOUT --- */
+    /* 5. CONFIGURAÇÃO FÍSICA DO CARTÃO (ID-1: 85.6 x 53.98 mm) */
+    .carteirinha-face {
+        position: relative !important; transform: none !important;
+        
+        /* Dimensões Oficiais */
+        width: 85.6mm !important; height: 53.98mm !important;
+        min-width: 85.6mm !important; max-width: 85.6mm !important;
+        min-height: 53.98mm !important; max-height: 53.98mm !important;
+        
+        border-radius: 3mm !important; /* Raio de canto padrão */
+        margin: 0 !important; padding: 2mm !important;
+        
+        /* GUIAS DE CORTE (Borda Tracejada Fina Cinza) */
+        border: 1px dashed #ccc !important;
+        box-shadow: none !important;
+        
+        color: white !important;
+        text-shadow: 0px 0px 1px #000;
+        
+        flex: 0 0 auto !important; display: block !important;
+        visibility: visible !important; opacity: 1 !important;
+        overflow: hidden;
+    }
+
+    /* MARCAS DE CORTE NOS CANTOS (Crop Marks Simuladas) */
+    /* Adiciona pseudo-elementos fora do cartão para guiar a régua */
+    .carteirinha-face::before {
+        content: ''; position: absolute;
+        top: -5mm; left: -5mm; right: -5mm; bottom: -5mm;
+        border: 0.5pt solid #000;
+        z-index: -1;
+        /* Truque para mostrar apenas os cantos: clip-path ou máscara */
+        /* Simplificação: Borda sólida preta ao redor distante 5mm */
+        display: none; /* Desativado para limpeza visual, usando borda dashed acima */
+    }
+
+    /* --- FRENTE: LAYOUT RÍGIDO --- */
     .carteirinha-front {
-        /* POSICIONAMENTO ESTÁTICO PARA FICAR NA ESQUERDA */
-        position: relative !important;
-        top: auto !important; left: auto !important;
-        
-        width: 100% !important;
-        height: 100% !important;
-        border-radius: 3mm !important;
-        
-        /* FALLBACK PARA COR DE FUNDO + GRADIENTE */
+        /* Garante Fundo Colorido - IMPORTANTE */
         background-color: var(--card-color, #2563eb) !important;
         background-image: linear-gradient(135deg, var(--card-color, #2563eb), #0f172a) !important;
         
-        padding: 4mm !important; /* Margem de Segurança Interna AUMENTADA */
-        padding-left: 6mm !important; /* Segurança Esquerda Extra */
         display: grid;
         grid-template-columns: 22mm 1fr;
-        grid-template-rows: 10mm auto 1fr; /* Header aumentado */
+        grid-template-rows: 10mm auto 1fr;
         gap: 1mm;
+        padding-left: 4mm !important; /* Ajuste de margem interna */
     }
 
-    /* HEADER */
+    /* Header Frente */
     .carteirinha-front .cart-header {
         grid-column: 1 / -1; grid-row: 1;
-        display: flex; align-items: center; gap: 3mm; /* Espaço maior */
-        border-bottom: 0.5pt solid rgba(255,255,255,0.4);
-        margin: 0; padding-bottom: 1mm; height: 100%;
-        overflow: visible; 
+        display: flex; align-items: center; gap: 3mm;
+        border-bottom: 0.5pt solid rgba(255,255,255,0.5);
+        padding-bottom: 1mm; height: 100%;
     }
-    /* Logo Ajustada */
     .carteirinha-front .cart-logo { 
-        width: auto; /* Deixa largura automática */
-        height: 100%; /* Ocupa altura do header */
-        max-height: 100%; 
-        padding: 0; 
-        box-shadow: none; 
-        flex-shrink: 0;
-        object-fit: contain; /* Ajusta sem cortar */
-        object-position: center; 
-        border: 2px solid white; 
-        border-radius: 50%;
-        background-color: white;
-        aspect-ratio: 1/1; /* Mantém quadrado/redondo */
+        width: auto; height: 90%; aspect-ratio: 1/1;
+        background: white; border-radius: 50%; border: 1pt solid white;
     }
-    
-    .carteirinha-front .cart-org-info {
-        display: flex; flex-direction: column; justify-content: center; overflow: hidden;
-    }
-    .carteirinha-front .cart-org-info h3 { 
-        font-size: 6.5pt; line-height: 1.1; margin: 0; font-weight: 800; 
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .carteirinha-front .cart-org-info small { 
-        font-size: 5pt; line-height: 1; display: block; margin-top: 0.5mm; 
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
+    .carteirinha-front .cart-org-info h3 { font-size: 7pt; margin: 0; line-height: 1; white-space: nowrap; }
+    .carteirinha-front .cart-org-info small { font-size: 5pt; margin-top: 0.5mm; display: block; }
 
-    /* CORPO */
+    /* Corpo Frente */
     .carteirinha-front .cart-body { display: contents; } 
 
-    /* FOTO */
+    /* Foto */
     .carteirinha-front .cart-photo-frame {
         width: 20mm; height: 26mm; 
-        margin: 0; border: 1pt solid white;
-        grid-column: 1; 
-        grid-row: 2 / span 2; /* Ocupa as linhas do Nome e Detalhes */
-        align-self: flex-start; margin-top: 1mm;
-        box-shadow: none; overflow: hidden; 
+        grid-column: 1; grid-row: 2 / span 2;
+        border: 1pt solid white; margin-top: 2mm;
+        background: #ccc;
     }
-    .cart-photo-frame img { 
-        width: 100%; height: 100%; object-fit: cover; object-position: top center; 
-    }
+    .cart-photo-frame img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* DADOS (Nome e Curso) - Topo da Coluna Direita */
+    /* Dados Principais */
     .carteirinha-front .cart-info-main { 
         grid-column: 2; grid-row: 2;
-        text-align: left; margin-left: 2mm; margin-top: 1mm;
-        display: flex; flex-direction: column; justify-content: flex-start;
-        overflow: visible; 
-        padding-right: 2mm;
-        
-        /* GARANTIA DE VISIBILIDADE */
-        visibility: visible !important;
-        opacity: 1 !important;
+        text-align: left; margin-top: 2mm; margin-left: 2mm;
     }
-    
     .carteirinha-front .cart-info-main h2 { 
-        font-size: 8pt; margin-bottom: 1mm; line-height: 1.1; 
-        text-transform: uppercase; font-weight: 800;
-        
-        /* Quebra de Nome Longo */
-        white-space: normal; 
-        word-wrap: break-word; 
-        overflow-wrap: break-word;
-        
-        color: #fff;
+        font-size: 9pt; margin-bottom: 1mm; line-height: 1.1; 
+        text-transform: uppercase; color: #fff;
     }
     .carteirinha-front .cart-info-main .cart-course { 
-        padding: 0; font-size: 6.5pt; border-radius: 0; 
-        margin-bottom: 0; display: block;
-        background: transparent; color: #fbbf24; font-weight: 600;
-        white-space: normal;
+        font-size: 7pt; color: #fbbf24; background: transparent; padding: 0; margin: 0;
+        font-weight: 700;
     }
 
-    /* DETALHES (Instituição, CPF, etc) - Abaixo do Curso */
+    /* Detalhes */
     .carteirinha-front .cart-details-grid { 
-        display: block; 
-        grid-column: 2; grid-row: 3; /* Força para a linha de baixo */
-        margin-top: 2mm; margin-left: 2mm;
-        
-        /* GARANTIA DE VISIBILIDADE */
-        visibility: visible !important;
-        opacity: 1 !important;
+        grid-column: 2; grid-row: 3;
+        display: block; margin-top: 2mm; margin-left: 2mm;
     }
     .carteirinha-front .detail-item {
-        background: transparent; padding: 0; border: none; text-align: left;
-        margin-bottom: 0.5mm; display: flex; align-items: baseline;
-        white-space: nowrap; overflow: hidden;
+        background: transparent; padding: 0; margin-bottom: 0.8mm;
+        text-align: left; display: flex; align-items: baseline;
     }
     .carteirinha-front .detail-label { 
-        font-size: 5pt; text-transform: uppercase; opacity: 0.8; 
-        width: 12mm; flex-shrink: 0; display: inline-block;
+        font-size: 5pt; width: 14mm; display: inline-block; opacity: 0.8;
     }
     .carteirinha-front .detail-value { 
-        font-size: 6pt; font-weight: 700; font-family: monospace;
-        white-space: normal; overflow: hidden; text-overflow: ellipsis;
+        font-size: 6.5pt; font-weight: 700; font-family: monospace;
     }
 
-    /* --- VERSO --- */
+    /* --- VERSO: LAYOUT RÍGIDO --- */
     .carteirinha-back {
-        /* POSICIONAMENTO ESTÁTICO PARA FICAR NA DIREITA */
-        position: relative !important;
-        top: auto !important; left: auto !important;
-        transform: none !important; /* Remove rotação 3D */
-        -webkit-transform: none !important;
-        
-        width: 100% !important;
-        height: 100% !important;
-        min-height: 100% !important;
-        border-radius: 3mm !important;
-        
-        /* FALLBACK PARA COR DE FUNDO + GRADIENTE */
+        /* Garante Fundo Colorido */
         background-color: var(--card-color, #1e293b) !important;
         background-image: linear-gradient(135deg, var(--card-color, #1e293b), #000000) !important;
         
-        padding: 4mm !important; /* Margem de Segurança Interna */
         display: grid;
         grid-template-columns: 24mm 1fr;
         grid-template-rows: 6mm 1fr 6mm;
-        align-items: center;
-        gap: 2mm;
+        align-items: center; gap: 2mm;
     }
+
     .carteirinha-back .cart-back-header {
         grid-column: 1 / -1; grid-row: 1;
-        font-size: 5.5pt; border-bottom: 0.5pt solid rgba(255,255,255,0.3);
-        margin: 0; padding-bottom: 1mm; position: static; white-space: nowrap;
+        font-size: 6pt; border-bottom: 0.5pt solid rgba(255,255,255,0.4);
+        padding-bottom: 1mm; white-space: nowrap;
     }
+    
     .carteirinha-back .qr-code-box {
         grid-column: 1; grid-row: 2;
-        width: 22mm; height: 22mm; padding: 1mm; background: white; margin: 0;
-        border-radius: 2mm;
+        width: 22mm; height: 22mm; background: white; padding: 1mm;
+        border-radius: 1mm;
     }
+    
     .carteirinha-back .validity-box {
         grid-column: 2; grid-row: 2;
-        text-align: center; margin: 0;
-        display: flex; flex-direction: column; justify-content: center; height: 100%;
+        text-align: center;
     }
-    .carteirinha-back .validity-label { font-size: 6pt; display: block; margin-bottom: 1mm; opacity: 0.9; }
-    .carteirinha-back .validity-year { font-size: 24pt; font-weight: 900; line-height: 1; display: block; color: var(--accent); }
+    .carteirinha-back .validity-label { font-size: 6pt; display: block; margin-bottom: 1mm; }
+    .carteirinha-back .validity-year { font-size: 24pt; font-weight: 900; color: #fbbf24; line-height: 1; }
+    
     .carteirinha-back .cart-footer {
         grid-column: 1 / -1; grid-row: 3;
-        position: static; padding: 0; margin: 0; border: none;
-        font-size: 5pt; align-self: end; opacity: 0.8;
+        font-size: 5pt; border: none; align-self: end; opacity: 0.9; padding: 0; margin: 0;
     }
-    .carteirinha-back .cart-sec-name { font-size: 5.5pt; margin-bottom: 0; }
+    .carteirinha-back .cart-sec-name { font-size: 6pt; margin-bottom: 0; }
 }
 
 @media(max-width: 400px) {
