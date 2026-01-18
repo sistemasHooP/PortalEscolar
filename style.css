@@ -461,7 +461,7 @@ input[type="file"] { display: none; }
         -webkit-print-color-adjust: exact; print-color-adjust: exact;
         font-size: 8pt; 
         
-        /* Sem margem externa que desloque o layout */
+        /* Margem externa para não cortar no limite da borda física */
         margin: 0; 
         
         color: white !important;
@@ -473,12 +473,10 @@ input[type="file"] { display: none; }
 
     /* --- FRENTE: LAYOUT (Foto Esq | Dados Dir) --- */
     .carteirinha-front {
-        padding: 2mm !important; 
-        /* Padding extra na esquerda para compensar margem mecânica se necessário */
-        padding-left: 5mm !important; 
+        padding: 4mm !important; /* Margem de Segurança Interna AUMENTADA */
         display: grid;
         grid-template-columns: 22mm 1fr;
-        grid-template-rows: 10mm 1fr auto;
+        grid-template-rows: 8mm auto 1fr; /* Header | Name/Course | Details */
         gap: 1mm;
     }
 
@@ -511,7 +509,8 @@ input[type="file"] { display: none; }
     .carteirinha-front .cart-photo-frame {
         width: 20mm; height: 26mm; 
         margin: 0; border: 1pt solid white;
-        grid-column: 1; grid-row: 2;
+        grid-column: 1; 
+        grid-row: 2 / span 2; /* Ocupa as linhas do Nome e Detalhes */
         align-self: flex-start; margin-top: 1mm;
         box-shadow: none; overflow: hidden; 
     }
@@ -519,36 +518,35 @@ input[type="file"] { display: none; }
         width: 100%; height: 100%; object-fit: cover; object-position: top center; 
     }
 
-    /* DADOS */
+    /* DADOS (Nome e Curso) - Topo da Coluna Direita */
     .carteirinha-front .cart-info-main { 
         grid-column: 2; grid-row: 2;
         text-align: left; margin-left: 2mm; margin-top: 1mm;
         display: flex; flex-direction: column; justify-content: flex-start;
         overflow: visible; 
-        /* Padding na direita para evitar corte no final da linha */
         padding-right: 2mm;
     }
     
     .carteirinha-front .cart-info-main h2 { 
         font-size: 8pt; margin-bottom: 1mm; line-height: 1.1; 
         text-transform: uppercase; font-weight: 800;
-        
-        /* QUEBRA DE NOME LONGO */
         white-space: normal; 
-        word-wrap: break-word; 
-        overflow-wrap: break-word;
-        
+        word-wrap: break-word; overflow-wrap: break-word;
         color: #fff;
     }
     .carteirinha-front .cart-info-main .cart-course { 
         padding: 0; font-size: 6.5pt; border-radius: 0; 
-        margin-bottom: 2mm; display: block;
+        margin-bottom: 0; display: block;
         background: transparent; color: #fbbf24; font-weight: 600;
         white-space: normal;
     }
 
-    /* LISTA DETALHES */
-    .carteirinha-front .cart-details-grid { display: block; margin-top: 0; }
+    /* DETALHES (Instituição, CPF, etc) - Abaixo do Curso */
+    .carteirinha-front .cart-details-grid { 
+        display: block; 
+        grid-column: 2; grid-row: 3; /* Força para a linha de baixo */
+        margin-top: 2mm; margin-left: 2mm;
+    }
     .carteirinha-front .detail-item {
         background: transparent; padding: 0; border: none; text-align: left;
         margin-bottom: 0.5mm; display: flex; align-items: baseline;
@@ -565,7 +563,7 @@ input[type="file"] { display: none; }
 
     /* --- VERSO --- */
     .carteirinha-back {
-        padding: 3mm !important;
+        padding: 4mm !important; /* Margem de Segurança Interna */
         display: grid;
         grid-template-columns: 24mm 1fr;
         grid-template-rows: 6mm 1fr 6mm;
