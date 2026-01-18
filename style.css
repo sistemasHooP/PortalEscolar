@@ -371,6 +371,13 @@ input[type="file"] { display: none; }
         margin: 0; 
     }
 
+    /* REGRAS GLOBAIS DE IMPRESSÃO - FORÇAR CORES */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+
     /* CRÍTICO: RESET COMPLETO PARA CENTRALIZAÇÃO */
     html, body {
         width: 100%;
@@ -448,8 +455,6 @@ input[type="file"] { display: none; }
         outline: none; 
         
         box-sizing: border-box;
-        -webkit-print-color-adjust: exact; print-color-adjust: exact;
-        font-size: 8pt; 
         
         /* Margem externa para não cortar no limite da borda física */
         margin: 0; 
@@ -465,7 +470,8 @@ input[type="file"] { display: none; }
         width: 100%;
         height: 100%;
         border-radius: 3mm;
-        background: linear-gradient(135deg, var(--card-color, #2563eb), #0f172a) !important;
+        /* FALLBACK PARA COR DE FUNDO + GRADIENTE */
+        background-color: var(--card-color, #2563eb) !important;
         background-image: linear-gradient(135deg, var(--card-color, #2563eb), #0f172a) !important;
         
         padding: 4mm !important; /* Margem de Segurança Interna AUMENTADA */
@@ -562,7 +568,9 @@ input[type="file"] { display: none; }
         width: 100%;
         height: 100%;
         border-radius: 3mm;
-        background: linear-gradient(135deg, var(--card-color, #1e293b), #000000);
+        /* FALLBACK PARA COR DE FUNDO + GRADIENTE */
+        background-color: var(--card-color, #1e293b) !important;
+        background-image: linear-gradient(135deg, var(--card-color, #1e293b), #000000) !important;
         
         padding: 4mm !important; /* Margem de Segurança Interna */
         display: grid;
