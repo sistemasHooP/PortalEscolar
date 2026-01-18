@@ -166,7 +166,7 @@
         </div>
     </div>
 
-    <!-- MODAL DA CARTEIRINHA DIGITAL (ATUALIZADO V2.0) -->
+    <!-- MODAL DA CARTEIRINHA DIGITAL (ATUALIZADO V3.0 - Layout RG) -->
     <div id="modal-carteirinha" class="modal-overlay hidden" style="z-index: 3000;">
         <div class="modal-content zoom-in transparent-modal">
             
@@ -189,11 +189,13 @@
                                 <img id="cart-img" src="" alt="Foto">
                             </div>
                             
+                            <!-- Área de Dados Principais -->
                             <div class="cart-info-main">
                                 <h2 id="cart-nome">Nome do Aluno</h2>
                                 <span class="cart-course" id="cart-course">Curso do Aluno</span>
                             </div>
 
+                            <!-- Grade de Detalhes -->
                             <div class="cart-details-grid">
                                 <div class="detail-item">
                                     <span class="detail-label">Instituição</span>
@@ -212,6 +214,11 @@
                                     <span class="detail-value" id="cart-mat">000000</span>
                                 </div>
                             </div>
+
+                            <!-- NOVO: Código Único na Frente -->
+                            <div class="cart-unique-code">
+                                CÓDIGO: <span id="cart-chave">----</span>
+                            </div>
                         </div>
                     </div>
 
@@ -228,7 +235,7 @@
 
                         <div class="validity-box">
                             <span class="validity-label">Válido até Dezembro de</span>
-                            <span class="validity-year" id="cart-validade-ano">2025</span>
+                            <span class="validity-year" id="cart-validade-ano">2026</span>
                         </div>
 
                         <div class="cart-footer">
