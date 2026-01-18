@@ -392,26 +392,63 @@ input[type="file"] { display: none; }
     /* Oculta tudo que não for o modal da carteirinha */
     body > *:not(#modal-carteirinha):not(#modal-carteirinha-admin) { display: none !important; }
     
-    #modal-carteirinha, #modal-carteirinha-admin {
-        display: block !important; position: absolute; top: 0; left: 0; 
-        width: 100%; height: 100%; background: white; z-index: 9999; margin: 0; padding: 0;
-        visibility: visible;
+    /* RESET DE OVERFLOW CRÍTICO PARA IMPRESSÃO */
+    html, body {
+        height: auto !important;
+        overflow: visible !important;
+        background: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
+
+    #modal-carteirinha, #modal-carteirinha-admin {
+        display: block !important; 
+        position: relative !important; /* Mudei para relative para fluir na página */
+        width: 100% !important; 
+        height: auto !important; 
+        background: white !important; 
+        z-index: 9999; 
+        margin: 0 !important; 
+        padding: 0 !important;
+        overflow: visible !important; /* Garante que nada corte */
+        visibility: visible;
+        border: none !important;
+    }
+    
     #modal-carteirinha *, #modal-carteirinha-admin * { visibility: visible; }
-    .modal-content, .modal-content-cart { box-shadow: none; padding: 0; margin: 0; background: transparent; }
+    
+    /* Remove estilos de modal que causam scroll */
+    .modal-content, .modal-content-cart { 
+        box-shadow: none !important; 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        background: transparent !important; 
+        max-height: none !important; /* Remove limite de altura */
+        overflow: visible !important; /* Remove barra de rolagem */
+        border: none !important;
+    }
     
     /* Layout Container: Lado a Lado (Frente | Verso) */
     .carteirinha-wrapper {
-        perspective: none; height: auto; max-width: 100%;
-        display: flex; flex-direction: row; gap: 5mm; /* Espaço entre os cartões */
-        justify-content: center; align-items: center;
-        height: 100vh; /* Centraliza verticalmente na folha A4 */
-        margin: 0;
+        perspective: none; 
+        height: auto !important; 
+        width: 100% !important;
+        max-width: none !important;
+        display: flex; 
+        flex-direction: row; 
+        gap: 5mm; /* Espaço entre os cartões */
+        justify-content: center; 
+        align-items: center;
+        margin-top: 10mm; /* Margem superior segura */
     }
     
     .carteirinha-card-inner {
-        transform: none !important; position: relative; height: auto; width: auto;
-        display: flex; gap: 5mm; /* Gap duplo para garantir */
+        transform: none !important; 
+        position: relative; 
+        height: auto; 
+        width: auto;
+        display: flex; 
+        gap: 5mm;
     }
     
     /* DEFINIÇÃO DO CARTÃO FÍSICO */
@@ -421,7 +458,7 @@ input[type="file"] { display: none; }
         
         /* GUIAS DE CORTE (Borda Tracejada Fina) */
         border: 1px dashed #94a3b8 !important; 
-        outline: none; /* Remove outline antigo */
+        outline: none; 
         
         box-sizing: border-box;
         -webkit-print-color-adjust: exact; print-color-adjust: exact;
